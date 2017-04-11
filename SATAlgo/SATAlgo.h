@@ -7,13 +7,14 @@ namespace bali
 {
     namespace SAT
     {
+        
         class Vector2
         {
         public:
-            int32_t x;
-            int32_t y;
+            float x;
+            float y;
             Vector2() {}
-            Vector2(int32_t x, int32_t y)
+            Vector2(float x, float y)
             {
                 this->x = x;
                 this->y = y;
@@ -25,9 +26,9 @@ namespace bali
                 this->y = v.y;
             }
 
-            int32_t magnitude() const
+            float magnitude() const
             {
-                int32_t m;
+                float m;
                 m = sqrt(pow(x, 2) + pow(y, 2));
                 return m;
             }
@@ -41,7 +42,7 @@ namespace bali
             Vector2 normalize() const
             {
                 Vector2 n(*this);
-                int32_t len = sqrt(x*x + y*y);
+                float len = sqrt(x*x + y*y);
                 if (len > 0)
                 {
                     n.x /= len;
@@ -57,9 +58,9 @@ namespace bali
                 return v;
             }
 
-            int32_t dot(Vector2 b) const
+            float dot(Vector2 b) const
             {
-                int32_t scalar;
+                float scalar;
                 scalar = (x*b.x) + (y*b.y);
                 return scalar;
             }
@@ -72,7 +73,7 @@ namespace bali
         {
         public:
             MTV() {}
-            MTV(const Vector2 & smallest, int32_t overlap) 
+            MTV(const Vector2 & smallest, float overlap) 
             {
                 this->smallest = smallest;
                 this->overlap = overlap;
@@ -84,50 +85,37 @@ namespace bali
             }
 
             Vector2 smallest;
-            int32_t overlap;
+            float overlap;
         };
 
-        class Projection
+        class Projection : public Vector2
         {
         public:
-            Vector2 a;
-            Vector2 b;
+            Projection(float min, float max)
+            {
+                this->x = min;
+                this->y = max;
+            }
 
-            Projection(int32_t min, int32_t max)
-            {
-                this->a.x = min;
-                this->a.y = 0;
-                this->b.x = max;
-                this->b.y = 0;
-            }
-            Projection(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
-            {
-                this->a.x = x1;
-                this->a.y = y1;
-                this->b.x = x2;
-                this->b.y = y2;
-            }
 
             Projection(const Projection & proj)
             {
-                this->a = proj.a;
-                this->b = proj.b;
+                this->x = proj.x;// min
+                this->y = proj.y;// max
             }
-            int32_t max(int32_t a, int32_t b)
+            float max(float a, float b)
             {
                 return (a > b ? a : b);
             }
 
-            int32_t min(int32_t a, int32_t b)
+            float min(float a, float b)
             {
                 return (a < b ? a : b);
             }
             bool overlap(const Projection & p)
             {
-                if (this->a.x > min(p.a.x, p.b.x) && this->a.x < max(p.a.x, p.b.x) &&
-                    this->a.y > min(p.a.y, p.b.y) && this->a.y < max(p.a.y, p.b.y) &&
-                    this->b.x > min(p.a.x, p.b.x) && this->b.x < max(p.a.x, p.b.x) &&
-                    this->b.y > min(p.a.y, p.b.y) && this->b.y < max(p.a.y, p.b.y))
+                if (this->x >= p.x && this->x <= p.y ||
+                    this->y >= p.x && this->y <= p.y)
                 {
                     return true;
                 }
@@ -135,7 +123,12 @@ namespace bali
             }
             double getOverlap(const Projection & p)
             {
-
+                //float pMin, pMax;
+                //float tMin, tMax;
+                if (this->x > min(p.x, p.x) && this->x < max(p.x, p.x) &&
+                    this->y > min(p.y, p.y) && this->y < max(p.y, p.y))
+                {
+                }
                 return 0.0;
             }
         };
@@ -146,7 +139,10 @@ namespace bali
         {
         public:
             std::vector<Vector2> vertices;
-
+            void addVertex(float x, float y)
+            {
+                vertices.push_back(Vector2(x, y));
+            }
             Axes getAxes()
             {
                 Axes axes;// = new Vector2[vertices.size()];
@@ -164,6 +160,7 @@ namespace bali
 
                     // get either normal vector
                     Vector2 normal = edge.normal();
+                    normal = normal.normalize();
 
                     // the perp method is just (x, y) => (-y, x) or (y, -x)
                     axes.push_back(normal);
