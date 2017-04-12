@@ -34,6 +34,7 @@ namespace bali
 
     sf::Vector2i GID2XY(int gid, int total_columns);
     sf::Uint32 addQuad(sf::VertexArray & v, sf::FloatRect c, sf::IntRect t);
+    sf::Uint32 addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle);
 
     uint32_t buildTileLayer(TileLayer & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer);
     uint32_t buildTileLayers(TileLayers & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layer);

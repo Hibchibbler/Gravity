@@ -23,7 +23,7 @@ namespace bali
             /*:layerBack({0,0,800,600},5),
              layerFore({ 0,0,800,600 }, 5)*/
         {
-
+            angle = 0.0;
         }
     public:
         GameClient*         owner;
@@ -48,6 +48,7 @@ namespace bali
         bali::TileLayers          tileLayers;
 
         sf::Transform  levelRotTrans;
+        float angle;
     };
 
 

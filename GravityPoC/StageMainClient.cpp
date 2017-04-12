@@ -34,7 +34,7 @@ namespace bali
             return 0;
         }
 
-        // Store TMX map layers into our own data structure, TileLayers
+        // Store TMX map layers into our TileLayers data structure
         buildTileLayers(ctx->tileLayers,
                         ctx->mctx.maps.back()->tilesets.back(),
                         ctx->mctx.maps.back()->layers);
@@ -121,6 +121,7 @@ namespace bali
         {
             getContext()->levelRotTrans.translate(sf::Vector2f(1024, 1024));
             getContext()->levelRotTrans.rotate(2);
+            getContext()->angle -= 2;
             getContext()->levelRotTrans.translate(sf::Vector2f(-1024, -1024));
         }
         
@@ -128,6 +129,7 @@ namespace bali
         {
             getContext()->levelRotTrans.translate(sf::Vector2f(1024, 1024));
             getContext()->levelRotTrans.rotate(-2);
+            getContext()->angle += 2;
             getContext()->levelRotTrans.translate(sf::Vector2f(-1024, -1024));
         }
 

@@ -33,6 +33,49 @@ namespace bali
         return 0;
     }
 
+    sf::Uint32 addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle)
+    {
+
+        float px1, py1;
+        float px2, py2;
+        float px3, py3;
+        float px4, py4;
+
+        angle = angle*(3.14156f / 180.0f);
+
+        px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
+        py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;
+
+        px2 = ((p.width - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py2 = ((p.width - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+        px3 = ((p.width - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py3 = ((p.width - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+        px4 = ((0 - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py4 = ((0 - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+
+        v.append(sf::Vertex(sf::Vector2f(px1, py1),
+            sf::Vector2f(t.left, t.top)
+        ));
+
+        v.append(sf::Vertex(sf::Vector2f(px2, py2),
+            sf::Vector2f(t.left + t.width, t.top)
+        ));
+
+        v.append(sf::Vertex(sf::Vector2f(px3, py3),
+            sf::Vector2f(t.left + t.width, t.top + t.height)
+        ));
+
+        v.append(sf::Vertex(sf::Vector2f(px4, py4),
+            sf::Vector2f(t.left, t.top + t.height)
+        ));
+
+        return 0;
+    }
+
+
     uint32_t buildTileLayer(TileLayer & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer)
     {
         int tw = tileset->tilewidth;
@@ -118,11 +161,11 @@ namespace bali
         for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
         {
             SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
-            int maxDepth = 4;
+            int maxDepth = 8;
             qt::AABB aabb;
             
             aabb.min.x = aabb.min.y = 0;
-            aabb.max.x = aabb.max.y = 64*32;
+            aabb.max.x = aabb.max.y = 64*32;//in pixels
             searchLayer->initialize(aabb, maxDepth);
             searchLayers.push_back(searchLayer);
 

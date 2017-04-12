@@ -114,8 +114,8 @@ namespace bali
             }
             bool overlap(const Projection & p)
             {
-                if (this->x >= p.x && this->x <= p.y ||
-                    this->y >= p.x && this->y <= p.y)
+                if (x >= min(p.x, p.y) && x <= max(p.x, p.y) ||
+                    y >= min(p.x, p.y) && x <= max(p.x, p.y))
                 {
                     return true;
                 }
@@ -139,6 +139,15 @@ namespace bali
         {
         public:
             std::vector<Vector2> vertices;
+            void translate(float x, float y)
+            {
+                for (int i = 0; i < vertices.size(); i++)
+                {
+                    vertices[i].x += x;
+                    vertices[i].y += y;
+                }
+            }
+
             void addVertex(float x, float y)
             {
                 vertices.push_back(Vector2(x, y));
