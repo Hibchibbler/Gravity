@@ -1,5 +1,10 @@
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iterator>
+
 #include "Utility.h"
-#include "quadtree.h"
+#include "QuadTree\quadtree.h"
 #include "GameContext.h"
 
 namespace bali
@@ -75,6 +80,18 @@ namespace bali
         return 0;
     }
 
+    qt::AABB getSearchRegion(const sf::View & view)
+    {
+        qt::AABB searchRegion;
+        sf::Vector2f c = view.getCenter();
+        sf::Vector2f s = view.getSize();
+
+        searchRegion.min.x = (float)((int)(c.x - (s.x / 2) + 64));
+        searchRegion.min.y = (float)((int)(c.y - (s.y / 2) + 64));
+        searchRegion.max.x = (float)((int)(c.x + (s.x / 2) - 64));
+        searchRegion.max.y = (float)((int)(c.y + (s.y / 2) - 64));
+        return searchRegion;
+    }
 
     uint32_t buildTileLayer(TileLayer & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer)
     {
@@ -91,7 +108,8 @@ namespace bali
             {
                 uint32_t tileIndex = (totalLayerCols * h) + w;
                 uint32_t gid = layer->data->tiles[tileIndex].gid - 1;
-
+                // When gid == 0, the map data did not associated a texture with this map location.
+                // We translate to array indexing by subtracting 1 from the gid.
                 if (gid != -1)
                 {
                     // Convert GID to x,y
@@ -99,10 +117,10 @@ namespace bali
 
                     Tile pt;
                     pt.ti = tileIndex;
-                    pt.tw = tw;
-                    pt.th = th;
-                    pt.x = (float)((w*tw) + (tw / 2));
-                    pt.y = (float)((h*th) + (th / 2));
+                    //pt.tw = tw;
+                    //pt.th = th;
+                    pt.x = (float)((w*tw));// +(tw / 2);
+                    pt.y = (float)((h*th));// +(th / 2);
                     pt.tx = texPos.x*tw;
                     pt.ty = texPos.y*th;
 
@@ -123,34 +141,76 @@ namespace bali
         return 0;
     }
 
-    uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer)
-    {
-        for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
-        {
-            addQuad(quadLayer, sf::FloatRect(tdi->x, tdi->y, (float)tdi->tw, (float)tdi->th), sf::IntRect(tdi->tx, tdi->ty, tdi->tw, tdi->th));
+    //uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
+    //{
+    //    for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
+    //    {
+    //        addQuad(quadLayer, sf::FloatRect(tdi->x, tdi->y, (float)tdi->tw, (float)tdi->th), sf::IntRect(tdi->tx, tdi->ty, tdi->tw, tdi->th));
+    //    }
+    //    return 0;
+    //}
+    //uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers, uint32_t tileWidth, uint32_t tileHeight)
+    //{
+    //    for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
+    //    {
+    //        quadLayers.push_back(QuadLayer(0));
+    //        buildQuadLayer(quadLayers.back(), *tl, tileWidth, tileHeight);
+    //    }
+    //    return 0;
+    //}
+    template<typename Out>
+    void split(const std::string &s, char delim, Out result) {
+        std::stringstream ss;
+        ss.str(s);
+        std::string item;
+        while (std::getline(ss, item, delim)) {
+            *(result++) = item;
         }
-        return 0;
     }
-    uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers)
-    {
-        for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
+
+    std::vector<std::string> split(const std::string &s, char delim) {
+        std::vector<std::string> elems;
+        split(s, delim, std::back_inserter(elems));
+        return elems;
+    }
+    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, std::string strPoints, int x, int y)
+    {//TODO: need multuple polygons here!
+        // <polygon points="162,162 456,234 1176,666 1248,846 1254,1116 -396,1362 -408,1284 -462,810 -72,210"/>        
+        std::vector<std::string> pairs = split(strPoints, ' ');
+       
+        polygons.push_back(ConvexShape());
+        polygons.back().setPointCount(pairs.size());
+        //
+
+        int i = 0;
+        for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
         {
-            quadLayers.push_back(QuadLayer(0));
-            buildQuadLayer(quadLayers.back(), *tl);
+            std::vector<std::string> comp = split(*pair, ',');
+            float x1, y1;
+            x1 = atol(comp[0].c_str())+x;
+            y1 = atol(comp[1].c_str())+y;
+            polygons.back().setPoint(i, sf::Vector2f(x1,y1));
+            ++i;
         }
+
+        //polygons.back().setPoint(0,)
+        //
+
+
+        
+        
         return 0;
     }
 
     uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer)
     {
-        for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
+        for (int tdi = 0; tdi < tileLayer.size(); tdi++)
+        //for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
         {
             qt::XY pt;
-            pt.ti = tdi->ti;
-            pt.x = tdi->x;
-            pt.y = tdi->y;
-            pt.tx = tdi->tx;
-            pt.ty = tdi->ty;
+            pt.ti = tdi;
+            pt.x = tileLayer[tdi].x;
+            pt.y = tileLayer[tdi].y;
             searchLayer->insert(pt);
         }
         return 0;
@@ -161,7 +221,7 @@ namespace bali
         for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
         {
             SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
-            int maxDepth = 8;
+            int maxDepth = 10;
             qt::AABB aabb;
             
             aabb.min.x = aabb.min.y = 0;

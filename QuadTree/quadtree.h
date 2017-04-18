@@ -13,8 +13,6 @@ namespace bali
         public:
             float x;
             float y;
-            uint32_t tx;
-            uint32_t ty;
             uint32_t ti;
         };
 
@@ -237,11 +235,11 @@ namespace bali
                 AABB c(minx + hafwidth, miny + hafheight, maxx, maxy);//se
                 AABB d(minx, miny + hafheight, maxx - hafwidth, maxy);//sw
 
-                                                                      //        cout << "Subdividing <(" <<minx << ", " << miny<< "),("<< maxx << ", " << maxy<< ")>" << endl;
-                                                                      //        cout << "New boundaries: NW<(" <<a.min.x << ", " << a.min.y<< "),("<< a.max.x<< ", " << a.max.y<< ")>" << endl;
-                                                                      //        cout << "                NE<(" <<b.min.x << ", " << b.min.y<< "),("<< b.max.x<< ", " << b.max.y<< ")>" << endl;
-                                                                      //        cout << "                SE<(" <<c.min.x << ", " << c.min.y<< "),("<< c.max.x<< ", " << c.max.y<< ")>" << endl;
-                                                                      //        cout << "                SW<(" <<d.min.x << ", " << d.min.y<< "),("<< d.max.x<< ", " << d.max.y<< ")>" << endl << endl;
+                // cout << "Subdividing <(" <<minx << ", " << miny<< "),("<< maxx << ", " << maxy<< ")>" << endl;
+                // cout << "New boundaries: NW<(" <<a.min.x << ", " << a.min.y<< "),("<< a.max.x<< ", " << a.max.y<< ")>" << endl;
+                // cout << "                NE<(" <<b.min.x << ", " << b.min.y<< "),("<< b.max.x<< ", " << b.max.y<< ")>" << endl;
+                // cout << "                SE<(" <<c.min.x << ", " << c.min.y<< "),("<< c.max.x<< ", " << c.max.y<< ")>" << endl;
+                // cout << "                SW<(" <<d.min.x << ", " << d.min.y<< "),("<< d.max.x<< ", " << d.max.y<< ")>" << endl << endl;
 
 
                 (*node)->nw = newNode(a, (*node)->depth + 1);

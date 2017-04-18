@@ -21,9 +21,6 @@ namespace bali
         uint32_t doDraw();
         uint32_t cleanup();
     private:
-
-        //uint32_t addStraightQuad(std::shared_ptr<sf::VertexArray> v, sf::FloatRect c, sf::IntRect t);
-
         sf::View mainView;
         sf::Clock localInputClock;
         uint32_t mouseInView = true;

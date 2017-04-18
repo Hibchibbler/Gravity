@@ -123,13 +123,31 @@ namespace bali
             }
             double getOverlap(const Projection & p)
             {
+                // Find Max
+                // Find Min
+                // Of the two values remaining
+                //  find Max
+                //  find min
+                //  subtract them
+
                 //float pMin, pMax;
                 //float tMin, tMax;
-                if (this->x > min(p.x, p.x) && this->x < max(p.x, p.x) &&
-                    this->y > min(p.y, p.y) && this->y < max(p.y, p.y))
+                float M, m;
+                m = max(x, p.x);
+                M = min(y, p.y);
+                //
+                /*M = max(x, max(y, max(p.x, p.y)));
+                m = min(x, min(y, min(p.x, p.y)));
+                
+                float Mi, mi;
+                mi = min(x, min(y, min(p.x, min(p.y, M))));
+
+
+                if (x > min(p.x, p.y) && x < max(p.x, p.y) &&
+                    y > min(p.x, p.y) && y < max(p.x, p.y))
                 {
-                }
-                return 0.0;
+                }*/
+                return (M-m);
             }
         };
 
