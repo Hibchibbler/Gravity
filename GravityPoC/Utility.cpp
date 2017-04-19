@@ -173,26 +173,48 @@ namespace bali
         split(s, delim, std::back_inserter(elems));
         return elems;
     }
-    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, std::string strPoints, int x, int y)
+    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
     {//TODO: need multuple polygons here!
         // <polygon points="162,162 456,234 1176,666 1248,846 1254,1116 -396,1362 -408,1284 -462,810 -72,210"/>        
-        std::vector<std::string> pairs = split(strPoints, ' ');
-       
-        polygons.push_back(ConvexShape());
-        polygons.back().setPointCount(pairs.size());
-        //
 
-        int i = 0;
-        for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+        for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
-            std::vector<std::string> comp = split(*pair, ',');
-            float x1, y1;
-            x1 = atol(comp[0].c_str())+x;
-            y1 = atol(comp[1].c_str())+y;
-            polygons.back().setPoint(i, sf::Vector2f(x1,y1));
-            ++i;
-        }
+            for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
+            {
 
+                if ((*obj)->polygon != nullptr)
+                {
+                    std::vector<std::string> pairs = split((*obj)->polygon->points, ' ');
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(pairs.size());
+                    //
+
+                    int i = 0;
+                    for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    {
+                        std::vector<std::string> comp = split(*pair, ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str()) + (*obj)->x;
+                        y1 = atol(comp[1].c_str()) + (*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1, y1));
+                        ++i;
+                    }
+                }
+                else if ((*obj)->polyline != nullptr)
+                {
+                }
+                else if ((*obj)->ellipse != nullptr)
+                {
+
+                }
+                else
+                {//a rectangle
+
+                }
+
+            }
+        }
         //polygons.back().setPoint(0,)
         //
 

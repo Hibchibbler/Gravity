@@ -48,7 +48,7 @@ namespace bali
     //uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers, uint32_t tileWidth, uint32_t tileHeight);
     //uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight);
 
-    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, std::string strPoints, int x, int y);
+    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups);
 
     uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer);
     uint32_t buildSearchLayers(SearchLayers & searchLayers, TileLayers & tileLayers);

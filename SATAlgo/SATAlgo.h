@@ -197,11 +197,12 @@ namespace bali
 
             Projection project(const Axis & axis)
             {
-                double min = axis.dot(vertices[0]);
+                Axis naxis = axis;// .normalize();
+                double min = naxis.dot(vertices[0]);
                 double max = min;
                 for (int i = 1; i < vertices.size(); i++) {
                     // NOTE: the axis must be normalized to get accurate projections
-                    double p = axis.dot(vertices[i]);
+                    double p = naxis.dot(vertices[i]);
                     if (p < min) {
                         min = p;
                     }
@@ -224,7 +225,7 @@ namespace bali
                 for (int i = 0; i < axes1.size(); i++) {
                     Axis axis = axes1[i];
                     // project both shapes onto the axis
-                    Projection p1 = project(axis);
+                    Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
 
                     // do the projections overlap?
