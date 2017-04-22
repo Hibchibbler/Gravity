@@ -206,11 +206,18 @@ namespace bali
                 }
                 else if ((*obj)->ellipse != nullptr)
                 {
+           
 
                 }
                 else
                 {//a rectangle
-
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(4);
+                    polygons.back().setPoint(0, sf::Vector2f( (*obj)->x                 , (*obj)->y                  ) );
+                    polygons.back().setPoint(1, sf::Vector2f( (*obj)->x + (*obj)->width , (*obj)->y                  ) );
+                    polygons.back().setPoint(2, sf::Vector2f( (*obj)->x + (*obj)->width , (*obj)->y + (*obj)->height ) );
+                    polygons.back().setPoint(3, sf::Vector2f( (*obj)->x                 , (*obj)->y + (*obj)->height ) );
+                    //polygons.back().setPoint(3, (*obj)->x);
                 }
 
             }

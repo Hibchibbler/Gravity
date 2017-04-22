@@ -7,7 +7,6 @@ namespace bali
 {
     namespace SAT
     {
-        
         class Vector2
         {
         public:
@@ -123,30 +122,10 @@ namespace bali
             }
             double getOverlap(const Projection & p)
             {
-                // Find Max
-                // Find Min
-                // Of the two values remaining
-                //  find Max
-                //  find min
-                //  subtract them
-
-                //float pMin, pMax;
-                //float tMin, tMax;
                 float M, m;
                 m = max(x, p.x);
                 M = min(y, p.y);
-                //
-                /*M = max(x, max(y, max(p.x, p.y)));
-                m = min(x, min(y, min(p.x, p.y)));
-                
-                float Mi, mi;
-                mi = min(x, min(y, min(p.x, min(p.y, M))));
 
-
-                if (x > min(p.x, p.y) && x < max(p.x, p.y) &&
-                    y > min(p.x, p.y) && y < max(p.x, p.y))
-                {
-                }*/
                 return (M-m);
             }
         };
@@ -197,12 +176,11 @@ namespace bali
 
             Projection project(const Axis & axis)
             {
-                Axis naxis = axis;// .normalize();
-                double min = naxis.dot(vertices[0]);
+                double min = axis.dot(vertices[0]);
                 double max = min;
                 for (int i = 1; i < vertices.size(); i++) {
                     // NOTE: the axis must be normalized to get accurate projections
-                    double p = naxis.dot(vertices[i]);
+                    double p = axis.dot(vertices[i]);
                     if (p < min) {
                         min = p;
                     }

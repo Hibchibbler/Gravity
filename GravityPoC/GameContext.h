@@ -17,19 +17,38 @@ namespace bali
         {
             gravityApplied = true;
             mtvApplied = false;
+            angle = 0.0;
         }
+
+        sf::Vector2f rotate(sf::Vector2f v, float angle)
+        {
+            angle = angle * (3.1415 / 180.0);
+            v.x = v.x * cos(angle) - v.y * sin(angle);
+            v.y = v.y * sin(angle) + v.y * cos(angle);
+            return v;
+        }
+
         void update(sf::Time elapsed)
         {
-            position.x += velocity.x *elapsed.asSeconds();
-            position.y += velocity.y *elapsed.asSeconds();
+            position.x += velocity.x * 1 * elapsed.asSeconds();
+            position.y += velocity.y * 1 * elapsed.asSeconds();
 
-            //if (abs(velocity.x) < 1)
-            velocity.x += acceleration.x*elapsed.asSeconds();
-            //if (abs(velocity.y) < 1)
-            velocity.y += acceleration.y*elapsed.asSeconds();
+            float velx = 0.0;
+            float vely = 0.0;
+
             
-            //float velx = 0.0;
-            //float vely = 0.0;
+            //if (abs(velocity.x) < 1)
+            velocity.x += acceleration.x *elapsed.asSeconds();
+            //if (abs(velocity.y) < 1)
+            velocity.y += acceleration.y *elapsed.asSeconds();
+            if (jumpApplied)
+            {
+                vely -= 25;
+                jumpApplied = false;
+            }
+            velocity.x += velx;
+            velocity.y += vely;
+
             //if (mtvApplied)
             //{
             //    SAT::Vector2 v = currentMTV.smallest.normalize();
@@ -53,17 +72,26 @@ namespace bali
             float accy = 0.0;
             if (gravityApplied)// #1
             {
-                accy += 50.0;
+                sf::Vector2f g(0,1);
+                g= rotate(g, angle);
+                accy += g.y * 100.0;
+                accx += g.x * 100.0;
+                std::cout << accx << ", " << accy << std::endl;
             }
+
             acceleration.x = accx;
             acceleration.y = accy;
         }
 
         bool applyGravity()
-        {
-            gravityApplied = !gravityApplied;
+        {            
+            gravityApplied = true;
             return gravityApplied;
+        }
 
+        void releaseGravity()
+        {
+            gravityApplied = false;
         }
 
         bool applyMTV()
@@ -72,7 +100,21 @@ namespace bali
             return mtvApplied;
         }
 
-        void applyUser()
+        void applyJump()
+        {
+            jumpApplied = true;
+        }
+
+        void applyMove()
+        {
+
+        }
+
+        void applyGrip()
+        {
+
+        }
+        void releaseGrip()
         {
 
         }
@@ -80,9 +122,16 @@ namespace bali
         sf::Vector2f position;
         sf::Vector2f velocity;
         sf::Vector2f acceleration;
+        float angle;
 
         SAT::MTV currentMTV;
         QuadLayer playerQuads;
+
+        bool gripApplied;
+        bool jumpApplied;
+        bool moveApplied;
+
+        
     private:
         bool gravityApplied;
         bool mtvApplied;
@@ -96,7 +145,7 @@ namespace bali
             /*:layerBack({0,0,800,600},5),
              layerFore({ 0,0,800,600 }, 5)*/
         {
-            angle = 0.0;
+            
 
         }
     public:
@@ -124,7 +173,7 @@ namespace bali
         std::vector<ConvexShape>          polygons;
 
         sf::Transform  levelRotTrans;
-        float angle;
+        
         Player player;
 
         sf::Clock mainClock;

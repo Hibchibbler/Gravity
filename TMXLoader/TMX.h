@@ -292,9 +292,9 @@ namespace bali {
         class Tileset
         {
         public:
-            typedef std::shared_ptr<Tileset> Ptr;
-            typedef std::vector<Ptr>         Vec;
-            typedef std::shared_ptr<Vec>     VecPtr;
+            typedef std::shared_ptr<Tileset>    Ptr;
+            typedef std::vector<Ptr>            Vec;
+            typedef std::shared_ptr<Vec>        VecPtr;
         public:
             Tileset()
             {
