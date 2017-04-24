@@ -202,7 +202,26 @@ namespace bali
                     }
                 }
                 else if ((*obj)->polyline != nullptr)
-                {
+                {//NOTE: discard last point, engine assume last point is same as first.
+                    // TMX format is explicit about first and last point. even though they will always be the same.
+                    std::vector<std::string> pairs = split((*obj)->polyline->points, ' ');
+
+                    size_t max = pairs.size()-1;/* - 1;
+                    if (pairs.size() == 4)
+                        max = pairs.size();*/
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(max);
+                    //
+                    //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    for (int i = 0;i < max;++i)
+                    {
+                        std::vector<std::string> comp = split(pairs[i], ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str()) + (*obj)->x;
+                        y1 = atol(comp[1].c_str()) + (*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1, y1));
+                    }
                 }
                 else if ((*obj)->ellipse != nullptr)
                 {

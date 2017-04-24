@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="45">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="118">
  <tileset firstgid="1" name="tilesetA" tilewidth="32" tileheight="32" tilecount="240" columns="16">
   <image source="tilesetA.png" width="512" height="480"/>
  </tileset>
- <layer name="Tile Layer 2" width="64" height="64" visible="0">
+ <layer name="Tile Layer 2" width="64" height="64">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4170,6 +4170,7 @@
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
+   <tile gid="131"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4230,8 +4231,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
+   <tile gid="132"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="0"/>
@@ -4424,114 +4424,114 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="147"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="93"/>
+   <tile gid="147"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="148"/>
    <tile gid="93"/>
    <tile gid="93"/>
-   <tile gid="147"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="147"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="148"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
@@ -4586,13 +4586,13 @@
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
@@ -4649,15 +4649,15 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="132"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="93"/>
-   <tile gid="131"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -8074,6 +8074,7 @@
    <tile gid="0"/>
    <tile gid="93"/>
    <tile gid="93"/>
+   <tile gid="147"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -8134,8 +8135,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
+   <tile gid="148"/>
    <tile gid="93"/>
    <tile gid="93"/>
    <tile gid="93"/>
@@ -8203,5 +8203,145 @@
    <tile gid="93"/>
   </data>
  </layer>
- <objectgroup name="Object Layer 1" visible="0"/>
+ <objectgroup name="Object Layer 1">
+  <object id="52" x="320" y="192">
+   <polyline points="1.27273,0 705.273,0 737.273,32 737.273,64 1.27273,64 1.27273,0"/>
+  </object>
+  <object id="59" x="32" y="160" width="192" height="96"/>
+  <object id="60" x="225" y="160">
+   <polyline points="-1,0 63,0 95,32 95,96 63,128 31,128 -1,96 -1.5,0"/>
+  </object>
+  <object id="63" x="1278.5" y="256.5">
+   <polyline points="1.63636,-0.545455 1.5,-32.5 33.5,-64.5 321.5,-64.5 353.5,-32.5 353.5,-0.5 1.5,-0.5"/>
+  </object>
+  <object id="66" x="1568" y="640">
+   <polyline points="0,0 64,0 64,64 32,64 0,32 0,0"/>
+  </object>
+  <object id="67" x="1632" y="320">
+   <polyline points="0,0 160,0 192,32 160,64 0,64 0,0"/>
+  </object>
+  <object id="69" x="1632" y="704">
+   <polyline points="0,0 0,-64 192,-64 224,-32 192,0 0,0"/>
+  </object>
+  <object id="70" x="1632" y="704">
+   <polyline points="0,0 64,0 64,352 32,384 0,352 0,0"/>
+  </object>
+  <object id="71" x="1216" y="896">
+   <polyline points="0,0 32,-32 416,-32 416,64 0,64 0,0"/>
+  </object>
+  <object id="72" x="1216" y="960">
+   <polyline points="0,0 96,0 96,416 0,416 0,0"/>
+  </object>
+  <object id="73" x="1312" y="1312">
+   <polyline points="0,0 288,0 288,64 0,64 0,0"/>
+  </object>
+  <object id="74" x="1600" y="1312">
+   <polyline points="0,0 32,-32 64,-32 96,0 96,64 0,64 0,0"/>
+  </object>
+  <object id="75" x="1696" y="1312">
+   <polyline points="0,0 96,0 128,32 96,64 0,64 0,0"/>
+  </object>
+  <object id="76" x="1152" y="1312">
+   <polyline points="0,0 64,0 64,64 0,64 0,0"/>
+  </object>
+  <object id="77" x="1056" y="1376">
+   <polyline points="0,0 0,-96 32,-128 64,-128 96,-96 96,0 0,0"/>
+  </object>
+  <object id="78" x="736" y="1600">
+   <polyline points="0,0 320,-320 320,-224 64,32 32,32 0,0"/>
+  </object>
+  <object id="79" x="1056" y="1376">
+   <polyline points="0,0 96,0 96,512 64,544 32,544 0,512 0,0"/>
+  </object>
+  <object id="80" x="896" y="1824">
+   <polyline points="0,0 0,-64 160,-64 160,32 32,32 0,0"/>
+  </object>
+  <object id="81" x="672" y="1760">
+   <polyline points="0,0 224,0 224,64 0,64 0,0"/>
+  </object>
+  <object id="82" x="544" y="1824">
+   <polyline points="0,0 0,-64 32,-96 96,-96 128,-64 128,0 0,0"/>
+  </object>
+  <object id="83" x="224" y="1792">
+   <polyline points="0,0 0,-32 320,-32 320,32 32,32 0,0"/>
+  </object>
+  <object id="84" x="224" y="1760">
+   <polyline points="0,0 0,-32 128,-32 160,0 0,0"/>
+  </object>
+  <object id="85" x="224" y="1728">
+   <polyline points="0,0 0,-64 96,-64 128,-32 128,0 0,0"/>
+  </object>
+  <object id="87" x="224" y="928">
+   <polyline points="0,0 320,-320 384,-320 384,-288 96,0 0,0"/>
+  </object>
+  <object id="88" x="544" y="608">
+   <polyline points="0,0 0,-96 32,-128 64,-128 64,0 0,0"/>
+  </object>
+  <object id="89" x="608" y="480">
+   <polyline points="0,0 800,0 832,32 832,64 800,96 0,96 0,0"/>
+  </object>
+  <object id="90" x="992" y="576">
+   <polyline points="0,0 64,0 64,480 0,480 0,0"/>
+  </object>
+  <object id="91" x="640" y="1504">
+   <polyline points="0,0 0,-96 352,-448 416,-448 416,-416 0,0"/>
+  </object>
+  <object id="92" x="608" y="1504">
+   <polyline points="0,0 0,-96 32,-96 32,0 0,0"/>
+  </object>
+  <object id="93" x="448" y="1312">
+   <polyline points="0,0 64,0 160,96 160,192 0,32 0,0"/>
+  </object>
+  <object id="94" x="448" y="1312">
+   <polyline points="0,0 0,-160 64,-160 64,0 0,0"/>
+  </object>
+  <object id="95" x="448" y="1152">
+   <polyline points="0,0 0,-32 320,-352 320,-256 160,-96 96,-32 64,0 0,0"/>
+  </object>
+  <object id="96" x="736" y="928">
+   <polyline points="0,0 32,-32 96,-32 96,32 64,64 0,0"/>
+  </object>
+  <object id="97" x="768" y="896">
+   <polyline points="0,0 0,-160 32,-192 64,-160 64,0 0,0"/>
+  </object>
+  <object id="98" x="1568" y="640">
+   <polyline points="0,0 0,-384 64,-384 64,0 0,0"/>
+  </object>
+  <object id="101" x="224" y="1664">
+   <polyline points="0,0 0,-736 96,-736 96,0 0,0"/>
+  </object>
+  <object id="103" x="1312" y="1696">
+   <polyline points="0,0 -32,-32 0,-64 64,-64 64,0 0,0"/>
+  </object>
+  <object id="104" x="1376" y="1696">
+   <polyline points="0,0 0,-64 128,-64 160,-32 160,32 32,32 0,0"/>
+  </object>
+  <object id="105" x="1536" y="1728">
+   <polyline points="0,0 0,-64 480,-64 480,0 0,0"/>
+  </object>
+  <object id="107" x="1984" y="0">
+   <polyline points="0,0 0,32 32,64 64,64 64,0 0,0"/>
+  </object>
+  <object id="108" x="1984" y="2048">
+   <polyline points="0,0 0,-32 32,-64 64,-64 64,0 0,0"/>
+  </object>
+  <object id="109" x="0" y="2048">
+   <polyline points="0,0 0,-64 32,-64 64,-32 64,0 0,0"/>
+  </object>
+  <object id="110" x="0" y="1984">
+   <polyline points="0,0 0,-1920 32,-1920 32,0 8,0"/>
+  </object>
+  <object id="111" x="0" y="64">
+   <polyline points="0,0 0,-64 64,-64 64,-32 32,0 0,0"/>
+  </object>
+  <object id="112" x="64" y="32">
+   <polyline points="0,0 0,-32 1920,-32 1920,0 0,0"/>
+  </object>
+  <object id="113" x="2016" y="1984">
+   <polyline points="0,0 0,-1920 32,-1920 32,0 0,0"/>
+  </object>
+  <object id="114" x="64" y="2048">
+   <polyline points="0,0 0,-32 1920,-32 1920,0 0,0"/>
+  </object>
+ </objectgroup>
 </map>

@@ -16,71 +16,65 @@ namespace bali
         Player()
         {
             gravityApplied = true;
-            mtvApplied = false;
             angle = 0.0;
+            onSolid = false;
         }
 
         sf::Vector2f rotate(sf::Vector2f v, float angle)
         {
-            angle = angle * (3.1415 / 180.0);
+            angle = angle * (3.14156f / 180.0f);
             v.x = v.x * cos(angle) - v.y * sin(angle);
-            v.y = v.y * sin(angle) + v.y * cos(angle);
+            v.y = v.x * sin(angle) + v.y * cos(angle);
             return v;
         }
-
+        sf::Vector2f normalize(sf::Vector2f v)
+        {
+            double len = sqrt(v.x*v.x + v.y*v.y);
+            if (len > 0)
+            {
+                v.x /= len;
+                v.y /= len;
+            }
+            return v;
+        }
         void update(sf::Time elapsed)
         {
-            position.x += velocity.x * 1 * elapsed.asSeconds();
-            position.y += velocity.y * 1 * elapsed.asSeconds();
+            updateTime += elapsed;
 
-            float velx = 0.0;
-            float vely = 0.0;
-
-            
-            //if (abs(velocity.x) < 1)
-            velocity.x += acceleration.x *elapsed.asSeconds();
-            //if (abs(velocity.y) < 1)
-            velocity.y += acceleration.y *elapsed.asSeconds();
-            if (jumpApplied)
+            if (updateTime.asMilliseconds() >= 30)
             {
-                vely -= 25;
-                jumpApplied = false;
+                updateTime = sf::Time::Zero;
+                position.x += velocity.x;
+                position.y += velocity.y;
+
+                float velx = 0.0;
+                float vely = 0.0;
+                
+                velocity.x += acceleration.x;
+                velocity.y += acceleration.y;
+                if (jumpApplied)
+                {
+                    vely -= 15;
+                    jumpApplied = false;
+                }
+                velocity.x = velocity.x + velx - (velocity.x * 0.10);
+                velocity.y = velocity.y + vely - (velocity.y * 0.10);
+
+                float accx = 0.0;
+                float accy = 0.0;
+                if (gravityApplied)// #1
+                {
+                    sf::Vector2f g(1, 1);
+                    float a = (angle+90)*(3.14156f / 180.0f);
+                    //std::cout << " G<" <<g.x* cos(a) << ", " << g.y * sin(a) << " >G" << std::endl;
+                    accx += g.x * cos(a);
+                    accy += g.y * sin(a);
+                    //std::cout << accx << ", " << accy << std::endl;
+                }
+
+                acceleration.x = accx;
+                acceleration.y = accy;
             }
-            velocity.x += velx;
-            velocity.y += vely;
-
-            //if (mtvApplied)
-            //{
-            //    SAT::Vector2 v = currentMTV.smallest.normalize();
-            //    if (currentMTV.smallest.x != 0)
-            //    {
-            //        velx += -v.x * currentMTV.overlap;
-            //        //velx += -mtv.smallest.x;
-
-            //    }
-            //    if (currentMTV.smallest.y != 0)
-            //    {
-            //        vely += -v.y * currentMTV.overlap;
-            //        //ctx->player.velocity.y = -mtv.smallest.y;
-            //    }
-            //    mtvApplied = false;
-            //}
-            //velocity.x = velx;
-            //velocity.y = vely;
-            
-            float accx = 0.0;
-            float accy = 0.0;
-            if (gravityApplied)// #1
-            {
-                sf::Vector2f g(0,1);
-                g= rotate(g, angle);
-                accy += g.y * 100.0;
-                accx += g.x * 100.0;
-                std::cout << accx << ", " << accy << std::endl;
-            }
-
-            acceleration.x = accx;
-            acceleration.y = accy;
         }
 
         bool applyGravity()
@@ -94,31 +88,12 @@ namespace bali
             gravityApplied = false;
         }
 
-        bool applyMTV()
-        {
-            mtvApplied = !mtvApplied;
-            return mtvApplied;
-        }
-
         void applyJump()
         {
             jumpApplied = true;
         }
 
-        void applyMove()
-        {
-
-        }
-
-        void applyGrip()
-        {
-
-        }
-        void releaseGrip()
-        {
-
-        }
-
+        std::vector<sf::Vector2f> posHist;
         sf::Vector2f position;
         sf::Vector2f velocity;
         sf::Vector2f acceleration;
@@ -127,14 +102,13 @@ namespace bali
         SAT::MTV currentMTV;
         QuadLayer playerQuads;
 
-        bool gripApplied;
         bool jumpApplied;
-        bool moveApplied;
-
+        bool gravityApplied;
+        bool onSolid;
         
     private:
-        bool gravityApplied;
-        bool mtvApplied;
+        
+        sf::Time updateTime;
     };
     
     class GameClient;

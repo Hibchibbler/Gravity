@@ -10,10 +10,10 @@ namespace bali
         class Vector2
         {
         public:
-            float x;
-            float y;
+            double x;
+            double y;
             Vector2() {}
-            Vector2(float x, float y)
+            Vector2(double x, double y)
             {
                 this->x = x;
                 this->y = y;
@@ -25,23 +25,23 @@ namespace bali
                 this->y = v.y;
             }
 
-            float magnitude() const
+            double magnitude() const
             {
-                float m;
+                double m;
                 m = sqrt(pow(x, 2) + pow(y, 2));
                 return m;
             }
 
             Vector2 normal() const
             {
-                Vector2 v(y, -x);
+                Vector2 v(y,-1*x);
                 return v;
             }
 
             Vector2 normalize() const
             {
                 Vector2 n(*this);
-                float len = sqrt(x*x + y*y);
+                double len = sqrt(x*x + y*y);
                 if (len > 0)
                 {
                     n.x /= len;
@@ -49,7 +49,7 @@ namespace bali
                 }
                 return n;
             }
-            Vector2 subtract(Vector2 b)
+            Vector2 subtract(Vector2 b) const
             {
                 Vector2 v(*this);
                 v.x -= b.x;
@@ -57,11 +57,21 @@ namespace bali
                 return v;
             }
 
-            float dot(Vector2 b) const
+            double dot(Vector2 b) const
             {
-                float scalar;
+                double scalar;
                 scalar = (x*b.x) + (y*b.y);
                 return scalar;
+            }
+
+            Vector2 rotate(double angle_degrees) const
+            {
+                double ang_rad = angle_degrees = angle_degrees * (3.14156f / 180.0f);
+                Vector2 v(*this);
+
+                v.x = v.x * cos(ang_rad) - v.y * sin(ang_rad);
+                v.y = v.x * sin(ang_rad) + v.y * cos(ang_rad);
+                return v;
             }
         };
 
@@ -72,7 +82,7 @@ namespace bali
         {
         public:
             MTV() {}
-            MTV(const Vector2 & smallest, float overlap) 
+            MTV(const Vector2 & smallest, double overlap)
             {
                 this->smallest = smallest;
                 this->overlap = overlap;
@@ -84,13 +94,13 @@ namespace bali
             }
 
             Vector2 smallest;
-            float overlap;
+            double overlap;
         };
 
         class Projection : public Vector2
         {
         public:
-            Projection(float min, float max)
+            Projection(double min, double max)
             {
                 this->x = min;
                 this->y = max;
@@ -102,31 +112,33 @@ namespace bali
                 this->x = proj.x;// min
                 this->y = proj.y;// max
             }
-            float max(float a, float b)
+            double max(double a, double b)
             {
-                return (a > b ? a : b);
+                return (a >= b ? a : b);
             }
 
-            float min(float a, float b)
+            double min(double a, double b)
             {
-                return (a < b ? a : b);
+                return (a <= b ? a : b);
             }
             bool overlap(const Projection & p)
             {
                 if (x >= min(p.x, p.y) && x <= max(p.x, p.y) ||
-                    y >= min(p.x, p.y) && x <= max(p.x, p.y))
+                    y >= min(p.x, p.y) && y <= max(p.x, p.y))
                 {
                     return true;
                 }
                 return false;
+
             }
             double getOverlap(const Projection & p)
             {
-                float M, m;
+                double M, m;
                 m = max(x, p.x);
                 M = min(y, p.y);
-
-                return (M-m);
+                //m = max(max(x, p.x), max(y,p.y));
+                //M = min(min(y, p.y), min(x, p.x));
+                return abs(M-m);
             }
         };
 
@@ -136,7 +148,7 @@ namespace bali
         {
         public:
             std::vector<Vector2> vertices;
-            void translate(float x, float y)
+            void translate(double x, double y)
             {
                 for (int i = 0; i < vertices.size(); i++)
                 {
@@ -145,7 +157,7 @@ namespace bali
                 }
             }
 
-            void addVertex(float x, float y)
+            void addVertex(double x, double y)
             {
                 vertices.push_back(Vector2(x, y));
             }
@@ -162,7 +174,7 @@ namespace bali
                     Vector2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
 
                     // subtract the two to get the edge vector
-                    Vector2 edge = p1.subtract(p2);
+                    Vector2 edge = p2.subtract(p1);
 
                     // get either normal vector
                     Vector2 normal = edge.normal();
@@ -181,10 +193,11 @@ namespace bali
                 for (int i = 1; i < vertices.size(); i++) {
                     // NOTE: the axis must be normalized to get accurate projections
                     double p = axis.dot(vertices[i]);
-                    if (p < min) {
+                    if (p <= min) {
                         min = p;
                     }
-                    else if (p > max) {
+                    else 
+                    if (p >= max) {
                         max = p;
                     }
                 }
@@ -194,18 +207,21 @@ namespace bali
 
             bool collision(Shape & other, MTV & mtv)
             {
-                double overlap = 9999999999999.0;// really large value;
+                double overlap = 999999999.0;// really large value;
                 Vector2 smallest;
-                Axes axes1 = getAxes();
+                Axes axes1 = (*this).getAxes();
                 Axes axes2 = other.getAxes();
 
                 // loop over the axes1
+                //cout << ">>>>>>>>>" << std::endl;
                 for (int i = 0; i < axes1.size(); i++) {
                     Axis axis = axes1[i];
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
 
+                    //cout << p1.x << ", " << p1.y << " | " << p2.x << ", " << p2.y;// std::endl;
+
                     // do the projections overlap?
                     if (!p1.overlap(p2)) {
                         // then we can guarantee that the shapes do not overlap
@@ -214,22 +230,25 @@ namespace bali
                     else {
                         // get the overlap
                         double o = p1.getOverlap(p2);
-
+//                        cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
                         // check for minimum
                         if (o < overlap) {
                             // then set this one as the smallest
-                            overlap = o;
+                            overlap = o;                            
                             smallest = axis;
+                            //smallest.x *= -1;
+                            //smallest.y *= -1;
                         }
                     }
                 }
+//                cout << "-------" << std::endl;
                 // loop over the axes2
                 for (int i = 0; i < axes2.size(); i++) {
                     Axis axis = axes2[i];
                     // project both shapes onto the axis
-                    Projection p1 = project(axis);
+                    Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
-
+                    //cout << p1.x << ", " << p1.y << " | " << p2.x << ", " << p2.y;//std::endl;
                     // do the projections overlap?
                     if (!p1.overlap(p2)) {
                         // then we can guarantee that the shapes do not overlap
@@ -238,15 +257,17 @@ namespace bali
                     else {
                         // get the overlap
                         double o = p1.getOverlap(p2);
-
                         // check for minimum
+//                        cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                         if (o < overlap) {
                             // then set this one as the smallest
                             overlap = o;
                             smallest = axis;
+
                         }
                     }
                 }
+                //cout << "<<<<<<<<<" << std::endl;
                 mtv = MTV(smallest, overlap);
                 // if we get here then we know that every axis had overlap on it
                 // so we can guarantee an intersection

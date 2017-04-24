@@ -27,8 +27,8 @@ namespace bali
 
         // Still playing with these...no clue yet
 
-        ctx->player.position.x = 1024;
-        ctx->player.position.y = 300;
+        ctx->player.position.x = 250;
+        ctx->player.position.y = 100;
         ctx->player.velocity = sf::Vector2f(0.0, 0.0);
         ctx->player.acceleration = sf::Vector2f(0.0, 0.0);
 
@@ -120,66 +120,44 @@ namespace bali
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
-            //getContext()->mainView.move(2, 0);//2*co0s(getContext()->angle), 0);
-            //if (getContext()->player.currentMTV.smallest.x == 0)
-                getContext()->player.velocity.x += 20.0f;
+                getContext()->player.velocity.x += 0.3f;
         }
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
         {
-            //getContext()->mainView.move(-2, 0);// -2 * cos(getContext()->angle), 0);
-            //if (getContext()->player.currentMTV.smallest.x == 0)
-                getContext()->player.velocity.x -= 20.0f;
+                getContext()->player.velocity.x -= 0.3f;
         }
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
-            //getContext()->mainView.move(0, -2);
-            getContext()->player.velocity.y -= 20.0f;
+            getContext()->player.velocity.y -= 0.3f;
         }
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            getContext()->player.velocity.y += 20.0f;
+            getContext()->player.velocity.y += 0.3f;
         }
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
         {
-            //getContext()->levelRotTrans.translate(sf::Vector2f(1024, 1024));
-            //getContext()->levelRotTrans.rotate(2);
-            getContext()->player.angle -= 2;
+            getContext()->player.angle = getContext()->player.angle - 0.05;
             if (getContext()->player.angle < 0)
                 getContext()->player.angle = 360;
-            //getContext()->levelRotTrans.translate(sf::Vector2f(-1024, -1024));
-
-            getContext()->mainView.setRotation(getContext()->mainView.getRotation() - 2);
         }
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
-            //getContext()->levelRotTrans.translate(sf::Vector2f(1024, 1024));
-            //getContext()->levelRotTrans.rotate(-2);
-            getContext()->player.angle += 2;
+            getContext()->player.angle = getContext()->player.angle + 0.05;
             if (getContext()->player.angle > 360)
                 getContext()->player.angle = 0;
-            //getContext()->levelRotTrans.translate(sf::Vector2f(-1024, -1024));
-
-            getContext()->mainView.setRotation(getContext()->mainView.getRotation() + 2);
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
-        {
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
-        {
-        }
         return 0;
     }
 
     sf::Vector2f normalize(sf::Vector2f v)
     {
-        float len = sqrt(v.x*v.x + v.y*v.y);
+        double len = sqrt(v.x*v.x + v.y*v.y);
         if (len > 0)
         {
             v.x /= len;
@@ -199,7 +177,7 @@ namespace bali
     {
         angle = angle *(3.14156f / 180.0f);
         v.x = v.x * cos(angle) - v.y * sin(angle);
-        v.y = v.y * sin(angle) + v.y * cos(angle);
+        v.y = v.x * sin(angle) + v.y * cos(angle);
         return v;
     }
 
@@ -213,14 +191,11 @@ namespace bali
     uint32_t StageMainClient::doUpdate()
     {
         GameContext* ctx = getContext();
-
         sf::Time elapsed = ctx->mainClock.restart();
-        float dt = elapsed.asSeconds();// / PIXELS_PER_SEC;
-
-        //ctx->player.acceleration.y += 1.5;// *dt;// Gravity 9.8 m/s^2
 
         ctx->player.update(elapsed);
 
+        getContext()->mainView.setRotation(getContext()->player.angle);
         ctx->mainView.setCenter(ctx->player.position);
 
             // Search for foreground that is visible
@@ -260,6 +235,7 @@ namespace bali
         // convert All obstacle tiles into shapes.
         std::vector<SAT::Shape> shapes;
 
+        // Convert Polygons
         for (int j = 0; j < ctx->polygons.size(); ++j)
         {
             shapes.push_back(SAT::Shape());
@@ -269,149 +245,106 @@ namespace bali
                 shapes.back().addVertex(v.x, v.y);
             }
         }
-        for (auto xy = sr.begin(); xy != sr.end(); ++xy)
-        {
-            float x, y;
-            x = ctx->tileLayers[1][xy->ti].x;
-            y = ctx->tileLayers[1][xy->ti].y;
-
-            shapes.push_back(SAT::Shape());
-            shapes.back().addVertex(x     , y     );
-            shapes.back().addVertex(x + tw, y     );
-            shapes.back().addVertex(x + tw, y + th);
-            shapes.back().addVertex(x     , y + th);
-        }
-        //SAT::Shape playerShape;
+        //// Convert Tiles for SAT
+        //for (auto xy = sr.begin(); xy != sr.end(); ++xy)
         //{
-        //    sf::Vector2f pos;
-        //    pos.x = ctx->player.position.x;
-        //    pos.y = ctx->player.position.y;
+        //    float x, y;
+        //    x = ctx->tileLayers[1][xy->ti].x;
+        //    y = ctx->tileLayers[1][xy->ti].y;
 
-        //    // Create renderable player
-        //    ctx->player.playerQuads.clear();
-        //    addQuad(ctx->player.playerQuads,
-        //        sf::FloatRect(pos.x, pos.y, tw, th),
-        //        sf::IntRect(63 * 32, 63 * 32, 32, 32));
-
-        //    // convert renderable player into a collision shape.
-        //    sf::Vector2f v0 = pos;
-        //    v0.x += 0;
-        //    v0.y += 0;
-        //    v0 = rotate(v0, ctx->player.angle);
-        //    playerShape.addVertex(v0.x, v0.y);
-
-        //    sf::Vector2f v1 = pos;
-        //    v1.x += tw;
-        //    v1.y += 0;
-        //    v1 = rotate(v1, ctx->player.angle);
-        //    playerShape.addVertex(v1.x, v1.y);
-
-        //    sf::Vector2f v2 = pos;
-        //    v2.x += tw;
-        //    v2.y += th;
-        //    v2 = rotate(v2, ctx->player.angle);
-        //    playerShape.addVertex(v2.x, v2.y);
-
-        //    sf::Vector2f v3 = pos;
-        //    v3.x += 0;
-        //    v3.y += th;
-        //    v3 = rotate(v3, ctx->player.angle);
-        //    playerShape.addVertex(v3.x, v3.y);
+        //    shapes.push_back(SAT::Shape());
+        //    shapes.back().addVertex(x     , y     );
+        //    shapes.back().addVertex(x + tw, y     );
+        //    shapes.back().addVertex(x + tw, y + th);
+        //    shapes.back().addVertex(x     , y + th);
         //}
+
         SAT::Shape playerShape;
         {
-            float x, y;
-            x = ctx->player.position.x;
-            y = ctx->player.position.y;
+            SAT::Vector2 v(ctx->player.position.x, ctx->player.position.y);
 
             // Create renderable player
             ctx->player.playerQuads.clear();
             addRotQuad(ctx->player.playerQuads,
-                    sf::FloatRect(x+16, y+16, tw, th),
-                    sf::IntRect(63 * 32, 63 * 32, 32, 32), ctx->player.angle);
+                    sf::FloatRect(v.x , v.y , tw, th),
+                    sf::IntRect(2 * 32, 7 * 32, 32, 32) , ctx->player.angle);
 
             // convert renderable player into a collision shape.
-            playerShape.addVertex(x     , y     );
-            playerShape.addVertex(x + tw, y     );
-            playerShape.addVertex(x + tw, y + th);
-            playerShape.addVertex(x     , y + th);
+            v.x = ctx->player.playerQuads[0].position.x;
+            v.y = ctx->player.playerQuads[0].position.y;
+            playerShape.addVertex(v.x     , v.y     );
+
+            v.x = ctx->player.playerQuads[1].position.x;
+            v.y = ctx->player.playerQuads[1].position.y;
+            //playerShape.addVertex(v.x + tw, v.y     );
+            playerShape.addVertex(v.x , v.y);
+
+            v.x = ctx->player.playerQuads[2].position.x;
+            v.y = ctx->player.playerQuads[2].position.y;
+            //playerShape.addVertex(v.x + tw, v.y + th);
+            playerShape.addVertex(v.x , v.y );
+
+            v.x = ctx->player.playerQuads[3].position.x;
+            v.y = ctx->player.playerQuads[3].position.y;
+            //playerShape.addVertex(v.x     , v.y + th);
+            playerShape.addVertex(v.x, v.y );
         }
-        /*<0.757673, 0.652634>, 0.419678     <66, 50>     <37.3819, 25.3494>
-<0.757673, 0.652634>, 0.399048     <37.3819, 25.3494>     <10.1706, 1.91046>
-<0.757673, 0.652634>, 0.0808105     <10.1706, 1.91046>     <4.66009, -2.83611>
-<0.757673, 0.652634>, 0.0179443     <4.66009, -2.83611>     <3.43645, -3.89011>
-<0.757673, 0.652634>, 0.000732422     <3.43645, -3.89011>     <3.38651, -3.93313>
-<0.757673, 0.652634>, 0     <3.38651, -3.93313>     <3.38651, -3.93313>
-<0.757673, 0.652634>, 0     <3.38651, -3.93313>     <3.38651, -3.93313>
-<0.757673, 0.652634>, 0     <3.38651, -3.93313>     <3.38651, -3.93313>
-<0.757673, 0.652634>, 0     <3.38651, -3.93313>     <3.38651, -3.93313>
-<0.757673, 0.652634>, 0     <3.38651, -3.93313>     <3.38651, -3.93313>*/
-            
+
         // compare player shape to all other shapes for collision        
         for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
         {
-            SAT::MTV mtv;
+            
             SAT::Shape prev = *shape;
-            for (int tries = 1; tries < 6; ++tries)
+            //for (int tries = 1; tries < 2; ++tries)
+            //{
+            for (auto v = prev.vertices.begin(); v != prev.vertices.end(); ++v)
             {
-                for (auto v = prev.vertices.begin(); v != prev.vertices.end(); ++v)
-                {
-                    sf::Vector2f w(v->x, v->y);
-                    sf::Vector2f t = ctx->player.velocity;
-                    t.x = (t.x / (tries * 5)) * -1;
-                    t.y = (t.y / (tries *5)) * -1;
+                sf::Vector2f w(v->x, v->y);
+                sf::Vector2f t = ctx->player.velocity;
+                t.x = (t.x / (3)) * -1;
+                t.y = (t.y / (3)) * -1;
 
-                    w = translate(w, t);
-                    v->x = w.x;
-                    v->y = w.y;
-                }
+                w = translate(w, t);
+                v->x = w.x;
+                v->y = w.y;
             }
-            if (1)
+            //}
+            SAT::MTV mtv;
+            SAT::MTV mtv1;
+            //SAT::MTV mtv2;
+            bool collider1 = playerShape.collision(*shape, mtv1);
+            //bool collider2 = playerShape.collision(prev, mtv2);
+            //if (collider1 || collider2)
+            if (collider1)
             {
-                if (playerShape.collision(*shape, mtv) ||
-                    playerShape.collision(prev, mtv))
+                mtv = mtv1;// (collider1 == true ? mtv1 : mtv2);
+
+                SAT::Vector2 v = mtv.smallest;
+               
+                //std::cout << "###<" << mtv.smallest.x << ", " << mtv.smallest.y << " | " << v.x << ", " << v.y << " | "<< mtv.overlap << ">### " << std::endl;
+                //std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">";
+
+                double dp = (ctx->player.velocity.x * v.x + ctx->player.velocity.y * v.y);
+                if (dp > 0.0)
                 {
-                    ctx->player.currentMTV = mtv;
-
-                    std::cout << "<" << mtv.smallest.x << ", " << mtv.smallest.y << ", " << mtv.overlap << "> ";
-                    std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">";
-                    if (mtv.smallest.x == 0 && mtv.smallest.y == 1)
-                        int a = 42;
-                    SAT::Vector2 v = mtv.smallest.normalize();
-                    
-                    //////////////////////////////////////////////////////////////////
-                    ctx->player.position.x += -v.x * mtv.overlap * 1.5;
-                    ctx->player.velocity.x = -v.x * mtv.overlap * 50;
-
-                    ctx->player.position.y += -v.y * mtv.overlap * 1.5;// *dt; // #1
-                    ctx->player.velocity.y = -v.y *mtv.overlap * 50;// *20; // #2
-                    //////////////////////////////////////////////////////////////////
-
-                    
-                    //////if (mtv.smallest.x != 0)
-                    //////{
-                    //////    //ctx->player.position.x -= mtv.smallest.x*2; // 
-                    //////    ctx->player.position.x += -v.x * mtv.overlap * 1.5;// *dt; // #1
-                    //////    ctx->player.velocity.x = -v.x * mtv.overlap * 50;// *20; // #2
-                    //////    //ctx->player.velocity.x += -mtv.smallest.x; // #3
-                    //////    //ctx->player.velocity.x *= -1;
-                    //////    //ctx->player.velocity.x *= -mtv.smallest.x;
-
-                    //////}
-                    //////if (mtv.smallest.y != 0)
-                    //////{
-                    //////    //ctx->player.position.y -= mtv.smallest.y*2; // 
-                    //////    ctx->player.position.y += -v.y * mtv.overlap * 1.5;// *dt; // #1
-                    //////    ctx->player.velocity.y = -v.y * mtv.overlap * 50;// *20; // #2
-                    //////    //ctx->player.velocity.y += -mtv.smallest.y;  // #3
-                    //////    //ctx->player.velocity.y *= -1;
-                    //////    //ctx->player.velocity.y *= -mtv.smallest.y;
-                    //////}
-
-                    std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">" << std::endl;
-
-                    break;
+                    v.x = -1 * v.x;
+                    v.y = -1 * v.y;
                 }
+
+                //std::cout << "###<" << mtv.smallest.x << ", " << mtv.smallest.y << " | " << mtv.overlap << ">### " << std::endl;
+                std::cout << "###<" << v.x << ", " << v.y << " | " << mtv.overlap << ">### " << std::endl;
+
+                if (v.x != 0) {
+                    ctx->player.position.x += v.x * mtv.overlap * 1.00;
+                    ctx->player.velocity.x = 0;// v.x * ctx->player.velocity.x *0.9;// mtv.overlap * 9.5;
+                }
+                if (v.y != 0) {
+                    ctx->player.position.y += v.y * mtv.overlap * 1.00;
+                    ctx->player.velocity.y = 0;// v.y * ctx->player.velocity.y *0.9;// mtv.overlap * 9.5;
+                }
+                //std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">" << std::endl;
+
+                break;
             }
         }
         
@@ -446,7 +379,7 @@ namespace bali
         {
             poly->setOutlineColor(sf::Color::Red);
             poly->setFillColor(sf::Color::Transparent);
-            poly->setOutlineThickness(6);
+            poly->setOutlineThickness(1);
             ctx->window.draw(*poly, states);
         }
 
