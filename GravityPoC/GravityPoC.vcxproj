@@ -88,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="GameContext.h" />
+    <ClInclude Include="PhysicalObject.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="StageMainClient.h" />
     <ClInclude Include="Utility.h" />

@@ -2,87 +2,19 @@
 
 #include <stdint.h>
 #include <vector>
-
+#include "Vector\Vector.h"
 namespace bali
 {
     namespace SAT
     {
-        class Vector2
-        {
-        public:
-            double x;
-            double y;
-            Vector2() {}
-            Vector2(double x, double y)
-            {
-                this->x = x;
-                this->y = y;
-            }
-
-            Vector2(const Vector2 & v)
-            {
-                this->x = v.x;
-                this->y = v.y;
-            }
-
-            double magnitude() const
-            {
-                double m;
-                m = sqrt(pow(x, 2) + pow(y, 2));
-                return m;
-            }
-
-            Vector2 normal() const
-            {
-                Vector2 v(y,-1*x);
-                return v;
-            }
-
-            Vector2 normalize() const
-            {
-                Vector2 n(*this);
-                double len = sqrt(x*x + y*y);
-                if (len > 0)
-                {
-                    n.x /= len;
-                    n.y /= len;
-                }
-                return n;
-            }
-            Vector2 subtract(Vector2 b) const
-            {
-                Vector2 v(*this);
-                v.x -= b.x;
-                v.y -= b.y;
-                return v;
-            }
-
-            double dot(Vector2 b) const
-            {
-                double scalar;
-                scalar = (x*b.x) + (y*b.y);
-                return scalar;
-            }
-
-            Vector2 rotate(double angle_degrees) const
-            {
-                double ang_rad = angle_degrees = angle_degrees * (3.14156f / 180.0f);
-                Vector2 v(*this);
-
-                v.x = v.x * cos(ang_rad) - v.y * sin(ang_rad);
-                v.y = v.x * sin(ang_rad) + v.y * cos(ang_rad);
-                return v;
-            }
-        };
-
-        typedef std::vector<Vector2> Axes;
-        typedef Vector2 Axis;
+        typedef std::vector<vec::Vector2> Axes;
+        typedef vec::Vector2 Axis;
 
         class MTV
         {
         public:
             MTV() {}
-            MTV(const Vector2 & smallest, double overlap)
+            MTV(const vec::Vector2 & smallest, double overlap)
             {
                 this->smallest = smallest;
                 this->overlap = overlap;
@@ -93,11 +25,11 @@ namespace bali
                 this->overlap = mtv.overlap;
             }
 
-            Vector2 smallest;
+            vec::Vector2 smallest;
             double overlap;
         };
 
-        class Projection : public Vector2
+        class Projection : public vec::Vector2
         {
         public:
             Projection(double min, double max)
@@ -147,7 +79,7 @@ namespace bali
         class Shape
         {
         public:
-            std::vector<Vector2> vertices;
+            std::vector<vec::Vector2> vertices;
             void translate(double x, double y)
             {
                 for (int i = 0; i < vertices.size(); i++)
@@ -159,7 +91,7 @@ namespace bali
 
             void addVertex(double x, double y)
             {
-                vertices.push_back(Vector2(x, y));
+                vertices.push_back(vec::Vector2(x, y));
             }
             Axes getAxes()
             {
@@ -168,16 +100,16 @@ namespace bali
                 for (int i = 0; i < vertices.size(); i++) 
                 {
                     // get the current vertex
-                    Vector2 p1 = vertices[i];
+                    vec::Vector2 p1 = vertices[i];
 
                     // get the next vertex
-                    Vector2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
+                    vec::Vector2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
 
                     // subtract the two to get the edge vector
-                    Vector2 edge = p2.subtract(p1);
+                    vec::Vector2 edge = p2.subtract(p1);
 
                     // get either normal vector
-                    Vector2 normal = edge.normal();
+                    vec::Vector2 normal = edge.normal();
                     normal = normal.normalize();
 
                     // the perp method is just (x, y) => (-y, x) or (y, -x)
@@ -208,7 +140,7 @@ namespace bali
             bool collision(Shape & other, MTV & mtv)
             {
                 double overlap = 999999999.0;// really large value;
-                Vector2 smallest;
+                vec::Vector2 smallest;
                 Axes axes1 = (*this).getAxes();
                 Axes axes2 = other.getAxes();
 

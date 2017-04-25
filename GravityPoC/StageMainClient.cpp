@@ -335,12 +335,12 @@ namespace bali
                 std::cout << "###<" << v.x << ", " << v.y << " | " << mtv.overlap << ">### " << std::endl;
 
                 if (v.x != 0) {
-                    ctx->player.position.x += v.x * mtv.overlap * 1.00;
-                    ctx->player.velocity.x = 0;// v.x * ctx->player.velocity.x *0.9;// mtv.overlap * 9.5;
+                    ctx->player.position.x += v.x * mtv.overlap * 1.05;
+                    ctx->player.velocity.x = v.x * ctx->player.velocity.x *0.9;// mtv.overlap * 9.5;
                 }
                 if (v.y != 0) {
-                    ctx->player.position.y += v.y * mtv.overlap * 1.00;
-                    ctx->player.velocity.y = 0;// v.y * ctx->player.velocity.y *0.9;// mtv.overlap * 9.5;
+                    ctx->player.position.y += v.y * mtv.overlap * 1.05;
+                    ctx->player.velocity.y = v.y * ctx->player.velocity.y *0.9;// mtv.overlap * 9.5;
                 }
                 //std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">" << std::endl;
 
