@@ -1,10 +1,19 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #include "StageMainClient.h"
 #include "GameContext.h"
 #include "Utility.h"
+#include "MouseKeyboard.h"
 #include <math.h>
+#include "Vector\Vector.h"
 #include "SATAlgo\SATAlgo.h"
 
 #define PIXELS_PER_SEC  4
+#define DEG_TO_RAD(x)   \
+        x * (3.14156f / 180.0f);
 
 namespace bali
 {
@@ -29,8 +38,8 @@ namespace bali
 
         ctx->player.position.x = 250;
         ctx->player.position.y = 100;
-        ctx->player.velocity = sf::Vector2f(0.0, 0.0);
-        ctx->player.acceleration = sf::Vector2f(0.0, 0.0);
+        ctx->player.velocity = vec::Vector2(0.0, 0.0);
+        ctx->player.acceleration = vec::Vector2(0.0, 0.0);
 
         ctx->size.x = ctx->size.y = 1000;
         ctx->mainView.setCenter(ctx->player.position.x, ctx->player.position.y);
@@ -38,7 +47,7 @@ namespace bali
         //ctx->mainView.setViewport(sf::FloatRect(0.25,0.25,0.5,0.5));
 
         // Load TMX
-        TMX::TMXReader::load("level1.tmx", ctx->mctx);
+        TMX::TMXReader::load("level0.tmx", ctx->mctx);
 
         ctx->tilesetAImg.loadFromFile(ctx->mctx.maps.back()->tilesets.back()->images.back()->source);
         ctx->tilesetATex.loadFromImage(ctx->tilesetAImg);
@@ -53,11 +62,11 @@ namespace bali
 
         // Store TMX map layers into our TileLayers data structure
         buildTileLayers(ctx->tileLayers,
-                        ctx->mctx.maps.back()->tilesets.back(),
-                        ctx->mctx.maps.back()->layers);
+            ctx->mctx.maps.back()->tilesets.back(),
+            ctx->mctx.maps.back()->layers);
 
         buildObjectLayers(ctx->polygons,
-                          ctx->mctx.maps.back()->objectgroups);
+            ctx->mctx.maps.back()->objectgroups);
 
         //// Then use the TileLayers to construct the other representations
         //// A representation of the layer that can drawn to the screen
@@ -66,7 +75,7 @@ namespace bali
 
         // A representation of the layer that can be searched
         buildSearchLayers(ctx->searchLayers,
-                          ctx->tileLayers);
+            ctx->tileLayers);
 
         // Last thing
         initialized();
@@ -89,7 +98,11 @@ namespace bali
         case sf::Event::MouseWheelScrolled: {
             getContext()->mainView = getContext()->window.getView();
             zoom = (event.mouseWheelScroll.delta > 0 ? 1.2 : 0.8);
-            getContext()->mainView.zoom(zoom);
+            sf::Vector2f v = getContext()->mainView.getSize();
+            v.x *= 1.01 * zoom;
+            v.y *= 1.01 * zoom;
+            getContext()->mainView.setSize(v);
+            //getContext()->mainView.zoom(zoom);
             std::cout << "Wheel Scrolled: " << event.mouseWheelScroll.delta << std::endl;
             break;
         }case sf::Event::Resized: {
@@ -106,88 +119,12 @@ namespace bali
 
     uint32_t StageMainClient::doLocalInputs()
     {
-
-        //if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-        //{
-        //    //this->done();
-        //    sf::Vector2i mpos = sf::Mouse::getPosition(getContext()->window);
-        //    sf::Vector2f worldPos = getContext()->window.mapPixelToCoords(mpos);
-        //}
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-        {
-            getContext()->player.applyJump();
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-        {
-                getContext()->player.velocity.x += 0.3f;
-        }
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-        {
-                getContext()->player.velocity.x -= 0.3f;
-        }
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-        {
-            getContext()->player.velocity.y -= 0.3f;
-        }
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-        {
-            getContext()->player.velocity.y += 0.3f;
-        }
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-        {
-            getContext()->player.angle = getContext()->player.angle - 0.05;
-            if (getContext()->player.angle < 0)
-                getContext()->player.angle = 360;
-        }
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-        {
-            getContext()->player.angle = getContext()->player.angle + 0.05;
-            if (getContext()->player.angle > 360)
-                getContext()->player.angle = 0;
-        }
+        MouseKeyboard::doMouse(*getContext());
+        MouseKeyboard::doKeyboard(*getContext());
 
         return 0;
     }
 
-    sf::Vector2f normalize(sf::Vector2f v)
-    {
-        double len = sqrt(v.x*v.x + v.y*v.y);
-        if (len > 0)
-        {
-            v.x /= len;
-            v.y /= len;
-        }
-        return v;
-    }
-
-    float magnitude(sf::Vector2f v)
-    {
-        float m;
-        m = sqrt(pow(v.x, 2) + pow(v.y, 2));
-        return m;
-    }
-
-    sf::Vector2f rotate(sf::Vector2f v, float angle)
-    {
-        angle = angle *(3.14156f / 180.0f);
-        v.x = v.x * cos(angle) - v.y * sin(angle);
-        v.y = v.x * sin(angle) + v.y * cos(angle);
-        return v;
-    }
-
-    sf::Vector2f translate(sf::Vector2f v, sf::Vector2f t)
-    {
-        v.x += t.x;
-        v.y += t.y;
-        return v;
-    }
-     
     uint32_t StageMainClient::doUpdate()
     {
         GameContext* ctx = getContext();
@@ -196,17 +133,17 @@ namespace bali
         ctx->player.update(elapsed);
 
         getContext()->mainView.setRotation(getContext()->player.angle);
-        ctx->mainView.setCenter(ctx->player.position);
+        ctx->mainView.setCenter(ctx->player.position.x, ctx->player.position.y);
 
-            // Search for foreground that is visible
-        qt::AABB searchRegion = getSearchRegion(ctx->mainView);
+        // Search for foreground that is visible
+        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.80);
 
         sf::Uint32 tw = ctx->mctx.getMap()->tilesets.back()->tilewidth;
         sf::Uint32 th = ctx->mctx.getMap()->tilesets.back()->tileheight;
 
         // Generate renderable for background layer (0)
         std::vector<qt::XY> sr;
-        
+
         sr = ctx->searchLayers.at(0)->search(searchRegion);
         ctx->quadLayers.clear();
         ctx->quadLayers.push_back(QuadLayer());
@@ -215,7 +152,7 @@ namespace bali
             float x, y;
             x = p->x;
             y = p->y;
-            
+
             addQuad(ctx->quadLayers.front(), sf::FloatRect(x, y, tw, th), sf::IntRect(ctx->tileLayers[0][p->ti].tx, ctx->tileLayers[0][p->ti].ty, tw, th));
         }
 
@@ -245,126 +182,110 @@ namespace bali
                 shapes.back().addVertex(v.x, v.y);
             }
         }
-        //// Convert Tiles for SAT
+        ////// Convert Tiles for SAT
         //for (auto xy = sr.begin(); xy != sr.end(); ++xy)
         //{
-        //    float x, y;
-        //    x = ctx->tileLayers[1][xy->ti].x;
-        //    y = ctx->tileLayers[1][xy->ti].y;
-
+        //    //vec::Vector2 v1(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y);
+        //    //vec::Vector2 v2(ctx->tileLayers[1][xy->ti].x+tw, ctx->tileLayers[1][xy->ti].y);
+        //    //vec::Vector2 v3(ctx->tileLayers[1][xy->ti].x+tw, ctx->tileLayers[1][xy->ti].y+th);
+        //    //vec::Vector2 v4(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y+th);
         //    shapes.push_back(SAT::Shape());
-        //    shapes.back().addVertex(x     , y     );
-        //    shapes.back().addVertex(x + tw, y     );
-        //    shapes.back().addVertex(x + tw, y + th);
-        //    shapes.back().addVertex(x     , y + th);
+        //    addRotShape(shapes.back(), sf::FloatRect(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y, tw, th), 360-ctx->player.angle);
         //}
 
         SAT::Shape playerShape;
         {
-            SAT::Vector2 v(ctx->player.position.x, ctx->player.position.y);
+            vec::Vector2 v(ctx->player.position.x, ctx->player.position.y);
 
             // Create renderable player
             ctx->player.playerQuads.clear();
-            addRotQuad(ctx->player.playerQuads,
-                    sf::FloatRect(v.x , v.y , tw, th),
-                    sf::IntRect(2 * 32, 7 * 32, 32, 32) , ctx->player.angle);
+            addQuad(ctx->player.playerQuads,
+                sf::FloatRect(v.x, v.y, tw, th),
+                sf::IntRect(2 * 32, 7 * 32, 32, 32));// , ctx->player.angle);
 
             // convert renderable player into a collision shape.
             v.x = ctx->player.playerQuads[0].position.x;
             v.y = ctx->player.playerQuads[0].position.y;
-            playerShape.addVertex(v.x     , v.y     );
+            playerShape.addVertex(v.x, v.y);
 
             v.x = ctx->player.playerQuads[1].position.x;
             v.y = ctx->player.playerQuads[1].position.y;
-            //playerShape.addVertex(v.x + tw, v.y     );
-            playerShape.addVertex(v.x , v.y);
+            playerShape.addVertex(v.x, v.y);
 
             v.x = ctx->player.playerQuads[2].position.x;
             v.y = ctx->player.playerQuads[2].position.y;
-            //playerShape.addVertex(v.x + tw, v.y + th);
-            playerShape.addVertex(v.x , v.y );
+            playerShape.addVertex(v.x, v.y);
 
             v.x = ctx->player.playerQuads[3].position.x;
             v.y = ctx->player.playerQuads[3].position.y;
-            //playerShape.addVertex(v.x     , v.y + th);
-            playerShape.addVertex(v.x, v.y );
+            playerShape.addVertex(v.x, v.y);
         }
 
         // compare player shape to all other shapes for collision        
         for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
         {
-            
-            SAT::Shape prev = *shape;
-            //for (int tries = 1; tries < 2; ++tries)
-            //{
-            for (auto v = prev.vertices.begin(); v != prev.vertices.end(); ++v)
-            {
-                sf::Vector2f w(v->x, v->y);
-                sf::Vector2f t = ctx->player.velocity;
-                t.x = (t.x / (3)) * -1;
-                t.y = (t.y / (3)) * -1;
-
-                w = translate(w, t);
-                v->x = w.x;
-                v->y = w.y;
-            }
-            //}
-            SAT::MTV mtv;
             SAT::MTV mtv1;
-            //SAT::MTV mtv2;
-            bool collider1 = playerShape.collision(*shape, mtv1);
-            //bool collider2 = playerShape.collision(prev, mtv2);
-            //if (collider1 || collider2)
+            std::vector<vec::Vector2> axes;
+            bool collider1 = playerShape.collision(*shape, mtv1, axes);
+
             if (collider1)
             {
-                mtv = mtv1;// (collider1 == true ? mtv1 : mtv2);
+                SAT::MTV mtv = mtv1;
+                vec::Vector2 collision_normal = mtv.smallest;
 
-                SAT::Vector2 v = mtv.smallest;
-               
-                //std::cout << "###<" << mtv.smallest.x << ", " << mtv.smallest.y << " | " << v.x << ", " << v.y << " | "<< mtv.overlap << ">### " << std::endl;
-                //std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">";
+                vec::Vector2 original_velocity = ctx->player.velocity;
+                double new_magnitude = original_velocity.dot(collision_normal);
+                vec::Vector2 new_velocity = original_velocity * new_magnitude * -1;
 
-                double dp = (ctx->player.velocity.x * v.x + ctx->player.velocity.y * v.y);
+                float a = 360 - ctx->player.angle;
+                a = DEG_TO_RAD(a);
+ 
+                vec::Vector2 rotated_velocity;
+                rotated_velocity.x = new_velocity.magnitude() * cos(a);
+                rotated_velocity.y = new_velocity.magnitude() * sin(a);
+                rotated_velocity = rotated_velocity.normalize();
+
+                double dp = ctx->player.velocity.dot(rotated_velocity);
                 if (dp > 0.0)
                 {
-                    v.x = -1 * v.x;
-                    v.y = -1 * v.y;
+                    rotated_velocity.y = rotated_velocity.y * -1;
+                    rotated_velocity.x = rotated_velocity.x * -1;
                 }
 
-                //std::cout << "###<" << mtv.smallest.x << ", " << mtv.smallest.y << " | " << mtv.overlap << ">### " << std::endl;
-                std::cout << "###<" << v.x << ", " << v.y << " | " << mtv.overlap << ">### " << std::endl;
+                std::cout << "###";
+                std::cout << "<CN " << collision_normal.x << ", " << collision_normal.y << ">, ";
+                std::cout << "<OV " << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">, ";
+                std::cout << "<NV " << new_velocity.x << ", " << new_velocity.y << "> ";
+                std::cout << "<A " << ctx->player.angle << ">, ";
+                std::cout << "<RV " << rotated_velocity.x << ", " << rotated_velocity.y << ">, ";
+                std::cout << "<DP " << dp << ">, ";
+                std::cout << "### " << std::endl;
 
-                if (v.x != 0) {
-                    ctx->player.position.x += v.x * mtv.overlap * 1.05;
-                    ctx->player.velocity.x = v.x * ctx->player.velocity.x *0.9;// mtv.overlap * 9.5;
+                if (collision_normal.x != 0) {
+                    ctx->player.position.x += rotated_velocity.x * mtv.overlap * 5;
+                    ctx->player.velocity.x = rotated_velocity.x * ctx->player.velocity.magnitude();
                 }
-                if (v.y != 0) {
-                    ctx->player.position.y += v.y * mtv.overlap * 1.05;
-                    ctx->player.velocity.y = v.y * ctx->player.velocity.y *0.9;// mtv.overlap * 9.5;
-                }
-                //std::cout << "     <" << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">" << std::endl;
 
-                break;
+                if (collision_normal.y != 0) {
+                    ctx->player.position.y += rotated_velocity.y * mtv.overlap * 5;
+                    ctx->player.velocity.y = rotated_velocity.y* ctx->player.velocity.magnitude();
+                }
             }
         }
-        
-
-
-
         return 0;
     }
 
     uint32_t StageMainClient::doDraw()
     {
         GameContext* ctx = getContext();
-        
+
         sf::RenderStates states;
-        
+
         ctx->window.setView(ctx->mainView);
         ctx->window.clear();
 
         states.texture = &ctx->tilesetATex;
-       // states.transform = ctx->levelRotTrans;
+        // states.transform = ctx->levelRotTrans;
 
         // Draw background
         auto i = ctx->quadLayers.front();
@@ -373,9 +294,9 @@ namespace bali
         // Draw visible foregound
         ctx->window.draw(ctx->visibleQuads, states);
 
-        ctx->window.draw(ctx->player.playerQuads,  states);
+        ctx->window.draw(ctx->player.playerQuads, states);
 
-        for(auto poly = ctx->polygons.begin(); poly != ctx->polygons.end(); ++poly)
+        for (auto poly = ctx->polygons.begin(); poly != ctx->polygons.end(); ++poly)
         {
             poly->setOutlineColor(sf::Color::Red);
             poly->setFillColor(sf::Color::Transparent);

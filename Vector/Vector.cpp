@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #include "Vector.h"
 #include <cmath>
 
@@ -60,10 +65,18 @@ double Vector2::dot(Vector2 b) const
 
 Vector2 Vector2::rotate(double angle_degrees) const
 {
-    double ang_rad = angle_degrees = angle_degrees * (3.14156f / 180.0f);
+    double ang_rad = angle_degrees * (3.14156f / 180.0f);
     Vector2 v(*this);
 
-    v.x = v.x * cos(ang_rad) - v.y * sin(ang_rad);
-    v.y = v.x * sin(ang_rad) + v.y * cos(ang_rad);
+    v.x = (v.x * cos(ang_rad)) - (v.y * sin(ang_rad));
+    v.y = (v.x * sin(ang_rad)) + (v.y * cos(ang_rad));
+    return v;
+}
+
+Vector2 Vector2::translate(Vector2 t)
+{
+    Vector2 v(*this);
+    v.x += t.x;
+    v.y += t.y;
     return v;
 }

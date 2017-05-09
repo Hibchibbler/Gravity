@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include <SFML\Graphics.hpp>
@@ -5,6 +10,7 @@
 #include <memory>
 #include "quadtree\quadtree.h"
 #include "tmxloader\TMX.h"
+#include "SATAlgo\SATAlgo.h"
 
 namespace bali
 {
@@ -41,13 +47,13 @@ namespace bali
     sf::Vector2i GID2XY(int gid, int total_columns);
     sf::Uint32 addQuad(sf::VertexArray & v, sf::FloatRect c, sf::IntRect t);
     sf::Uint32 addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle);
-    qt::AABB getSearchRegion(const sf::View & view);
+    qt::AABB getSearchRegion(const sf::View & view, float zoom=1.0f);
 
     uint32_t buildTileLayer(TileLayer & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer);
     uint32_t buildTileLayers(TileLayers & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layer);
     //uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers, uint32_t tileWidth, uint32_t tileHeight);
     //uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight);
-
+    sf::Uint32 addRotShape(SAT::Shape & s, sf::FloatRect p, float angle);
     uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups);
 
     uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer);

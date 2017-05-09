@@ -1,4 +1,9 @@
-#include "SATAlgo.h"
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
+#include "SATAlgo\SATAlgo.h"
 #include <iostream>
 
 int main()
@@ -44,24 +49,25 @@ int main()
 
     bali::SAT::MTV mtv;
     bool r = false;
+    bali::SAT::Axes axes;
     
-    r = shape1.collision(shape2, mtv);// Yes
+    r = shape1.collision(shape2, mtv, axes);// Yes
     std::cout << "shape1 HIT shape2 ?= " << (r == true ? "yes" : "no") << std::endl;
     
-    r = shape1.collision(shape3, mtv);// Yes
+    r = shape1.collision(shape3, mtv, axes);// Yes
     std::cout << "shape1 HIT shape3 ?= " << (r == true ? "yes" : "no") << std::endl;
     
-    r = shape2.collision(shape3, mtv);// Yes
+    r = shape2.collision(shape3, mtv, axes);// Yes
     std::cout << "shape2 HIT shape3 ?= " << (r == true ? "yes" : "no") << std::endl;
 
-    r = shape1.collision(shape4, mtv);// No
+    r = shape1.collision(shape4, mtv, axes);// No
     std::cout << "shape1 HIT shape4 ?= " << (r == true ? "yes" : "no") << std::endl;
 
-    r = shape1.collision(shape5, mtv);// Yes
+    r = shape1.collision(shape5, mtv, axes);// Yes
     std::cout << "shape1 HIT shape5 ?= " << (r == true ? "yes" : "no") << std::endl;
 
     shape5.translate(-100, -70);
-    r = shape1.collision(shape5, mtv);// Yes
+    r = shape1.collision(shape5, mtv, axes);// Yes
     std::cout << "shape1 HIT shape5 ?= " << (r == true ? "yes" : "no") << std::endl;
 
     char s;

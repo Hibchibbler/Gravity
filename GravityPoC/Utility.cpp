@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -35,6 +40,35 @@ namespace bali
         v.append(sf::Vertex(sf::Vector2f(c.left + c.width, c.top), sf::Vector2f(t.left + t.width, t.top)));
         v.append(sf::Vertex(sf::Vector2f(c.left + c.width, c.top + c.height), sf::Vector2f(t.left + t.width, t.top + t.height)));
         v.append(sf::Vertex(sf::Vector2f(c.left, c.top + c.height), sf::Vector2f(t.left, t.top + t.height)));
+        return 0;
+    }
+
+    sf::Uint32 addRotShape(SAT::Shape & s, sf::FloatRect p, float angle)
+    {
+        float px1, py1;
+        float px2, py2;
+        float px3, py3;
+        float px4, py4;
+
+        angle = angle*(3.14156f / 180.0f);
+
+        px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
+        py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;
+
+        px2 = ((p.width - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py2 = ((p.width - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+        px3 = ((p.width - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py3 = ((p.width - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+        px4 = ((0 - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
+        py4 = ((0 - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
+        s.addVertex(px1, py1);
+        s.addVertex(px2, py2);
+        s.addVertex(px3, py3);
+        s.addVertex(px4, py4);
+
         return 0;
     }
 
@@ -80,11 +114,13 @@ namespace bali
         return 0;
     }
 
-    qt::AABB getSearchRegion(const sf::View & view)
+    qt::AABB getSearchRegion(const sf::View & view, float zoom)
     {
         qt::AABB searchRegion;
         sf::Vector2f c = view.getCenter();
         sf::Vector2f s = view.getSize();
+        s.x *= zoom;
+        s.y *= zoom;
 
         searchRegion.min.x = (float)((int)(c.x - (s.x / 2) + 64));
         searchRegion.min.y = (float)((int)(c.y - (s.y / 2) + 64));

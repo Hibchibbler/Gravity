@@ -3,12 +3,13 @@
 // 2017
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "TMXReader.h"
+#pragma once
 
-int main()
+namespace bali
 {
-    bali::TMX::MapContext mapCtx;
-    bali::TMX::TMXReader::load("level1.tmx", mapCtx);
+    class Impulse
+    {
+        //sf::Time elapsed;
 
-    return 0;
+    };
 }

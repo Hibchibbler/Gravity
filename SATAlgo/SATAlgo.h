@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include <stdint.h>
@@ -38,7 +43,6 @@ namespace bali
                 this->y = max;
             }
 
-
             Projection(const Projection & proj)
             {
                 this->x = proj.x;// min
@@ -61,20 +65,15 @@ namespace bali
                     return true;
                 }
                 return false;
-
             }
             double getOverlap(const Projection & p)
             {
                 double M, m;
                 m = max(x, p.x);
                 M = min(y, p.y);
-                //m = max(max(x, p.x), max(y,p.y));
-                //M = min(min(y, p.y), min(x, p.x));
                 return abs(M-m);
             }
         };
-
-
 
         class Shape
         {
@@ -137,7 +136,7 @@ namespace bali
                 return proj;
             }
 
-            bool collision(Shape & other, MTV & mtv)
+            bool collision(Shape & other, MTV & mtv, std::vector<vec::Vector2> & axes)
             {
                 double overlap = 999999999.0;// really large value;
                 vec::Vector2 smallest;
@@ -151,9 +150,7 @@ namespace bali
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
-
                     //cout << p1.x << ", " << p1.y << " | " << p2.x << ", " << p2.y;// std::endl;
-
                     // do the projections overlap?
                     if (!p1.overlap(p2)) {
                         // then we can guarantee that the shapes do not overlap
@@ -162,18 +159,19 @@ namespace bali
                     else {
                         // get the overlap
                         double o = p1.getOverlap(p2);
-//                        cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
+                        //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
                         // check for minimum
-                        if (o < overlap) {
+                        if (o <= overlap) {
                             // then set this one as the smallest
                             overlap = o;                            
                             smallest = axis;
                             //smallest.x *= -1;
                             //smallest.y *= -1;
+                            axes.push_back(axis);
                         }
                     }
                 }
-//                cout << "-------" << std::endl;
+                //cout << "-------" << std::endl;
                 // loop over the axes2
                 for (int i = 0; i < axes2.size(); i++) {
                     Axis axis = axes2[i];
@@ -191,11 +189,11 @@ namespace bali
                         double o = p1.getOverlap(p2);
                         // check for minimum
 //                        cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
-                        if (o < overlap) {
+                        if (o <= overlap) {
                             // then set this one as the smallest
                             overlap = o;
                             smallest = axis;
-
+                            axes.push_back(axis);
                         }
                     }
                 }

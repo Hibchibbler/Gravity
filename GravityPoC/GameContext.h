@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
+
 #ifndef GameContext_h_
 #define GameContext_h_
 
@@ -6,6 +11,7 @@
 #include "TMXLoader\TMXReader.h"
 #include "QuadTree\quadtree.h"
 #include "Utility.h"
+#include "Vector\Vector.h"
 #include "SATAlgo\SATAlgo.h"
 
 namespace bali 
@@ -20,61 +26,50 @@ namespace bali
             onSolid = false;
         }
 
-        sf::Vector2f rotate(sf::Vector2f v, float angle)
-        {
-            angle = angle * (3.14156f / 180.0f);
-            v.x = v.x * cos(angle) - v.y * sin(angle);
-            v.y = v.x * sin(angle) + v.y * cos(angle);
-            return v;
-        }
-        sf::Vector2f normalize(sf::Vector2f v)
-        {
-            double len = sqrt(v.x*v.x + v.y*v.y);
-            if (len > 0)
-            {
-                v.x /= len;
-                v.y /= len;
-            }
-            return v;
-        }
         void update(sf::Time elapsed)
         {
-            updateTime += elapsed;
+            
 
-            if (updateTime.asMilliseconds() >= 30)
+            //if (updateTime.asMilliseconds() >= 50)
+            //{
+            float pps = elapsed.asSeconds() * 200;
+            position.x += velocity.x * pps;
+            position.y += velocity.y * pps;
+
+            float velx = 0.0;
+            float vely = 0.0;
+            velHist.push_back(velocity);
+            if (velHist.size() > 50)
+                velHist.erase(velHist.begin());
+            velocity.x += acceleration.x * pps;
+            velocity.y += acceleration.y * pps;
+            if (jumpApplied)
             {
-                updateTime = sf::Time::Zero;
-                position.x += velocity.x;
-                position.y += velocity.y;
-
-                float velx = 0.0;
-                float vely = 0.0;
-                
-                velocity.x += acceleration.x;
-                velocity.y += acceleration.y;
-                if (jumpApplied)
-                {
-                    vely -= 15;
-                    jumpApplied = false;
-                }
-                velocity.x = velocity.x + velx - (velocity.x * 0.10);
-                velocity.y = velocity.y + vely - (velocity.y * 0.10);
-
-                float accx = 0.0;
-                float accy = 0.0;
-                if (gravityApplied)// #1
-                {
-                    sf::Vector2f g(1, 1);
-                    float a = (angle+90)*(3.14156f / 180.0f);
-                    //std::cout << " G<" <<g.x* cos(a) << ", " << g.y * sin(a) << " >G" << std::endl;
-                    accx += g.x * cos(a);
-                    accy += g.y * sin(a);
-                    //std::cout << accx << ", " << accy << std::endl;
-                }
-
-                acceleration.x = accx;
-                acceleration.y = accy;
+                vely -= 15;
+                jumpApplied = false;
             }
+            velocity.x = velocity.x + velx - (velocity.x * 0.10);
+            velocity.y = velocity.y + vely - (velocity.y * 0.10);
+
+            float accx = 0.0;
+            float accy = 0.0;
+            if (gravityApplied)// #1
+            {
+                vec::Vector2 g(0, 1);
+                float a = (angle+90)*(3.14156f / 180.0f);
+                g.x = g.magnitude() * cos(a);
+                g.y = g.magnitude() * sin(a);
+                //g = g.rotate(angle+45);
+                ////std::cout << " G<" <<g.x << ", " << g.y << " >G" << std::endl;
+                accx += g.x ;
+                accy += g.y ;
+                //std::cout << accx << ", " << accy << std::endl;
+            }
+
+            acceleration.x = accx;
+            acceleration.y = accy;
+            //    updateTime = sf::milliseconds(0);
+            //}
         }
 
         bool applyGravity()
@@ -93,10 +88,10 @@ namespace bali
             jumpApplied = true;
         }
 
-        std::vector<sf::Vector2f> posHist;
-        sf::Vector2f position;
-        sf::Vector2f velocity;
-        sf::Vector2f acceleration;
+        std::vector<vec::Vector2> velHist;
+        vec::Vector2 position;
+        vec::Vector2 velocity;
+        vec::Vector2 acceleration;
         float angle;
 
         SAT::MTV currentMTV;

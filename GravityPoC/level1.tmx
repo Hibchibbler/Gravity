@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="118">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="140">
  <tileset firstgid="1" name="tilesetA" tilewidth="32" tileheight="32" tilecount="240" columns="16">
   <image source="tilesetA.png" width="512" height="480"/>
  </tileset>
@@ -8204,13 +8204,6 @@
   </data>
  </layer>
  <objectgroup name="Object Layer 1">
-  <object id="52" x="320" y="192">
-   <polyline points="1.27273,0 705.273,0 737.273,32 737.273,64 1.27273,64 1.27273,0"/>
-  </object>
-  <object id="59" x="32" y="160" width="192" height="96"/>
-  <object id="60" x="225" y="160">
-   <polyline points="-1,0 63,0 95,32 95,96 63,128 31,128 -1,96 -1.5,0"/>
-  </object>
   <object id="63" x="1278.5" y="256.5">
    <polyline points="1.63636,-0.545455 1.5,-32.5 33.5,-64.5 321.5,-64.5 353.5,-32.5 353.5,-0.5 1.5,-0.5"/>
   </object>
@@ -8342,6 +8335,18 @@
   </object>
   <object id="114" x="64" y="2048">
    <polyline points="0,0 0,-32 1920,-32 1920,0 0,0"/>
+  </object>
+  <object id="136" x="32" y="160">
+   <polyline points="0,0 256,0 288,32 288,96 0,96 0,0"/>
+  </object>
+  <object id="137" x="224" y="256">
+   <polyline points="0,0 96,0 64,32 32,32 0,0"/>
+  </object>
+  <object id="138" x="320" y="256">
+   <polyline points="0,0 0,-64 705.333,-64 736,-32 736,0 0,0"/>
+  </object>
+  <object id="139" x="256" y="160">
+   <polyline points="0,0 32,0 64,32 64,96 32,128 0,128 -32,96 -32,0 0,0"/>
   </object>
  </objectgroup>
 </map>
