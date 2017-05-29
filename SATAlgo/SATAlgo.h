@@ -7,19 +7,60 @@
 
 #include <stdint.h>
 #include <vector>
-#include "Vector\Vector.h"
+#include "Vector\Vector2.h"
+#include "GravityPoC\TileLayer.h"
+#include <iostream>
+
 namespace bali
 {
     namespace SAT
     {
-        typedef std::vector<vec::Vector2> Axes;
-        typedef vec::Vector2 Axis;
+        class Axis : public vec::VECTOR2
+        {
+        public:
+            Axis()
+                : VECTOR2()
+            {
+
+            }
+
+            Axis(float x, float y)
+                : VECTOR2(x,y)
+            {
+
+            }
+
+            Axis(const vec::VECTOR2 & vec)
+                : VECTOR2(vec)
+            {
+
+            }
+
+            Axis operator=(const Axis & a)
+            {
+                if (this != &a)
+                {
+                    x = a.x;
+                    y = a.y;
+                    edge = a.edge;
+                }
+                return *this;
+            }
+
+
+            vec::VECTOR2 edge;
+        };
+        //typedef vec::Vector2 Axis;
+        typedef std::vector<Axis> Axes;
+
+
+        
 
         class MTV
         {
         public:
             MTV() {}
-            MTV(const vec::Vector2 & smallest, double overlap)
+            MTV(const Axis & smallest, double overlap)
             {
                 this->smallest = smallest;
                 this->overlap = overlap;
@@ -30,11 +71,11 @@ namespace bali
                 this->overlap = mtv.overlap;
             }
 
-            vec::Vector2 smallest;
+            Axis smallest;
             double overlap;
         };
 
-        class Projection : public vec::Vector2
+        class Projection : public vec::VECTOR2
         {
         public:
             Projection(double min, double max)
@@ -75,10 +116,15 @@ namespace bali
             }
         };
 
+        #define TI_PLAYER -1
+
+
         class Shape
         {
         public:
-            std::vector<vec::Vector2> vertices;
+            std::vector<vec::VECTOR2> vertices;
+            uint32_t ti;
+            double offsetX, offsetY;
             void translate(double x, double y)
             {
                 for (int i = 0; i < vertices.size(); i++)
@@ -90,7 +136,7 @@ namespace bali
 
             void addVertex(double x, double y)
             {
-                vertices.push_back(vec::Vector2(x, y));
+                vertices.push_back(vec::VECTOR2(x, y));
             }
             Axes getAxes()
             {
@@ -99,27 +145,32 @@ namespace bali
                 for (int i = 0; i < vertices.size(); i++) 
                 {
                     // get the current vertex
-                    vec::Vector2 p1 = vertices[i];
+                    vec::VECTOR2 p1 = vertices[i];
 
                     // get the next vertex
-                    vec::Vector2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
+                    vec::VECTOR2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
 
                     // subtract the two to get the edge vector
-                    vec::Vector2 edge = p2.subtract(p1);
+                    vec::VECTOR2 edge = p2 - p1;//.subtract(p1);
 
                     // get either normal vector
-                    vec::Vector2 normal = edge.normal();
-                    normal = normal.normalize();
+                    vec::VECTOR2 normal = edge.normal();//.normal();
+                    normal = normal.norm();
 
                     // the perp method is just (x, y) => (-y, x) or (y, -x)
-                    axes.push_back(normal);
+                    Axis axis;
+                    axis = normal;
+                    //axis.edge = edge.translate(vec::Vector2(offsetX, offsetY));
+                    axis.edge += vec::VECTOR2(offsetX, offsetY);
+                    
+                    axes.push_back(axis);
                 }
                 return axes;
             }
 
             Projection project(const Axis & axis)
             {
-                double min = axis.dot(vertices[0]);
+                float min = axis.dot(vertices[0]);
                 double max = min;
                 for (int i = 1; i < vertices.size(); i++) {
                     // NOTE: the axis must be normalized to get accurate projections
@@ -135,11 +186,50 @@ namespace bali
                 Projection proj(min, max);
                 return proj;
             }
+            bool MootPoint(vec::VECTOR2 pVel, Axis axis, bali::Tile & tile)
+            {
+                //std::cout << " ,.-" << axis.x << ", " << axis.y << "-.," << std::endl;
 
-            bool collision(Shape & other, MTV & mtv, std::vector<vec::Vector2> & axes)
+
+                if (axis.x == 1)
+                {
+                    if (tile.w)
+                    {
+                       std::cout << "-w-";
+                        return true;
+                    }
+                }
+                if (axis.x == -1)
+                {
+                    if (tile.e)
+                    {
+                        std::cout << "-e-";
+                        return true;
+                    }
+                }
+                if (axis.y == 1)
+                {
+                    if (tile.n)
+                    {
+                        std::cout << "-n-";
+                        return true;
+                    }
+                }
+                if (axis.y == -1)
+                {
+                    if (tile.s)
+                    {
+                        std::cout << "-s-";
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            bool collision(Shape & other, MTV & mtv, bali::TileLayer & tileLayer)
             {
                 double overlap = 999999999.0;// really large value;
-                vec::Vector2 smallest;
+                Axis smallest;
                 Axes axes1 = (*this).getAxes();
                 Axes axes2 = other.getAxes();
 
@@ -157,17 +247,24 @@ namespace bali
                         return false;
                     }
                     else {
+                        // if this collision normal points to an adjacent tile, ignore it.
+                        
+                        
+                        //if (tileLayer[other.ti].
                         // get the overlap
                         double o = p1.getOverlap(p2);
                         //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
                         // check for minimum
                         if (o <= overlap) {
+
+                            //if (MootPoint(axis, tileLayer[other.ti]))
+                            //    continue;
+
+
                             // then set this one as the smallest
-                            overlap = o;                            
+                            overlap = o;
                             smallest = axis;
-                            //smallest.x *= -1;
-                            //smallest.y *= -1;
-                            axes.push_back(axis);
+                            smallest.edge = axis.edge;
                         }
                     }
                 }
@@ -188,12 +285,14 @@ namespace bali
                         // get the overlap
                         double o = p1.getOverlap(p2);
                         // check for minimum
-//                        cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
+                        //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                         if (o <= overlap) {
+                            //if (MootPoint(axis, tileLayer[other.ti]))
+                            //    continue;
                             // then set this one as the smallest
                             overlap = o;
                             smallest = axis;
-                            axes.push_back(axis);
+                            smallest.edge = axis.edge;
                         }
                     }
                 }

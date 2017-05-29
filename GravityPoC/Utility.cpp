@@ -43,6 +43,98 @@ namespace bali
         return 0;
     }
 
+    sf::Uint32 addShape(SAT::Shape & s, uint32_t ti, uint32_t gid, sf::FloatRect c)
+    {
+        // Create Quad, clockwise winding. Add tex too.
+        //             
+        //    1        
+        //    *---* 2  
+        //    |   |    
+        //  4 *---*    
+        //        3    
+        //             
+        s.ti = ti;
+
+        
+        if (gid == 131-1)
+        {// |/
+
+            s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            //s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height);
+        }else
+        if (gid == 132-1)
+        {// /|
+            
+            s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            //s.addVertex(c.left, c.top + c.height);
+        }
+        else
+        if (gid == 147-1)
+        {//
+                     
+            s.addVertex(c.left, c.top);
+            //s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height);
+        }else
+        if (gid == 148-1)
+        {// /|
+
+            //s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height);
+        }
+        else
+        if (gid == 133 - 1)
+        {// /|
+
+            s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            //s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height/2);
+        }
+        else
+        if (gid == 134 - 1)
+        {// /|
+            s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height/2);
+            //s.addVertex(c.left, c.top + c.height);
+        }
+        else
+        if (gid == 149 - 1)
+        {// /|
+
+            s.addVertex(c.left, c.top + c.height/2);
+            //s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height);
+        }
+        else
+        if (gid == 150 - 1)
+        {// /|
+
+            s.addVertex(c.left, c.top + c.height);
+         //s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height/2);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            
+        }
+        else
+        {
+            s.addVertex(c.left, c.top);
+            s.addVertex(c.left + c.width, c.top);
+            s.addVertex(c.left + c.width, c.top + c.height);
+            s.addVertex(c.left, c.top + c.height);
+        }
+        return 0;
+    }
+
     sf::Uint32 addRotShape(SAT::Shape & s, sf::FloatRect p, float angle)
     {
         float px1, py1;
@@ -118,6 +210,9 @@ namespace bali
     {
         qt::AABB searchRegion;
         sf::Vector2f c = view.getCenter();
+        c.x = floor(c.x);
+        c.y = floor(c.y);
+
         sf::Vector2f s = view.getSize();
         s.x *= zoom;
         s.y *= zoom;
@@ -137,7 +232,7 @@ namespace bali
         int totalTilesetCols = tileset->columns;
         int totalLayerCols = layer->width;
         int totalLayerRows = layer->height;
-
+        
         for (int h = 0; h < layer->width; h++)
         {
             for (int w = 0; w < layer->height; w++)
@@ -146,12 +241,93 @@ namespace bali
                 uint32_t gid = layer->data->tiles[tileIndex].gid - 1;
                 // When gid == 0, the map data did not associated a texture with this map location.
                 // We translate to array indexing by subtracting 1 from the gid.
+
+
+                // Mark if neighboring cells are tiled, or not.
+                uint32_t nti, eti, sti, wti;
+                Tile pt;
+                if (h > 0 )
+                {
+                    nti = (totalLayerCols * (h - 1)) + (w);
+                    nti = layer->data->tiles[nti].gid;
+                    if (nti == 0)
+                    {
+                        pt.n = false;
+                    }
+                    else
+                    {
+                        pt.n = true;
+                    }
+                }
+                else
+                {
+                    //Since there is nothing to the north, mark it as a wall.
+                    pt.n = true;
+                }
+                
+                if (h <  totalLayerRows-1)
+                {
+                    sti = (totalLayerCols * (h + 1)) + (w);
+                    sti = layer->data->tiles[sti].gid;
+                    if (sti == 0)
+                    {
+                        pt.s = false;
+                    }
+                    else
+                    {
+                        pt.s = true;
+                    }
+                }
+                else
+                {
+                    pt.s = true;
+                }
+                
+                if (w > 0)
+                {
+                    wti = (totalLayerCols * (h)) + (w - 1);
+                    wti = layer->data->tiles[wti].gid;
+                    if (wti == 0)
+                    {
+                        pt.w = false;
+                    }
+                    else
+                    {
+                        pt.w = true;
+                    }
+                }
+                else
+                {
+                    pt.w = true;
+                }
+
+                if (w <  totalLayerCols - 1)
+                {
+                    eti = (totalLayerCols * (h)) + (w + 1);
+                    eti = layer->data->tiles[eti].gid;
+                    if (eti == 0)
+                    {
+                        pt.e = false;
+                    }
+                    else
+                    {
+                        pt.e = true;
+                    }
+                }
+                else
+                {
+                    pt.e = true;
+                }
+
+
                 if (gid != -1)
                 {
                     // Convert GID to x,y
-                    sf::Vector2i texPos = GID2XY(gid, totalTilesetCols);
+                    sf::Vector2i texPos = GID2XY(gid - tileset->firstgid+1, totalTilesetCols);
 
-                    Tile pt;
+                    
+                    
+                    pt.gid = gid;
                     pt.ti = tileIndex;
                     //pt.tw = tw;
                     //pt.th = th;
@@ -209,12 +385,182 @@ namespace bali
         split(s, delim, std::back_inserter(elems));
         return elems;
     }
+
+    uint32_t buildPlayerObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
+    {
+        for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
+        {
+            if ((*objG)->name != "PlayerShape")
+                continue;
+            for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
+            {
+
+                if ((*obj)->polygon != nullptr)
+                {
+                    std::vector<std::string> pairs = split((*obj)->polygon->points, ' ');
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(pairs.size());
+                    //
+
+                    int i = 0;
+                    for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    {
+                        std::vector<std::string> comp = split(*pair, ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str());// +(*obj)->x;
+                        y1 = atol(comp[1].c_str());// +(*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1, y1));
+                        ++i;
+                    }
+                }
+                else if ((*obj)->polyline != nullptr)
+                {//NOTE: discard last point, engine assume last point is same as first.
+                 // TMX format is explicit about first and last point. even though they will always be the same.
+                    std::vector<std::string> pairs = split((*obj)->polyline->points, ' ');
+
+                    size_t max = pairs.size() - 1;/* - 1;
+                                                  if (pairs.size() == 4)
+                                                  max = pairs.size();*/
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(max);
+                    //
+                    //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    for (int i = 0; i < max; ++i)
+                    {
+                        std::vector<std::string> comp = split(pairs[i], ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str());// +(*obj)->x;
+                        y1 = atol(comp[1].c_str());// +(*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1/3, y1/3));
+                    }
+                }
+                else if ((*obj)->ellipse != nullptr)
+                {
+
+
+                }
+                else
+                {//a rectangle
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(4);
+                    polygons.back().setPoint(0, sf::Vector2f((*obj)->x, (*obj)->y));
+                    polygons.back().setPoint(1, sf::Vector2f((*obj)->x + (*obj)->width, (*obj)->y));
+                    polygons.back().setPoint(2, sf::Vector2f((*obj)->x + (*obj)->width, (*obj)->y + (*obj)->height));
+                    polygons.back().setPoint(3, sf::Vector2f((*obj)->x, (*obj)->y + (*obj)->height));
+                    //polygons.back().setPoint(3, (*obj)->x);
+                }
+
+            }
+        }
+        //polygons.back().setPoint(0,)
+        //
+
+
+
+
+        return 0;
+    }
+    uint32_t buildSharedEdgesLayers(std::vector<vec::VECTOR2> & sharedEdges, TMX::Objectgroup::Vec & objectGroups)
+    {
+        for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
+        {
+            if ((*objG)->name != "Shared Edges")
+                continue;
+
+            std::vector<ConvexShape> polygons;
+            for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
+            {
+                if ((*obj)->polyline != nullptr)
+                {//NOTE: discard last point, engine assume last point is same as first.
+                 // TMX format is explicit about first and last point. even though they will always be the same.
+                    std::vector<std::string> pairs = split((*obj)->polyline->points, ' ');
+
+                    size_t max = pairs.size();/* - 1;
+                                                  if (pairs.size() == 4)
+                                                  max = pairs.size();*/
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(max);
+                    
+                    //
+                    //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    for (int i = 0; i < max; ++i)
+                    {
+                        std::vector<std::string> comp = split(pairs[i], ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str()) + (*obj)->x;
+                        y1 = atol(comp[1].c_str()) + (*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1, y1));
+                        
+                    }
+
+                    //// Assume one line segment, so 2 points.
+                    size_t pc = polygons.back().getPointCount();
+
+                    if (pc >= 2)
+                    {
+                        sf::Vector2f p1 = polygons.back().getPoint(0);
+                        sf::Vector2f p2 = polygons.back().getPoint((0 + 1) % pc);
+
+                        sf::Vector2f _edge = p2 - p1;
+                        vec::VECTOR2 edge(_edge.x, _edge.y);
+                        edge += vec::VECTOR2((*obj)->x, (*obj)->y);
+                        sharedEdges.push_back(edge);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    uint32_t buildPolygonLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)
+    {
+        for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
+        {
+            if ((*objG)->name != "Object Layer 1")
+                continue;
+
+            for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
+            {
+                if ((*obj)->polyline != nullptr)
+                {//NOTE: discard last point, engine assume last point is same as first.
+                 // TMX format is explicit about first and last point. even though they will always be the same.
+                    std::vector<std::string> pairs = split((*obj)->polyline->points, ' ');
+
+                    size_t max = pairs.size() - 1;/* - 1;
+                                                  if (pairs.size() == 4)
+                                                  max = pairs.size();*/
+
+                    polygons.push_back(ConvexShape());
+                    polygons.back().setPointCount(max);
+                    polygons.back().offsetX = (*obj)->x;
+                    polygons.back().offsetY = (*obj)->y;
+                    //
+                    //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+                    for (int i = 0; i < max; ++i)
+                    {
+                        std::vector<std::string> comp = split(pairs[i], ',');
+                        float x1, y1;
+                        x1 = atol(comp[0].c_str()) + (*obj)->x;
+                        y1 = atol(comp[1].c_str()) + (*obj)->y;
+                        polygons.back().setPoint(i, sf::Vector2f(x1, y1));
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
     uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
     {//TODO: need multuple polygons here!
         // <polygon points="162,162 456,234 1176,666 1248,846 1254,1116 -396,1362 -408,1284 -462,810 -72,210"/>        
 
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
+            if ((*objG)->name != "Object Layer 1")
+                continue;
             for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
             {
 

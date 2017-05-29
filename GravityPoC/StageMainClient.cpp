@@ -8,12 +8,11 @@
 #include "Utility.h"
 #include "MouseKeyboard.h"
 #include <math.h>
-#include "Vector\Vector.h"
+#include "Vector\Vector2.h"
 #include "SATAlgo\SATAlgo.h"
-
+#include "Physics.h"
 #define PIXELS_PER_SEC  4
-#define DEG_TO_RAD(x)   \
-        x * (3.14156f / 180.0f);
+
 
 namespace bali
 {
@@ -36,10 +35,10 @@ namespace bali
 
         // Still playing with these...no clue yet
 
-        ctx->player.position.x = 250;
-        ctx->player.position.y = 100;
-        ctx->player.velocity = vec::Vector2(0.0, 0.0);
-        ctx->player.acceleration = vec::Vector2(0.0, 0.0);
+        ctx->player.position.x = 175;
+        ctx->player.position.y = 90;
+        ctx->player.velocity = vec::VECTOR2(0.0, 0.0);
+        ctx->player.acceleration = vec::VECTOR2(0.0, 0.0);
 
         ctx->size.x = ctx->size.y = 1000;
         ctx->mainView.setCenter(ctx->player.position.x, ctx->player.position.y);
@@ -49,25 +48,37 @@ namespace bali
         // Load TMX
         TMX::TMXReader::load("level0.tmx", ctx->mctx);
 
-        ctx->tilesetAImg.loadFromFile(ctx->mctx.maps.back()->tilesets.back()->images.back()->source);
+        // Let's use this tileset.wadasdsa
+        TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
+        ctx->tilesetAImg.loadFromFile(tilesetA->images.back()->source);
+        ctx->tilesetAImg.createMaskFromColor(sf::Color::Black);//transparent is black...
         ctx->tilesetATex.loadFromImage(ctx->tilesetAImg);
 
-        // Let's use this tileset.
-        TMX::Tileset::Ptr tileset = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
-        if (tileset == nullptr)
-        {
-            cout << "ERROR: didn't find tilesetA" << endl;
-            return 0;
-        }
+
+        TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
+        ctx->backgroundImg.loadFromFile(tilesetBkgnd->images.back()->source);
+        //ctx->backgroundImg.createMaskFromColor(sf::Color::White);//transparent is black...
+        ctx->backgroundTex.loadFromImage(ctx->backgroundImg);
 
         // Store TMX map layers into our TileLayers data structure
-        buildTileLayers(ctx->tileLayers,
-            ctx->mctx.maps.back()->tilesets.back(),
-            ctx->mctx.maps.back()->layers);
+        //buildTileLayers(ctx->tileLayers,
+        //    tilesetA,
+        //    ctx->mctx.maps.back()->layers);
+        ctx->tileLayers.push_back(TileLayer());
+        buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->mctx.maps.back()->layers[0]);
 
-        buildObjectLayers(ctx->polygons,
+        ctx->tileLayers.push_back(TileLayer());
+        buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->mctx.maps.back()->layers[1]);
+
+
+        buildPolygonLayers(ctx->polygons,
             ctx->mctx.maps.back()->objectgroups);
 
+        buildSharedEdgesLayers(ctx->sharedEdges,
+            ctx->mctx.maps.back()->objectgroups);
+
+        buildPlayerObjectLayers(ctx->playerpolygons,
+            ctx->mctx.maps.back()->objectgroups);
         //// Then use the TileLayers to construct the other representations
         //// A representation of the layer that can drawn to the screen
         //buildQuadLayers(ctx-W>quadLayers,
@@ -130,16 +141,18 @@ namespace bali
         GameContext* ctx = getContext();
         sf::Time elapsed = ctx->mainClock.restart();
 
-        ctx->player.update(elapsed);
 
-        getContext()->mainView.setRotation(getContext()->player.angle);
-        ctx->mainView.setCenter(ctx->player.position.x, ctx->player.position.y);
 
         // Search for foreground that is visible
-        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.80);
+        
+        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.00);
 
-        sf::Uint32 tw = ctx->mctx.getMap()->tilesets.back()->tilewidth;
-        sf::Uint32 th = ctx->mctx.getMap()->tilesets.back()->tileheight;
+        TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
+        TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
+
+
+        sf::Uint32 tw = tilesetA->tilewidth;
+        sf::Uint32 th = tilesetA->tileheight;
 
         // Generate renderable for background layer (0)
         std::vector<qt::XY> sr;
@@ -176,31 +189,55 @@ namespace bali
         for (int j = 0; j < ctx->polygons.size(); ++j)
         {
             shapes.push_back(SAT::Shape());
+            shapes.back().offsetX = ctx->polygons[j].offsetX;
+            shapes.back().offsetY = ctx->polygons[j].offsetY;
+
             for (int i = 0; i < ctx->polygons[j].getPointCount(); i++)
             {
                 sf::Vector2f v = ctx->polygons[j].getPoint(i);
                 shapes.back().addVertex(v.x, v.y);
+                
             }
         }
-        ////// Convert Tiles for SAT
+
+        //// Convert Tiles for SAT
         //for (auto xy = sr.begin(); xy != sr.end(); ++xy)
         //{
+        //    
         //    //vec::Vector2 v1(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y);
         //    //vec::Vector2 v2(ctx->tileLayers[1][xy->ti].x+tw, ctx->tileLayers[1][xy->ti].y);
         //    //vec::Vector2 v3(ctx->tileLayers[1][xy->ti].x+tw, ctx->tileLayers[1][xy->ti].y+th);
         //    //vec::Vector2 v4(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y+th);
         //    shapes.push_back(SAT::Shape());
-        //    addRotShape(shapes.back(), sf::FloatRect(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y, tw, th), 360-ctx->player.angle);
+        //    addShape(shapes.back(), xy->ti, ctx->tileLayers[1][xy->ti].gid, sf::FloatRect(ctx->tileLayers[1][xy->ti].x, ctx->tileLayers[1][xy->ti].y, tw, th));
         //}
 
+        vec::VECTOR2 pos((ctx->player.position.x), (ctx->player.position.y));
         SAT::Shape playerShape;
+        std::vector<SAT::Shape> playershapes;//not used
+        
+        // Convert Player Polygon
+        for (int j = 0; j < ctx->playerpolygons.size(); ++j)
         {
-            vec::Vector2 v(ctx->player.position.x, ctx->player.position.y);
+            playershapes.push_back(SAT::Shape());
+            for (int i = 0; i < ctx->playerpolygons[j].getPointCount(); i++)
+            {
+                sf::Vector2f v = ctx->playerpolygons[j].getPoint(i);
+                playershapes.back().addVertex(v.x, v.y);
+            }
+            float hafWid =  ctx->playerpolygons[j].getLocalBounds().width / 2.0;
+            float hafHite =  ctx->playerpolygons[j].getLocalBounds().height / 2.0;
 
-            // Create renderable player
+            ctx->playerpolygons[j].setPosition(pos.x + hafWid, pos.y + hafHite);
+            playershapes.back().translate(pos.x + hafWid, pos.y + hafHite);
+        }
+
+         // Create renderable player
+        {
+            vec::VECTOR2 v;
             ctx->player.playerQuads.clear();
             addQuad(ctx->player.playerQuads,
-                sf::FloatRect(v.x, v.y, tw, th),
+                sf::FloatRect(pos.x, pos.y, tw*0.5, th*0.5),
                 sf::IntRect(2 * 32, 7 * 32, 32, 32));// , ctx->player.angle);
 
             // convert renderable player into a collision shape.
@@ -219,59 +256,27 @@ namespace bali
             v.x = ctx->player.playerQuads[3].position.x;
             v.y = ctx->player.playerQuads[3].position.y;
             playerShape.addVertex(v.x, v.y);
+
+            playerShape.offsetX = pos.x;
+            playerShape.offsetY = pos.y;
+
+            //playershapes.push_back(playerShape);
         }
 
-        // compare player shape to all other shapes for collision        
-        for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
+        
+        bool isCollided = physics::ResolveCollisions(shapes, playershapes, ctx->player, ctx->tileLayers[1], ctx);
+        ctx->player.update(elapsed);
+        
+
+        vec::VECTOR2 zxc;
+        for (int d = 0; d < ctx->player.posHist.size(); d++)
         {
-            SAT::MTV mtv1;
-            std::vector<vec::Vector2> axes;
-            bool collider1 = playerShape.collision(*shape, mtv1, axes);
-
-            if (collider1)
-            {
-                SAT::MTV mtv = mtv1;
-                vec::Vector2 collision_normal = mtv.smallest;
-
-                vec::Vector2 original_velocity = ctx->player.velocity;
-                double new_magnitude = original_velocity.dot(collision_normal);
-                vec::Vector2 new_velocity = original_velocity * new_magnitude * -1;
-
-                float a = 360 - ctx->player.angle;
-                a = DEG_TO_RAD(a);
- 
-                vec::Vector2 rotated_velocity;
-                rotated_velocity.x = new_velocity.magnitude() * cos(a);
-                rotated_velocity.y = new_velocity.magnitude() * sin(a);
-                rotated_velocity = rotated_velocity.normalize();
-
-                double dp = ctx->player.velocity.dot(rotated_velocity);
-                if (dp > 0.0)
-                {
-                    rotated_velocity.y = rotated_velocity.y * -1;
-                    rotated_velocity.x = rotated_velocity.x * -1;
-                }
-
-                std::cout << "###";
-                std::cout << "<CN " << collision_normal.x << ", " << collision_normal.y << ">, ";
-                std::cout << "<OV " << ctx->player.velocity.x << ", " << ctx->player.velocity.y << ">, ";
-                std::cout << "<NV " << new_velocity.x << ", " << new_velocity.y << "> ";
-                std::cout << "<A " << ctx->player.angle << ">, ";
-                std::cout << "<RV " << rotated_velocity.x << ", " << rotated_velocity.y << ">, ";
-                std::cout << "<DP " << dp << ">, ";
-                std::cout << "### " << std::endl;
-
-                if (collision_normal.x != 0) {
-                    ctx->player.position.x += rotated_velocity.x * mtv.overlap * 5;
-                    ctx->player.velocity.x = rotated_velocity.x * ctx->player.velocity.magnitude();
-                }
-
-                if (collision_normal.y != 0) {
-                    ctx->player.position.y += rotated_velocity.y * mtv.overlap * 5;
-                    ctx->player.velocity.y = rotated_velocity.y* ctx->player.velocity.magnitude();
-                }
-            }
+            zxc += ctx->player.posHist[d];
         }
+        zxc /= ctx->player.posHist.size();
+
+        ctx->mainView.setCenter(zxc.x, zxc.y);// ctx->player.position.x, ctx->player.position.y);
+        getContext()->mainView.setRotation(getContext()->player.angle);
         return 0;
     }
 
@@ -284,25 +289,34 @@ namespace bali
         ctx->window.setView(ctx->mainView);
         ctx->window.clear();
 
-        states.texture = &ctx->tilesetATex;
-        // states.transform = ctx->levelRotTrans;
-
+        states.texture = &ctx->backgroundTex;
         // Draw background
         auto i = ctx->quadLayers.front();
         ctx->window.draw(i, states);
 
+
+        states.texture = &ctx->tilesetATex;
         // Draw visible foregound
         ctx->window.draw(ctx->visibleQuads, states);
 
-        ctx->window.draw(ctx->player.playerQuads, states);
+        //for (auto poly = ctx->polygons.begin(); poly != ctx->polygons.end(); ++poly)
+        //{
+        //    poly->setOutlineColor(sf::Color::Red);
+        //    poly->setFillColor(sf::Color::Transparent);
+        //    poly->setOutlineThickness(1);
+        //    ctx->window.draw(*poly, states);
+        //}
 
-        for (auto poly = ctx->polygons.begin(); poly != ctx->polygons.end(); ++poly)
+        for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
         {
-            poly->setOutlineColor(sf::Color::Red);
-            poly->setFillColor(sf::Color::Transparent);
+            poly->setOutlineColor(sf::Color::Yellow);
+            poly->setFillColor(sf::Color::Green);
             poly->setOutlineThickness(1);
             ctx->window.draw(*poly, states);
         }
+
+
+        //ctx->window.draw(ctx->player.playerQuads, states);
 
         // Finalize it
         ctx->window.display();
