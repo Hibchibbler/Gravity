@@ -353,14 +353,14 @@ namespace bali
         return 0;
     }
 
-    //uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
-    //{
-    //    for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
-    //    {
-    //        addQuad(quadLayer, sf::FloatRect(tdi->x, tdi->y, (float)tdi->tw, (float)tdi->th), sf::IntRect(tdi->tx, tdi->ty, tdi->tw, tdi->th));
-    //    }
-    //    return 0;
-    //}
+    uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
+    {
+        for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
+        {
+            addQuad(quadLayer, sf::FloatRect(tdi->x, tdi->y, (float)tileWidth, (float)tileHeight), sf::IntRect(tdi->tx, tdi->ty, tileWidth, tileHeight));
+        }
+        return 0;
+    }
     //uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers, uint32_t tileWidth, uint32_t tileHeight)
     //{
     //    for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
@@ -386,7 +386,7 @@ namespace bali
         return elems;
     }
 
-    uint32_t buildPlayerObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
+    uint32_t buildPlayerObjectLayers(std::vector<CONVEXSHAPE> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
     {
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
@@ -399,7 +399,7 @@ namespace bali
                 {
                     std::vector<std::string> pairs = split((*obj)->polygon->points, ' ');
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(pairs.size());
                     //
 
@@ -423,7 +423,7 @@ namespace bali
                                                   if (pairs.size() == 4)
                                                   max = pairs.size();*/
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(max);
                     //
                     //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
@@ -433,7 +433,7 @@ namespace bali
                         float x1, y1;
                         x1 = atol(comp[0].c_str());// +(*obj)->x;
                         y1 = atol(comp[1].c_str());// +(*obj)->y;
-                        polygons.back().setPoint(i, sf::Vector2f(x1/3, y1/3));
+                        polygons.back().setPoint(i, sf::Vector2f(x1/0.75f, y1/0.75f));
                     }
                 }
                 else if ((*obj)->ellipse != nullptr)
@@ -443,7 +443,7 @@ namespace bali
                 }
                 else
                 {//a rectangle
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(4);
                     polygons.back().setPoint(0, sf::Vector2f((*obj)->x, (*obj)->y));
                     polygons.back().setPoint(1, sf::Vector2f((*obj)->x + (*obj)->width, (*obj)->y));
@@ -469,7 +469,7 @@ namespace bali
             if ((*objG)->name != "Shared Edges")
                 continue;
 
-            std::vector<ConvexShape> polygons;
+            std::vector<CONVEXSHAPE> polygons;
             for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
             {
                 if ((*obj)->polyline != nullptr)
@@ -481,7 +481,7 @@ namespace bali
                                                   if (pairs.size() == 4)
                                                   max = pairs.size();*/
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(max);
                     
                     //
@@ -515,7 +515,7 @@ namespace bali
         return 0;
     }
 
-    uint32_t buildPolygonLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)
+    uint32_t buildPolygonLayers(std::vector<CONVEXSHAPE> & polygons, TMX::Objectgroup::Vec & objectGroups)
     {
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
@@ -533,7 +533,7 @@ namespace bali
                                                   if (pairs.size() == 4)
                                                   max = pairs.size();*/
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(max);
                     polygons.back().offsetX = (*obj)->x;
                     polygons.back().offsetY = (*obj)->y;
@@ -553,7 +553,7 @@ namespace bali
         return 0;
     }
 
-    uint32_t buildObjectLayers(std::vector<ConvexShape> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
+    uint32_t buildObjectLayers(std::vector<CONVEXSHAPE> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
     {//TODO: need multuple polygons here!
         // <polygon points="162,162 456,234 1176,666 1248,846 1254,1116 -396,1362 -408,1284 -462,810 -72,210"/>        
 
@@ -568,7 +568,7 @@ namespace bali
                 {
                     std::vector<std::string> pairs = split((*obj)->polygon->points, ' ');
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(pairs.size());
                     //
 
@@ -592,7 +592,7 @@ namespace bali
                     if (pairs.size() == 4)
                         max = pairs.size();*/
 
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(max);
                     //
                     //for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
@@ -612,7 +612,7 @@ namespace bali
                 }
                 else
                 {//a rectangle
-                    polygons.push_back(ConvexShape());
+                    polygons.push_back(CONVEXSHAPE());
                     polygons.back().setPointCount(4);
                     polygons.back().setPoint(0, sf::Vector2f( (*obj)->x                 , (*obj)->y                  ) );
                     polygons.back().setPoint(1, sf::Vector2f( (*obj)->x + (*obj)->width , (*obj)->y                  ) );
@@ -632,37 +632,52 @@ namespace bali
         return 0;
     }
 
-    uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer)
+    //uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer)
+    //{
+    //    for (int tdi = 0; tdi < tileLayer.size(); tdi++)
+    //    //for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
+    //    {
+    //        qt::XY pt;
+    //        pt.ti = tdi;
+    //        pt.x = tileLayer[tdi].x;
+    //        pt.y = tileLayer[tdi].y;
+    //        searchLayer->insert(pt);
+    //    }
+    //    return 0;
+    //}
+
+    uint32_t buildSearchLayer(SearchLayer & searchLayer, std::vector<CONVEXSHAPE> polygons)
     {
-        for (int tdi = 0; tdi < tileLayer.size(); tdi++)
-        //for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
+        for (int tdi = 0; tdi < polygons.size(); tdi++)
         {
             qt::XY pt;
             pt.ti = tdi;
-            pt.x = tileLayer[tdi].x;
-            pt.y = tileLayer[tdi].y;
+
+            sf::FloatRect gb = polygons[tdi].getGlobalBounds();
+            pt.x = gb.left + gb.width / 2.0;
+            pt.y = gb.top + gb.height / 2.0;
             searchLayer->insert(pt);
         }
         return 0;
     }
 
-    uint32_t buildSearchLayers(SearchLayers & searchLayers, TileLayers & tileLayers)
-    {
-        for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
-        {
-            SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
-            int maxDepth = 10;
-            qt::AABB aabb;
-            
-            aabb.min.x = aabb.min.y = 0;
-            aabb.max.x = aabb.max.y = 64*32;//in pixels
-            searchLayer->initialize(aabb, maxDepth);
-            searchLayers.push_back(searchLayer);
+    //uint32_t buildSearchLayers(SearchLayers & searchLayers, TileLayers & tileLayers)
+    //{
+    //    for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
+    //    {
+    //        SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
+    //        int maxDepth = 10;
+    //        qt::AABB aabb;
+    //        
+    //        aabb.min.x = aabb.min.y = 0;
+    //        aabb.max.x = aabb.max.y = 64*32;//in pixels
+    //        searchLayer->initialize(aabb, maxDepth);
+    //        searchLayers.push_back(searchLayer);
 
-            buildSearchLayer(searchLayers.back(), *tl);
-        }
-        return 0;
-    }
+    //        buildSearchLayer(searchLayers.back(), *tl);
+    //    }
+    //    return 0;
+    //}
 
     TMX::Tileset::Ptr getTileset(std::string name, TMX::Tileset::Vec & tilesets)
     {

@@ -27,14 +27,23 @@ namespace bali
              layerFore({ 0,0,800,600 }, 5)*/
         {
             
-
+            rotationOccured = false;
         }
     public:
+        enum TargetTexture{
+            FRONT=0,
+            BACK=0,
+
+        };
         GameClient*         owner;
         uint32_t            screenWidth;
         uint32_t            screenHeight;
         sf::RenderWindow    window;
         TMX::MapContext     mctx;
+
+        sf::RenderTexture   renderTextures[2];
+        sf::RenderTexture*  pRenderTexture0;
+        sf::RenderTexture*  pRenderTexture1;
 
         sf::Image           tilesetAImg;
         sf::Texture         tilesetATex;
@@ -46,15 +55,19 @@ namespace bali
         sf::Uint32          centerx;
         sf::Uint32          centery;
         sf::Vector2f        size;
+        sf::Vector2f        worldMousePos;
+        sf::Vector2i        screenMousePos;
+        bool                rotationOccured;
 
         bali::SearchLayers        searchLayers;
-        bali::QuadLayers          quadLayers;
+        bali::QuadLayers          quadLayers;       // Full time
         bali::QuadLayer           visibleQuads;
-        bali::TileLayers          tileLayers;
-        std::vector<ConvexShape>  polygons;
-        std::vector<ConvexShape>  playerpolygons;
-        std::vector<ConvexShape>  playerpolygonsMoved;
-        std::vector<vec::VECTOR2> sharedEdges;
+
+        bali::TileLayers          tileLayers;       // All the ones with a gid
+        std::vector<CONVEXSHAPE>  polygons;         // All of them
+        std::vector<CONVEXSHAPE>  polygonsVisible;  // Updated each iteration
+        std::vector<CONVEXSHAPE>  playerpolygons;   // 
+        std::vector<vec::VECTOR2> sharedEdges;      // 
 
 
         sf::Transform  levelRotTrans;
@@ -63,7 +76,7 @@ namespace bali
 
         sf::Clock mainClock;
         sf::Clock inputClock;
-
+        sf::Shader shader;
     };
 
 

@@ -43,6 +43,7 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
             ctx.player.angle = ctx.player.angle - 2.0;
             if (ctx.player.angle < 0)
                 ctx.player.angle = 360;
+            //ctx.player.GravityOn();
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
@@ -50,16 +51,17 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
             ctx.player.angle = ctx.player.angle + 2.0;
             if (ctx.player.angle >= 360)
                 ctx.player.angle = 0;
+            //ctx.player.GravityOn();
         }
     }
 }
 
 void MouseKeyboard::doMouse(GameContext & ctx)
 {
-    //if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-    //{
-    //    //this->done();
-    //    sf::Vector2i mpos = sf::Mouse::getPosition(ctx.window);
-    //    sf::Vector2f worldPos = ctx.window.mapPixelToCoords(mpos);
-    //}
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    {
+        //this->done();
+        ctx.screenMousePos = sf::Mouse::getPosition(ctx.window);
+        ctx.worldMousePos = ctx.window.mapPixelToCoords(ctx.screenMousePos);
+    }
 }

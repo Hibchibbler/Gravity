@@ -125,6 +125,14 @@ namespace bali
             std::vector<vec::VECTOR2> vertices;
             uint32_t ti;
             double offsetX, offsetY;
+            float mass;
+
+            Shape()
+            {
+                ti = UINT32_MAX;
+                offsetX = offsetY = 0;
+                mass = 1;
+            }
             void translate(double x, double y)
             {
                 for (int i = 0; i < vertices.size(); i++)
@@ -232,11 +240,13 @@ namespace bali
                 Axis smallest;
                 Axes axes1 = (*this).getAxes();
                 Axes axes2 = other.getAxes();
-
+                bool collided = false;
                 // loop over the axes1
                 //cout << ">>>>>>>>>" << std::endl;
                 for (int i = 0; i < axes1.size(); i++) {
                     Axis axis = axes1[i];
+
+
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
@@ -256,7 +266,8 @@ namespace bali
                         //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
                         // check for minimum
                         if (o <= overlap) {
-
+                            //if (velocity.norm().dot(vec::VECTOR2(axis.x, axis.y)) > 0.0)
+                            //    continue;
                             //if (MootPoint(axis, tileLayer[other.ti]))
                             //    continue;
 
@@ -272,6 +283,8 @@ namespace bali
                 // loop over the axes2
                 for (int i = 0; i < axes2.size(); i++) {
                     Axis axis = axes2[i];
+
+
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
@@ -282,6 +295,8 @@ namespace bali
                         return false;
                     }
                     else {
+                        //if (velocity.norm().dot(vec::VECTOR2(axis.x, axis.y)) > 0.0)
+                        //    continue;
                         // get the overlap
                         double o = p1.getOverlap(p2);
                         // check for minimum

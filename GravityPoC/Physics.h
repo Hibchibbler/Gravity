@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
 // 2017
 ///////////////////////////////////////////////////////////////////////////////
@@ -13,39 +13,15 @@ namespace bali
 {
     namespace physics
     {
-        //bool IgnoreEdge(vec::VECTOR2 edge, std::vector<vec::VECTOR2> sharedEdges)
-        //{
-        //    bool ret = false;
-        //    for (auto e = sharedEdges.begin(); e != sharedEdges.end(); ++e)
-        //    {
-        //        if (edge.x == e->x && edge.y == e->y)
-        //        {
-        //            ret = true;
-        //            break;
-        //        }
-        //    }
-        //    return ret;
-        //}
-
-        //bool IsBigger(SAT::MTV a, SAT::MTV b)
-        //{
-        //    if (a.overlap < b.overlap)
-        //        return true;
-        //    return false;
-        //}
-
-        //template <typename T> int sgn(T val) {
-        //    return (T(0) < val) - (val < T(0));
-        //}
-
         bool ResolveCollisions(std::vector<SAT::Shape> & shapes, std::vector<SAT::Shape> & playerShapes, Player & player, bali::TileLayer & tileLayer, GameContext* ctx)
         {
-            // compare player shape to all other shapes for collision        
+            // compare player shape to all other shapes for collision
             bool isCollided = false;
 
             float a_deg =180+ player.angle;
             float a = DEG_TO_RAD(a_deg);
             std::list<SAT::MTV> mtvs;
+            std::stringstream ss;
 
             vec::VECTOR2 original_velocity = player.velocity;
             double original_magnitude = original_velocity.mag();
@@ -58,6 +34,11 @@ namespace bali
                 bool collision = playerShapes.back().collision(*shape, mtv1, tileLayer);
                 if (collision)
                 {
+                    float dp = original_velocity.dot(mtv1.smallest);
+                    if ( dp > 0)
+                    {
+                        mtv1.smallest *= -1;
+                    }
                     mtvs.push_back(mtv1);
                 }
             }
@@ -67,21 +48,17 @@ namespace bali
             //mtvs.sort(IsBigger);
             for (auto mtv = mtvs.begin();mtv != mtvs.end();++mtv)
             {
-                //if (IgnoreEdge(mtv->smallest.edge, ctx->sharedEdges))
-                //{
-                //    cout << "-ie-";
-                //    //continue;
-                //}
+                if (original_velocity == vec::VECTOR2(0.0, 0.0))
+                {
+                    int a = 42;
+                }
                 SAT::Axis collision_normal = mtv->smallest;
 
-                //// -R =  2*(V dot N)*N - V
                 ////  R = -2*(V dot N)*N + V
                 vec::VECTOR2 new_velocity = collision_normal*(original_velocity.dot(collision_normal)) * -2 + original_velocity;
                 newPos += mtv->smallest;
                 newVel += new_velocity;
-
-                std::stringstream ss;
-                ss << ">>>";
+                
                 ss << "<CN " << collision_normal.x << ", " << collision_normal.y << ">, ";
                 ss << "<OV " << original_velocity.x << ", " << original_velocity.y << ">, ";
                 ss << "<NV " << new_velocity.x << ", " << new_velocity.y << "> ";
@@ -89,24 +66,38 @@ namespace bali
                 ss << "<A " << player.angle << ">, ";
                 ss << "<NP " << newPos.x << ", " << newPos.y << "> ";
                 ss << "<NV " << newVel.x << ", " << newVel.y << "> ";
-                ss << "<<< " << std::endl;
-                cout << ss.str();
+                /*ss << "---" << endl;*/
             }
 
-            player.position.x += newPos.x * 1.0;
-            if (newVel.x != 0)
-            {
-                player.velocity.x = newVel.norm().x * original_magnitude* 0.20;
-                //player.velocity.x = 0;
-            }
+            // Normalize the aggregate new velocity vectors
+           // if (newVel.x != 0.0 && newVel.y != 0.0)
+                newVel = newVel.norm();
 
-            player.position.y += newPos.y * 1.0;
-            if (newVel.y != 0)
+            if (!mtvs.empty())
             {
-                //player.velocity.y = 0;
-                player.velocity.y = newVel.norm().y * original_magnitude * 0.20;
+
+                player.posCorrection = newPos;
+                player.velCorrection = newVel;
+                player.position.x += newPos.x * 1.0;
+                if (newVel.x != 0)
+                {
+                    float newVX = (newVel.x * original_magnitude) * 0.60f;
+                    player.velocity.x = newVX;
+                }
+
+                player.position.y += newPos.y * 1.0f;
+
+
+                if (newVel.y != 0)
+                {
+                    float newVY = (newVel.y * original_magnitude) * 0.60;
+                    player.velocity.y = newVY;
+                }
             }
-            
+            //ss << "<<< " << std::endl;
+            if (!mtvs.empty())
+                ss << "---" << endl;
+            cout << ss.str();
             return isCollided;
         }
     }
