@@ -154,6 +154,10 @@ const std::string VECTOR2::to_str()
     return tmpbuf;
 }
 
+float VECTOR2::cross(const VECTOR2 & v) const
+{
+    return ((this->x*v.y) - (this->y*v.x));
+}
 
 
 

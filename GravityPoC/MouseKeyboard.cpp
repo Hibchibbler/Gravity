@@ -17,33 +17,38 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
         //    ctx.player.applyJump();
         //}
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        //
+        // Don't do up or down when doing right or left
+        //
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
         {
-            ctx.player.moveRight = true;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+            {
+                ctx.player.moveRight = true;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+            {
+                ctx.player.moveLeft = true;
+            }
         }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        else
         {
-            ctx.player.moveLeft = true;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+            {
+                ctx.player.moveUp = true;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+            {
+                //ctx.player.velocity.y += 0.3f;
+                ctx.player.moveDown = true;
+            }
         }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-        {
-            ctx.player.moveUp = true;
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-        {
-            //ctx.player.velocity.y += 0.3f;
-            ctx.player.moveDown = true;
-        }
-
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
         {
             ctx.player.angle = ctx.player.angle - 2.0;
             if (ctx.player.angle < 0)
                 ctx.player.angle = 360;
-            //ctx.player.GravityOn();
+            ctx.player.GravityOn();
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
@@ -51,7 +56,7 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
             ctx.player.angle = ctx.player.angle + 2.0;
             if (ctx.player.angle >= 360)
                 ctx.player.angle = 0;
-            //ctx.player.GravityOn();
+            ctx.player.GravityOn();
         }
     }
 }

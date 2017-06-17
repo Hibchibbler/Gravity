@@ -241,92 +241,11 @@ namespace bali
                 uint32_t gid = layer->data->tiles[tileIndex].gid - 1;
                 // When gid == 0, the map data did not associated a texture with this map location.
                 // We translate to array indexing by subtracting 1 from the gid.
-
-
-                // Mark if neighboring cells are tiled, or not.
-                uint32_t nti, eti, sti, wti;
                 Tile pt;
-                if (h > 0 )
-                {
-                    nti = (totalLayerCols * (h - 1)) + (w);
-                    nti = layer->data->tiles[nti].gid;
-                    if (nti == 0)
-                    {
-                        pt.n = false;
-                    }
-                    else
-                    {
-                        pt.n = true;
-                    }
-                }
-                else
-                {
-                    //Since there is nothing to the north, mark it as a wall.
-                    pt.n = true;
-                }
-                
-                if (h <  totalLayerRows-1)
-                {
-                    sti = (totalLayerCols * (h + 1)) + (w);
-                    sti = layer->data->tiles[sti].gid;
-                    if (sti == 0)
-                    {
-                        pt.s = false;
-                    }
-                    else
-                    {
-                        pt.s = true;
-                    }
-                }
-                else
-                {
-                    pt.s = true;
-                }
-                
-                if (w > 0)
-                {
-                    wti = (totalLayerCols * (h)) + (w - 1);
-                    wti = layer->data->tiles[wti].gid;
-                    if (wti == 0)
-                    {
-                        pt.w = false;
-                    }
-                    else
-                    {
-                        pt.w = true;
-                    }
-                }
-                else
-                {
-                    pt.w = true;
-                }
-
-                if (w <  totalLayerCols - 1)
-                {
-                    eti = (totalLayerCols * (h)) + (w + 1);
-                    eti = layer->data->tiles[eti].gid;
-                    if (eti == 0)
-                    {
-                        pt.e = false;
-                    }
-                    else
-                    {
-                        pt.e = true;
-                    }
-                }
-                else
-                {
-                    pt.e = true;
-                }
-
-
                 if (gid != -1)
                 {
                     // Convert GID to x,y
                     sf::Vector2i texPos = GID2XY(gid - tileset->firstgid+1, totalTilesetCols);
-
-                    
-                    
                     pt.gid = gid;
                     pt.ti = tileIndex;
                     //pt.tw = tw;
@@ -361,15 +280,7 @@ namespace bali
         }
         return 0;
     }
-    //uint32_t buildQuadLayers(QuadLayers & quadLayers, TileLayers & tileLayers, uint32_t tileWidth, uint32_t tileHeight)
-    //{
-    //    for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
-    //    {
-    //        quadLayers.push_back(QuadLayer(0));
-    //        buildQuadLayer(quadLayers.back(), *tl, tileWidth, tileHeight);
-    //    }
-    //    return 0;
-    //}
+
     template<typename Out>
     void split(const std::string &s, char delim, Out result) {
         std::stringstream ss;
@@ -632,20 +543,6 @@ namespace bali
         return 0;
     }
 
-    //uint32_t buildSearchLayer(SearchLayer & searchLayer, TileLayer & tileLayer)
-    //{
-    //    for (int tdi = 0; tdi < tileLayer.size(); tdi++)
-    //    //for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
-    //    {
-    //        qt::XY pt;
-    //        pt.ti = tdi;
-    //        pt.x = tileLayer[tdi].x;
-    //        pt.y = tileLayer[tdi].y;
-    //        searchLayer->insert(pt);
-    //    }
-    //    return 0;
-    //}
-
     uint32_t buildSearchLayer(SearchLayer & searchLayer, std::vector<CONVEXSHAPE> polygons)
     {
         for (int tdi = 0; tdi < polygons.size(); tdi++)
@@ -660,24 +557,6 @@ namespace bali
         }
         return 0;
     }
-
-    //uint32_t buildSearchLayers(SearchLayers & searchLayers, TileLayers & tileLayers)
-    //{
-    //    for (auto tl = tileLayers.begin(); tl != tileLayers.end(); tl++)
-    //    {
-    //        SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
-    //        int maxDepth = 10;
-    //        qt::AABB aabb;
-    //        
-    //        aabb.min.x = aabb.min.y = 0;
-    //        aabb.max.x = aabb.max.y = 64*32;//in pixels
-    //        searchLayer->initialize(aabb, maxDepth);
-    //        searchLayers.push_back(searchLayer);
-
-    //        buildSearchLayer(searchLayers.back(), *tl);
-    //    }
-    //    return 0;
-    //}
 
     TMX::Tileset::Ptr getTileset(std::string name, TMX::Tileset::Vec & tilesets)
     {

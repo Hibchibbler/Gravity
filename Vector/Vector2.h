@@ -119,6 +119,8 @@ namespace bali
             */
             float dot(const VECTOR2) const;
 
+            float cross(const VECTOR2 & v) const;
+
             /*
             * The normalization of this vector
             * ->VECTOR2	A new vector that equals this vector normalized

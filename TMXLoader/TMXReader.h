@@ -28,11 +28,19 @@ namespace bali {
         typedef std::shared_ptr<MapContext> Ptr;
         Map::Vec maps;
     public:
-        TMX::Map::Ptr getMap() {
-            return maps.back();
-        }
+
         TMX::Map::Ptr getMap(int i) {
             return maps[i];
+        }
+
+        static TMX::Objectgroup::Ptr getObjectGroup(TMX::Map::Ptr map, std::string name)
+        {
+            for (auto objG = map->objectgroups.begin(); objG != map->objectgroups.end(); ++objG)
+            {
+                if ((*objG)->name != name)
+                    continue;
+                return *objG;
+            }
         }
 
         enum LoadState

@@ -69,6 +69,7 @@ namespace bali
         std::vector<CONVEXSHAPE>  playerpolygons;   // 
         std::vector<vec::VECTOR2> sharedEdges;      // 
 
+        sf::VertexArray lineSegments;
 
         sf::Transform  levelRotTrans;
         
