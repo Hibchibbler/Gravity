@@ -16,7 +16,7 @@
 namespace bali
 {
     #define DEG_TO_RAD(x)   \
-        (x) * (3.14156f / 180.0f);
+        (x) * (PI / 180.0f);
 
     typedef qt::QuadTree::Ptr          SearchLayer;
     typedef std::vector<SearchLayer>   SearchLayers;

@@ -20,8 +20,8 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
         //
         // Don't do up or down when doing right or left
         //
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-        {
+        //if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        //{
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
             {
                 ctx.player.moveRight = true;
@@ -30,9 +30,9 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
             {
                 ctx.player.moveLeft = true;
             }
-        }
-        else
-        {
+        //}
+        //else
+        //{
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
             {
                 ctx.player.moveUp = true;
@@ -42,7 +42,7 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
                 //ctx.player.velocity.y += 0.3f;
                 ctx.player.moveDown = true;
             }
-        }
+        //}
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
         {
             ctx.player.angle = ctx.player.angle - 2.0;

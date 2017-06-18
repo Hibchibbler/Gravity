@@ -275,19 +275,6 @@ namespace bali
                 return proj;
             }
 
-            //float minimum_distance(vec::VECTOR2 v, vec::VECTOR2 w, vec::VECTOR2 p) {
-            //    // Return minimum distance between line segment vw and point p
-            //    const float l2 = pow((w - v).mag(),2);//length_squared(v, w);  // i.e. |w-v|^2 -  avoid a sqrt
-            //    if (l2 == 0.0) return distance(p, v);   // v == w case
-            //                                            // Consider the line extending the segment, parameterized as v + t (w - v).
-            //                                            // We find projection of point p onto the line. 
-            //                                            // It falls where t = [(p-v) . (w-v)] / |w-v|^2
-            //                                            // We clamp t from [0,1] to handle points outside the segment vw.
-            //    const float t = max(0, min(1, dot(p - v, w - v) / l2));
-            //    const vec::VECTOR2 projection = v + t * (w - v);  // Projection falls on the segment
-            //    return distance(p, projection);
-            //}
-
             bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, MTV & mtv, std::vector<MTV> & hitInfo)
             {
                 double overlap = 999999999.0;// really large value;
@@ -365,11 +352,6 @@ namespace bali
 
                         if (o <= overlap) 
                         {
-
-
-                            //if (vel.dot(axis) >= 0)
-                            //    continue;
-
                             overlap = o;
                             smallest = axis;
                             smallest.edge = axis.edge;

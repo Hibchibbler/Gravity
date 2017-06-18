@@ -142,7 +142,7 @@ namespace bali
         float px3, py3;
         float px4, py4;
 
-        angle = angle*(3.14156f / 180.0f);
+        angle = angle*(PI / 180.0f);
 
         px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
         py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;
@@ -172,7 +172,7 @@ namespace bali
         float px3, py3;
         float px4, py4;
 
-        angle = angle*(3.14156f / 180.0f);
+        angle = angle*(PI / 180.0f);
 
         px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
         py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;

@@ -22,19 +22,19 @@ namespace bali
 #ifdef _DEBUG
         const int LEFTUP = 0;
         const int h = 15;
-        const int GK = 50;
-        const float FIXED_DELTA = 1.0f / 100.0f;
+        const int GK = 20;
+        const float FIXED_DELTA = 1.0f / 200.0f;
         const float DRAG_CONSTANT = 0.4;
         const int SKIP_FRAMES = 14;
-        const float RESTITUTION = 0.80f;
+        const float RESTITUTION = 0.9f;
 #else
         const int LEFTUP = 0;
-        const int h = 15;
-        const int GK = 50;
-        const float FIXED_DELTA = 1.0f / 200.0f;
+        const int h = 100;
+        const int GK = 2000;
+        const float FIXED_DELTA = 1.0f / 300.0f;
         const float DRAG_CONSTANT = 0.10;
         const int SKIP_FRAMES = 25;
-        const float RESTITUTION = 0.60f;
+        const float RESTITUTION = 0.05f;
 #endif
         /*
         Ray X = r_px+r_dx*T1
@@ -55,6 +55,7 @@ namespace bali
             }
             vec::VECTOR2 distance;
             float time;
+            vec::VECTOR2 ray;
             vec::VECTOR2 castedPoint;
             vec::VECTOR2 actualPoint;
             float angle;
@@ -141,7 +142,7 @@ namespace bali
             // Adds a fuzz factor..because floating point is never perfect..
             // i don't really know what that means though.
             // but i kinda know what they're sayin'
-            const float epsilon = 0.005f;
+            const float epsilon = 0.0001f;
             if (a > b-epsilon && a < b+epsilon)
             {
                 return true;
@@ -203,8 +204,99 @@ namespace bali
             intersection.distance = rayStart - intersection.actualPoint;
             return true;
         }
-        
+        bool sortHitsByAngle(physics::Intersection & i, physics::Intersection & j) { return (i.angle  > j.angle); }
 
+
+        bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<SAT::Segment> & segments, physics::Intersection & intersect)
+        {
+            bool found = false;          
+            dir = dir / 10.0;// This is important. is it?
+            ///PHYSPRINT("[Ang](" << angle << ")");
+            float closest = 999999.9;
+            for (auto seg = segments.begin(); seg != segments.end(); ++seg)
+            {
+                physics::Intersection intersectTemp;
+                intersectTemp.expired = true;
+                intersectTemp.castedPoint = start + dir * 4000;
+                intersectTemp.distance = intersectTemp.castedPoint - start;
+                intersectTemp.ray = dir;
+                getIntersection(start, dir, (*seg), intersectTemp);
+                if (intersectTemp.distance.mag() <= closest)
+                {
+                    closest = intersectTemp.distance.mag();
+                    intersect = intersectTemp;
+                    intersect.expired = false;
+                    found = true;
+                }
+            }
+            return found;
+        }
+
+        bool RayCast(float a, vec::VECTOR2 start, std::vector<SAT::Segment> & segments, physics::Intersection & intersect)
+        {
+            float radians = a * (PI / 180.0f);
+
+            vec::VECTOR2 dir(cos(radians),
+                sin(radians));
+            return RayCast(dir, start, segments, intersect);
+        }
+
+        void doShit(std::vector<SAT::Segment> & segments, std::vector<SAT::Shape> & shapes, GameContext* ctx)
+        {
+            // We will shoot a ray for each degree of rotation around position.
+            segments.clear();
+            for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
+            {
+                std::vector<SAT::Segment> s = shape->getSegments();
+                segments.insert(segments.end(), s.begin(), s.end());
+            }
+            {
+                std::vector<physics::Intersection> intersections;
+                for (float a = 0; a < 360; a = a + 0.25)
+                {
+                    //if (a == 0)
+                    //    continue;
+                    //if (a == 180.0)
+                    //    continue;
+
+                    // A Ray will intersect with an obstacle or the maximum distance (that we cast)
+                    // hence, we always will have an intersection..but 
+                    // whether it's relevent or not is in the eye of the beholder.
+
+                    ////////////////////////////////////////////////////////////////////////////////////
+                    Intersection intersectMin;
+                    RayCast(a, ctx->player.position, segments, intersectMin);
+                    intersections.push_back(intersectMin);
+                    ////////////////////////////////////////////////////////////////////////////////////
+
+                }
+                //std::sort(intersections.begin(), intersections.end(), sortHitsByAngle);
+                //ctx->lineSegments.clear();
+                //ctx->lineSegments = sf::VertexArray(sf::PrimitiveType::Lines);
+
+                //for (auto i = intersections.begin(); i != intersections.end(); ++i)
+                //{
+                //    vec::VECTOR2 positionFixed = ctx->player.position;
+                //    ctx->lineSegments.append(positionFixed.sf());
+                //    ctx->lineSegments.append(i->castedPoint.sf());
+                //}
+                ctx->lineSegments = sf::VertexArray(sf::PrimitiveType::TrianglesFan);//Lines);
+                vec::VECTOR2 positionFixed = ctx->player.position;
+                //positionFixed.x += 23;
+                //positionFixed.y -= 10;
+                ctx->lineSegments.append(positionFixed.sf());
+                for (auto i = intersections.begin(); i != intersections.end(); ++i)
+                {
+                    //vec::VECTOR2 newLine = i->actualPoint - ctx->player.position;
+                    //ctx->lineSegments.append(positionFixed.sf());
+                    if (!i->expired)
+                    {
+                        i->castedPoint += i->ray * 700.0f;
+                        ctx->lineSegments.append(i->castedPoint.sf());
+                    }
+                }
+            }
+        }
 
         bool ResolveCollisions(std::vector<SAT::Segment> & segments,std::vector<SAT::Shape> & shapes, std::vector<SAT::Shape> & playerShapes, Player & player, bali::TileLayer & tileLayer, GameContext* ctx, bool ignoreDP)
         {
@@ -248,7 +340,7 @@ namespace bali
                     //float overlapTarget = hitInfo.back().overlap;//Since this is on the back()==size()-1, it is the smallest overlap.
                     // now only cycle through hits with equally small overlap
                     for (auto h = hitInfo.begin(); h != hitInfo.end(); ++h)
-                    {;
+                    {
                         if (h->overlap <= fuck)
                         {
                             fuck = h->overlap;
@@ -258,23 +350,32 @@ namespace bali
                     {
                         if (h->overlap != fuck)
                             continue;
+
+                        if (original_velocity.dot(h->smallest) > 0)
+                            continue;
+
+                        ss << "<fuck " << fuck << "> ";
+
                         if (false)
                         {
                             mtvA = *h;
                             if (original_velocity.dot(mtvA.smallest) > 0)
-                                mtvA.smallest *= -1.0;
+                            {
+                                ss << "<> ";
+                                continue;
+                            }
                         }
                         if (true)
                         {
                             vec::VECTOR2 edgeLine = h->smallest.edge.end - h->smallest.edge.start;
-                            edgeLine.norm();
+                            edgeLine = edgeLine.norm();
                             vec::VECTOR2 edgeStart = h->smallest.edge.start;
 
                             float m = 9999999999.0;
                             float t = 0;
-                            for (t = 0; t < 50.0; t = ++t)
+                            for (t = 0; t < 1.0; t = t=t+0.005)
                             {
-                                vec::VECTOR2 edgePoint = edgeStart + (edgeLine)* t;
+                                vec::VECTOR2 edgePoint = (edgeStart * (1-t)) + (edgeLine)* t;
                                 vec::VECTOR2 yang = player.position;
 
                                 vec::VECTOR2 dist = edgePoint - yang;
@@ -282,7 +383,7 @@ namespace bali
                                 if (mag <= m)
                                 {
                                     m = mag;
-                                    ss << "<m? " << m << "> ";
+                                    //ss << "<m? " << m << "> ";
                                 }
                             }
 
@@ -315,10 +416,10 @@ namespace bali
                 ////  R = -2*(V dot N)*N + V
                 newPos += mtv->smallest;
                 //overlap += mtv->overlap;
-                 if (mtv->overlap <= overlap)
-                {
+                //if (mtv->overlap <= overlap)
+                //{
                     overlap = mtv->overlap;
-                }
+                //}
                 ss << "<" << zxc << ">, ";
                 ss << "<CN " << collision_normal.x << ", " << collision_normal.y << ">, ";
                 ss << "<OVR? " << overlap << ">, ";
@@ -326,30 +427,55 @@ namespace bali
                 ss << "(" << mtv->smallest.edge.end.x << ", " << mtv->smallest.edge.end.y << "), ";
             }
 
-            if (!mtvs.empty())
+            if (!mtvs.empty() && newPos != vec::VECTOR2(0, 0))
             {
+
+                    
                 isCollided = true;
                 //overlap /= mtvs.size();
                 vec::VECTOR2 newVelocity;
+                newVelocity = newPos*(original_velocity.dot(newPos)) * -1 * (1 + RESTITUTION) + original_velocity;
+
                 newPos = newPos.norm();
-                float steepness = downVector(player.angle).dot(newPos);
-                if (steepness > -0.90  || original_magnitude > 50.0)
+
+                
+
+                if (newPos.x != 0)
+                { 
+                    player.velocity.x = newVelocity.x;
+                }
+
+                if (newPos.y != 0)
                 {
-                    ss << "< " << "HARD" << ">, ";
+                    player.velocity.y = newVelocity.y;
+                }
+
+                vec::VECTOR2 posDelta = newPos * overlap * 2.0;
+                player.position += posDelta;// *overlap *;//newPos *  original_magnitude * 0.30;//  * 2.0;// overlap * 1.0;// 3.0;//
+
+                float steepness = downVector(player.angle).dot(newPos);
+                //if (steepness > -0.90 || original_magnitude > 80.0)
+                if (original_magnitude > 80.0)
+                {
+                    ss << "< " << "HARD " << original_magnitude << ">, ";
+                    //player.skipCollision = 2;
+                    //player.velocity = newVelocity;
+                    //player.GravityOn();
                 }
                 else
                 {
                     ss << "< " << "SOFT" << ">, ";
+                    player.velocity = vec::VECTOR2(0, 0);
+                    player.acceleration = vec::VECTOR2(0, 0);
+                   // player.GravityOff();
                 }
 
-                newVelocity = newPos*(original_velocity.dot(newPos)) * -1 * (1 + RESTITUTION) + original_velocity;
-
-                vec::VECTOR2 posDelta = newPos * overlap * 2.0;
-                player.position += posDelta;// *overlap *;//newPos *  original_magnitude * 0.30;//  * 2.0;// overlap * 1.0;// 3.0;//
-                player.velocity = newVelocity;
-
+                
+                
+                
+                
                 ss << "<A " << player.angle << ">";
-                ss << "<NP " << posDelta.x << ", " << posDelta.y << "> ";//aggregate new position
+                ss << "<PD " << posDelta.x << ", " << posDelta.y << "> ";//aggregate new position
                 ss << "<NV " << newVelocity.x << ", " << newVelocity.y << "> ";//aggregate new velocity
                 ss << "<OVR! " << overlap << ">, ";
                 ss << "<STEEP " << steepness << ">, ";
@@ -386,66 +512,67 @@ exit:
                 if (player.moveUp)
                 {
                     vec::VECTOR2 u = upVector(player.angle)*h;
-                    velAccum += u;
+                    velAccum += player.accelerate(u);
                     player.moveUp = false;
-                    player.GravityOn();
-                    player.gravitySkipFrames = SKIP_FRAMES+15;
                 }
 
                 if (player.moveLeft)
                 {
                     vec::VECTOR2 l;
                     l = leftVector(player.angle + LEFTUP)*h;
-
-                    velAccum += l;
-                    //vel += upVector(player.angle) * 3.0;
+                    velAccum += player.accelerate(l);
                     player.moveLeft = false;
-                    player.GravityOn();
-                   // if (player.solidGround)
-                    player.gravitySkipFrames = SKIP_FRAMES;
                 }
 
                 if (player.moveDown)
                 {
                     vec::VECTOR2 d = downVector(player.angle)*h;
-                    velAccum += d;
+                    velAccum += player.accelerate(d);
                     player.moveDown = false;
-                    player.GravityOn();
-                    player.gravitySkipFrames = SKIP_FRAMES;
                 }
 
                 if (player.moveRight)
                 {
                     vec::VECTOR2 r;
                     r = rightVector(player.angle - LEFTUP)*h;
-                    velAccum += r;
-                    //vel += upVector(player.angle) * 3.0;
+                    velAccum += player.accelerate(r);
                     player.moveRight = false;
-                    player.GravityOn();
-
-                    //if (player.solidGround)
-                    player.gravitySkipFrames = SKIP_FRAMES;
                 }
 
-                if (player.gravitySkipFrames == 0 && player.applyGravity)
+                //if (player.gravitySkipFrames == 0 && player.applyGravity)
+                if (player.applyGravity)
                 {
                     ////std::cout << " G<" <<g.x << ", " << g.y << " >G" << std::endl;
                     vec::VECTOR2 g = downVector(player.angle) * GK;
-                    //accelAccum += g;
+                    accelAccum += g;
+                }
+                else
+                {
+                    int g = 32;
                 }
 
                 if (player.gravitySkipFrames > 0)
                     player.gravitySkipFrames--;
 
+                if (true)
+                {
+                    player.acceleration = player.accelerate(accelAccum);
+                    
+                    player.position += (player.velocity + ((player.acceleration / 2) * FIXED_DELTA)) * FIXED_DELTA;
+                    player.velocity += (player.acceleration * FIXED_DELTA/2.0f) + velAccum;
+                    vec::VECTOR2 newAcceleration = player.accelerate(accelAccum);
+                    player.velocity += ((newAcceleration - player.acceleration) / 2) * (FIXED_DELTA / 2.0f);
+                }
+                if (false)
+                {
+                    vec::VECTOR2 drag = player.velocity * DRAG_CONSTANT;
+                    player.acceleration = player.accelerate(accelAccum) - drag;
 
-                player.position += (player.velocity + (player.acceleration / 2) * 2) * FIXED_DELTA;
 
-                player.velocity += (player.acceleration * FIXED_DELTA) + velAccum;
-
-                vec::VECTOR2 drag = player.velocity * DRAG_CONSTANT;
-                player.acceleration = accelAccum - drag;
-                
-                //player.velocity += velAccum;
+                    //player.position += (player.velocity + (player.acceleration / 2) * 2) * FIXED_DELTA;
+                    player.position += (player.velocity + ((player.acceleration / 2)*FIXED_DELTA)) * FIXED_DELTA;
+                    player.velocity += (player.acceleration * FIXED_DELTA) + velAccum;
+                }
             }
         }
     }

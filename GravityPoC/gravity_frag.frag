@@ -6,11 +6,14 @@ uniform vec2 view;
 uniform vec2 position;
 uniform vec2 resolution;
 uniform sampler2D texture;
+uniform sampler2D losMask;
 
 void main()
 {
-	vec4 pixelColor = texture2D(texture, gl_TexCoord[0].xy);
-    vec4 solidColor = vec4(0.01,0.01,0.01,1.0);
+
+    vec4 solidColor = vec4(0.1,0.1,0.1,1.0);
+	vec4 solidBlack = vec4(1.0,1.0,1.0,0.10);
+	
 	vec2 texCoord = gl_TexCoord[0].xy;
 	//float argleR = (noise1(0.75) + 1.0) / 2.0;// a random value scaled to be between 0, 1.
 	
@@ -22,9 +25,16 @@ void main()
 	float len1 = length(dist1);
 	float cubicFalloff1 = len1*len1*len1;	
 	vec4 pixel = texture2D(texture, texCoord.xy) * gl_Color;	
-	gl_FragColor = pixel - (13.20*cubicFalloff1);
+	vec4 maskColor = texture2D(losMask, gl_TexCoord[0].xy)* gl_Color;
 	
 	
+	
+	
+	gl_FragColor = pixel - (10.20*cubicFalloff1);
+	if (maskColor != vec4(1.0, 1.0, 1.0, 1.0))
+	{
+		gl_FragColor = gl_FragColor * solidBlack;
+	}
 /* 	vec2 dist2 = distance(gl_FragCoord.xy, last_position.xy) / view.xy;
 	float len2 = length(dist2);
 	float cubicFalloff2 = len2*len2*len2;	

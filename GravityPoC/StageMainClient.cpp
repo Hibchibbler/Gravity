@@ -30,7 +30,7 @@ namespace bali
         GameContext* ctx = getContext();
         ///////////////////////////////////////////////////////////////////////
         // Load TMX
-        TMX::TMXReader::load("level6.tmx", ctx->mctx);
+        TMX::TMXReader::load("level5.tmx", ctx->mctx);
 
         // Still playing with these...no clue yet
         TMX::Objectgroup::Ptr pObjG = ctx->mctx.getObjectGroup(ctx->mctx.maps.back(), "PlayerShape");
@@ -159,8 +159,7 @@ namespace bali
         return 0;
     }
 
-    bool myfunction(physics::Intersection i, physics::Intersection j) { return (i.angle  > j.angle); }
-
+   
     uint32_t StageMainClient::doUpdate()
     {
         GameContext* ctx = getContext();
@@ -266,100 +265,14 @@ namespace bali
 
             //playershapes.push_back(playerShape);
         }
-        physics::update(ctx->player, elapsed);
+        
 
         std::vector<SAT::Segment> segments;
         physics::ResolveCollisions(segments, shapes, playershapes, ctx->player, ctx->tileLayers[1], ctx, false);
-
-        // We will shoot a ray for each degree of rotation around position.
-        segments.clear();
-        for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
-        {
-            std::vector<SAT::Segment> s = shape->getSegments();
-            segments.insert(segments.end(), s.begin(), s.end());
-        }
-        {
-            std::vector<physics::Intersection> intersections;
-            for (float a = 0; a < 370; a = a + 5.0)
-            {
-                //if (a == 0)
-                //    continue;
-                //if (a == 180.0)
-                //    continue;
-
-                // A Ray will intersect with an obstacle or the maximum distance (that we cast)
-                // hence, we always will have an intersection..but 
-                // whether it's relevent or not is in the eye of the beholder.
-
-                ////////////////////////////////////////////////////////////////////////////////////
-                //RayCast(intersect, ctx->player.position, segments, a);                
-                float radians = a * (3.14159f / 180.0f);
-                vec::VECTOR2 rayDir(ctx->player.position.mag() * cos(radians),
-                                    ctx->player.position.mag() * sin(radians));
-                rayDir = rayDir.norm() /5.0;// This is important
-                vec::VECTOR2 rayStart = ctx->player.position;
-                ///PHYSPRINT("[Ang](" << angle << ")");
-
-                
-
-                bool found = false;
-                float closest = 999999.9;
-                physics::Intersection intersectMin;
-                for (auto seg = segments.begin(); seg != segments.end(); ++seg)
-                {
-                   
-                    physics::Intersection intersectTemp;
-                    intersectTemp.castedPoint = rayStart + rayDir * 900;
-                    intersectTemp.distance = intersectTemp.castedPoint;
-                    getIntersection(rayStart, rayDir, (*seg), intersectTemp);
-                    if (intersectTemp.distance.mag() <= closest)
-                    {
-                        closest = intersectTemp.distance.mag();
-                        intersectMin = intersectTemp;
-                        found = true;
-                    }
-                }
-                
-                intersections.push_back(intersectMin);
-
-                ////////////////////////////////////////////////////////////////////////////////////
-                
-            }
-            std::sort(intersections.begin(), intersections.end(), myfunction);
-            ctx->lineSegments.clear();
-            ctx->lineSegments = sf::VertexArray(sf::PrimitiveType::TrianglesFan);//Lines);
-            vec::VECTOR2 positionFixed = ctx->player.position;
-            //positionFixed.x += 23;
-            //positionFixed.y -= 10;
-            ctx->lineSegments.append(positionFixed.sf());
-            for (auto i = intersections.begin(); i != intersections.end(); ++i)
-            {
-                //vec::VECTOR2 newLine = i->actualPoint - ctx->player.position;
-                //ctx->lineSegments.append(positionFixed.sf());
-                ctx->lineSegments.append(i->castedPoint.sf());
-
-            }
-        }
-        //if (ctx->lineSegments.getVertexCount() > 200)
-        //    ctx->lineSegments.clear();
-        //
-        //int v = 0;
-        //for (auto seg = segments.begin(); seg != segments.end(); ++seg)
-        //{
-        //    ctx->lineSegments.setPrimitiveType(sf::PrimitiveType::Quads);
-        //    vec::VECTOR2 midpoint((seg->end.x + seg->start.x)/2.0, (seg->end.y + seg->start.y) / 2.0);
-        //    
-        //    sf::Vector2f p1(midpoint.x, midpoint.y);
-        //    sf::Vector2f p2(midpoint.x + 10, midpoint.y);
-        //    sf::Vector2f p3(midpoint.x + 10, midpoint.y+10);
-        //    sf::Vector2f p4(midpoint.x , midpoint.y + 10);
-
-        //    ctx->lineSegments.append(p1);
-        //    ctx->lineSegments.append(p2);
-        //    ctx->lineSegments.append(p3);
-        //    ctx->lineSegments.append(p4);
-        //    v++;
-        //}
+        physics::update(ctx->player, elapsed);
+        
+        
+        physics::doShit(segments, shapes, ctx);
 
 
         ctx->mainView.setCenter(zxc.x, zxc.y);// ctx->player.position.x, ctx->player.position.y);
@@ -372,6 +285,7 @@ namespace bali
         GameContext* ctx = getContext();
         // Draw background
         ctx->pRenderTexture0->clear();
+        ctx->pRenderTexture1->clear(sf::Color::Black);
         ctx->window.setView(ctx->mainView);
         ctx->window.clear();
 
@@ -386,17 +300,17 @@ namespace bali
         auto fore = ctx->quadLayers[1];
         ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-        // Hit Edges
-        ctx->pRenderTexture0->draw(ctx->lineSegments);
+        //// Hit Edges
+        //ctx->pRenderTexture0->draw(ctx->lineSegments);
 
-        for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-        {
-            sf::RenderStates polyVisiRenderStates;
-            poly->setOutlineColor(sf::Color::Red);
-            poly->setFillColor(sf::Color::Transparent);
-            poly->setOutlineThickness(1);
-            ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-        }
+        //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+        //{
+        //    sf::RenderStates polyVisiRenderStates;
+        //    poly->setOutlineColor(sf::Color::Red);
+        //    poly->setFillColor(sf::Color::Transparent);
+        //    poly->setOutlineThickness(1);
+        //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+        //}
 
         for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
         {
@@ -416,8 +330,11 @@ namespace bali
         //    poly->setOutlineThickness(2);
         //    ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
         //}
-
+        sf::RenderStates lineSegRenderState;
         
+        ctx->pRenderTexture1->draw(ctx->lineSegments, lineSegRenderState);
+        ctx->pRenderTexture1->display();
+
         ctx->pRenderTexture0->display();
 
         sf::RenderStates totalRenderStates;
@@ -430,6 +347,7 @@ namespace bali
         pposTemp.y = pposTemp.y - 13;
         ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->window.mapCoordsToPixel(pposTemp.sf())));
         ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
+        ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());
 
 
         sf::Sprite sprite(ctx->pRenderTexture0->getTexture());

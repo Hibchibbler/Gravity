@@ -1,8 +1,10 @@
 #pragma once
 
+#include "PhysicalObject.h"
+
 namespace bali
 {
-    class Player
+    class Player : public PhysicalObject
     {
     public:
         //std::list<Impulse> impulses;
@@ -10,7 +12,8 @@ namespace bali
 
 
         Player()
-            : lastPosition(0,0),
+            : PhysicalObject(),
+              lastPosition(0,0),
               accumulator()
         {
             applyGravity = true;
