@@ -4106,7 +4106,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <layer name="Tile Layer 1" width="64" height="64">
+ <layer name="Tile Layer 1" width="64" height="64" visible="0">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -9066,9 +9066,9 @@
    <polyline points="0,0 64,0 64,16 0,16 0,0"/>
   </object>
  </objectgroup>
- <objectgroup name="PlayerShape" visible="0">
-  <object id="205" x="976" y="168">
-   <polyline points="0,0 0,-4 2,-8 6,-10 10,-10 14,-8 16,-4 16,0 14,4 10,6 6,6 2,4 0,0"/>
+ <objectgroup name="PlayerShape">
+  <object id="205" x="912" y="185.922">
+   <polyline points="0,0 0,-3.96875 2,-7.9375 6,-9.92188 10,-9.92188 14,-7.9375 16,-3.96875 16,0 14,3.96875 10,5.95313 6,5.95313 2,3.96875 0,0"/>
   </object>
  </objectgroup>
 </map>

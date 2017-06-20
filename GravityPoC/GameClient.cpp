@@ -15,8 +15,8 @@ namespace bali
     uint32_t GameClient::initialize()
     {
         ctx.owner = this;
-        ctx.screenWidth = 800;
-        ctx.screenHeight = 800;
+        ctx.screenWidth = 900;
+        ctx.screenHeight = 900;
         ctx.window.create(sf::VideoMode(ctx.screenWidth, ctx.screenHeight), "Gravity PoC");
 
         Stage::Ptr newStage = std::make_shared<StageMainClient>(&ctx);

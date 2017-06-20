@@ -36,14 +36,14 @@ namespace bali
         TMX::Objectgroup::Ptr pObjG = ctx->mctx.getObjectGroup(ctx->mctx.maps.back(), "PlayerShape");
         
 
-        ctx->player.position.x = pObjG->objects.back()->x;
-        ctx->player.position.y = pObjG->objects.back()->y;
+        ctx->player.pos.x = pObjG->objects.back()->x;
+        ctx->player.pos.y = pObjG->objects.back()->y;
 
-        ctx->player.velocity = vec::VECTOR2(0.0, 0.0);
-        ctx->player.acceleration = vec::VECTOR2(0.0, 0.0);
+        ctx->player.vel = vec::VECTOR2(0.0, 0.0);
+        ctx->player.acc = vec::VECTOR2(0.0, 0.0);
 
         ctx->size.x = ctx->size.y = 1000;
-        ctx->mainView.setCenter(ctx->player.position.x, ctx->player.position.y);
+        ctx->mainView.setCenter(ctx->player.pos.x, ctx->player.pos.y);
         ctx->mainView.setSize(sf::Vector2f(ctx->size.x, ctx->size.y));
         //ctx->mainView.setViewport(sf::FloatRect(0.25,0.25,0.5,0.5));
         ///////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ namespace bali
             ctx->mctx.maps.back()->objectgroups);
 
         ///////////////////////////////////////////////////////////////////////
-        int maxDepth = 10;
+        int maxDepth = 15;
         qt::AABB aabb;
         aabb.min.x = -64;
         aabb.min.y = -64;
@@ -108,9 +108,6 @@ namespace bali
         ctx->shader.loadFromFile("gravity_vert.vert", "gravity_frag.frag");
 
         ///////////////////////////////////////////////////////////////////////
-
-        
-
         // Last thing
         initialized();
         return 0;
@@ -164,29 +161,23 @@ namespace bali
     {
         GameContext* ctx = getContext();
         sf::Time elapsed = ctx->mainClock.restart();
-
-
         vec::VECTOR2 zxc;
         for (int d = 0; d < ctx->player.posHist.size(); d++)
         {
             zxc += ctx->player.posHist[d];
         }
         zxc /= ctx->player.posHist.size();
-
-        // Search for foreground that is visible
-        
-        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.0);
-
+        // Search for foreground that is visible        
+        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.0f);
         TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
         TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
-
-
         sf::Uint32 tw = tilesetA->tilewidth;
         sf::Uint32 th = tilesetA->tileheight;
 
+
         //Does the player hit anything?
         // convert All obstacle tiles into shapes.
-        std::vector<SAT::Shape> shapes;
+        
         std::vector<qt::XY> sr;
         sr = ctx->searchLayers.at(0)->search(searchRegion);
         
@@ -201,7 +192,11 @@ namespace bali
             ctx->polygonsVisible.back() = ctx->polygons[p->ti];
         }
 
-        // Convert Polygons
+        // Every shape that is tested for collision by the player
+        // shape is to be placed into this vector
+        std::vector<SAT::Shape> shapes;
+
+        // Convert generic convex polygons  to shapes
         for (int j = 0; j < ctx->polygonsVisible.size(); ++j)
         {
             shapes.push_back(SAT::Shape());
@@ -215,11 +210,13 @@ namespace bali
             }
         }
 
-        vec::VECTOR2 pos(floor(ctx->player.position.x), floor(ctx->player.position.y));
-        SAT::Shape playerShape;
-        std::vector<SAT::Shape> playershapes;//not used
-        
-        // Convert Player Polygon
+
+        // A player "shape" may be composed of multiple polygons.
+        // therefore, we need to convert each polygon to a shape.
+        std::vector<SAT::Shape> playershapes;
+
+        vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
+        // Convert Player polygons to shapes
         for (int j = 0; j < ctx->playerpolygons.size(); ++j)
         {
             playershapes.push_back(SAT::Shape());
@@ -231,51 +228,19 @@ namespace bali
             float hafWid =  ctx->playerpolygons[j].getLocalBounds().width / 2.0;
             float hafHite =  ctx->playerpolygons[j].getLocalBounds().height / 2.0;
 
-            ctx->playerpolygons[j].setPosition(pos.x + hafWid, pos.y + hafHite);
-            playershapes.back().translate(pos.x + hafWid, pos.y + hafHite);
+            ctx->playerpolygons[j].setPosition(pos.x - hafWid, pos.y + hafHite);
+            playershapes.back().translate(pos.x - hafWid, pos.y + hafHite);
         }
 
-         // Create renderable player
-        {
-            vec::VECTOR2 v;
-            ctx->player.playerQuads.clear();
-            addQuad(ctx->player.playerQuads,
-                sf::FloatRect(pos.x, pos.y, tw*0.5, th*0.5),
-                sf::IntRect(2 * 32, 7 * 32, 32, 32));// , ctx->player.angle);
 
-            // convert renderable player into a collision shape.
-            v.x = ctx->player.playerQuads[0].position.x;
-            v.y = ctx->player.playerQuads[0].position.y;
-            playerShape.addVertex(v.x, v.y);
-
-            v.x = ctx->player.playerQuads[1].position.x;
-            v.y = ctx->player.playerQuads[1].position.y;
-            playerShape.addVertex(v.x, v.y);
-
-            v.x = ctx->player.playerQuads[2].position.x;
-            v.y = ctx->player.playerQuads[2].position.y;
-            playerShape.addVertex(v.x, v.y);
-
-            v.x = ctx->player.playerQuads[3].position.x;
-            v.y = ctx->player.playerQuads[3].position.y;
-            playerShape.addVertex(v.x, v.y);
-
-            playerShape.offsetX = pos.x;
-            playerShape.offsetY = pos.y;
-
-            //playershapes.push_back(playerShape);
-        }
-        
-
-        std::vector<SAT::Segment> segments;
-        physics::ResolveCollisions(segments, shapes, playershapes, ctx->player, ctx->tileLayers[1], ctx, false);
+        // Resolve collisions
+        // Integrate motion
+        // Create Line of Sight Triangle Fan
+        physics::ResolveCollisions(shapes, playershapes, ctx->player);
         physics::update(ctx->player, elapsed);
-        
-        
-        physics::doShit(segments, shapes, ctx);
+        physics::createLoSTriFan(shapes, ctx);
 
-
-        ctx->mainView.setCenter(zxc.x, zxc.y);// ctx->player.position.x, ctx->player.position.y);
+        ctx->mainView.setCenter(zxc.x, zxc.y);
         getContext()->mainView.setRotation(getContext()->player.angle);
         return 0;
     }
@@ -303,14 +268,14 @@ namespace bali
         //// Hit Edges
         //ctx->pRenderTexture0->draw(ctx->lineSegments);
 
-        //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-        //{
-        //    sf::RenderStates polyVisiRenderStates;
-        //    poly->setOutlineColor(sf::Color::Red);
-        //    poly->setFillColor(sf::Color::Transparent);
-        //    poly->setOutlineThickness(1);
-        //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-        //}
+        for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+        {
+            sf::RenderStates polyVisiRenderStates;
+            poly->setOutlineColor(sf::Color::Red);
+            poly->setFillColor(sf::Color::Transparent);
+            poly->setOutlineThickness(1);
+            ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+        }
 
         for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
         {
@@ -340,9 +305,9 @@ namespace bali
         sf::RenderStates totalRenderStates;
         totalRenderStates.shader = &ctx->shader;
         //totalRenderStates.texture = (sf::Texture*)ctx->pRenderTexture0;
-        ctx->shader.setUniform("view", sf::Vector2f(ctx->renderTextures[0].getSize().x, ctx->renderTextures[0].getSize().y));
+        ctx->shader.setUniform("view", ctx->mainView.getSize());
         ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
-        vec::VECTOR2 pposTemp = ctx->player.position;
+        vec::VECTOR2 pposTemp = ctx->player.pos;
         pposTemp.x = pposTemp.x + 20;
         pposTemp.y = pposTemp.y - 13;
         ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->window.mapCoordsToPixel(pposTemp.sf())));

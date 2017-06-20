@@ -32,13 +32,13 @@ namespace bali
         vec::VECTOR2 lastPosition;
         std::vector<vec::VECTOR2> velHist;
         std::vector<vec::VECTOR2> posHist;
-        vec::VECTOR2 position;
-        vec::VECTOR2 velocity;
-        vec::VECTOR2 acceleration;
+        //vec::VECTOR2 position;
+        //vec::VECTOR2 velocity;
+        //vec::VECTOR2 acceleration;
         float angle;
         bool rotated; //meta data
         bool solidGround;
-        SAT::MTV currentMTV;
+
         QuadLayer playerQuads;
         vec::VECTOR2 velCorrection;
         vec::VECTOR2 posCorrection;

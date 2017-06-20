@@ -19,7 +19,12 @@ namespace bali
         class Segment
         {
         public:
-            Segment() = default;
+            Segment()
+            {
+                start = vec::VECTOR2(0.0, 0.0);
+                end = vec::VECTOR2(0.0, 0.0);
+            }
+
             Segment(float x1, float y1, float x2, float y2)
             {
                 start.x = x1;
@@ -33,71 +38,79 @@ namespace bali
         };
 
 
-        class Axis : public vec::VECTOR2
+        class ContactInfo 
         {
         public:
-            Axis()
-                : VECTOR2()
+            ContactInfo()
             {
-
+                normal = vec::VECTOR2(0.0f, 0.0f);
+                overlap = 0.0f;
             }
 
-            Axis(float x, float y)
-                : VECTOR2(x,y)
+            ContactInfo(float nx, float ny, float o)
             {
-
+                normal.x = nx;
+                normal.y = ny;
+                overlap = o;
             }
 
-            Axis(const vec::VECTOR2 & vec)
-                : VECTOR2(vec)
+            ContactInfo(const vec::VECTOR2 & n, float o)
             {
-
+                normal = n;
+                overlap = o;
             }
 
-            Axis operator=(const Axis & a)
+            ContactInfo(const ContactInfo & ci)
+
             {
-                if (this != &a)
-                {
-                    x = a.x;
-                    y = a.y;
-                    edge.start = a.edge.start;
-                    edge.end = a.edge.end;
-                }
-                return *this;
+                *this = ci;
             }
 
+            //ContactInfo operator=(const ContactInfo & ci)
+            //{
+            //    if (this != &ci)
+            //    {
+            //        *this = ci;
+            //        /*normal.x = a.x;
+            //        normal.y = a.y;
+            //        edge.start = a.edge.start;
+            //        edge.end = a.edge.end;*/
+            //    }
+            //    return *this;
+            //}
+
+            vec::VECTOR2 normal;
             Segment edge;
+            float overlap;
         };
         //typedef vec::Vector2 Axis;
-        typedef std::vector<Axis> Axes;
+        typedef std::vector<ContactInfo> Axes;
+                
 
+        //class MTV
+        //{
+        //public:
+        //    MTV() {}
+        //    MTV(const ContactInfo & smallest, double overlap)
+        //    {
+        //        this->smallest = smallest;
+        //        this->overlap = overlap;
+        //    }
+        //    MTV(const MTV & mtv)
+        //    {
+        //        this->smallest = mtv.smallest;
+        //        this->overlap = mtv.overlap;
+        //    }
 
-        
+        //    Axis smallest;
+        //    double overlap;
+        //};
 
-        class MTV
-        {
-        public:
-            MTV() {}
-            MTV(const Axis & smallest, double overlap)
-            {
-                this->smallest = smallest;
-                this->overlap = overlap;
-            }
-            MTV(const MTV & mtv)
-            {
-                this->smallest = mtv.smallest;
-                this->overlap = mtv.overlap;
-            }
-
-            Axis smallest;
-            double overlap;
-        };
-
-        class HitInfo
-        {
-        public:
-            MTV mtv;
-        };
+        //class HitInfo
+        //{
+        //public:
+        //    MTV mtv;
+        //};
 
         class Projection : public vec::VECTOR2
         {
@@ -224,9 +237,9 @@ namespace bali
                 //}
                 return segments;
             }
-            Axes getAxes()
+            Axes getContactInfo()
             {
-                Axes axes;// = new Vector2[vertices.size()];
+                Axes axes;
                 // loop over the vertices
                 for (int i = 0; i < vertices.size(); i++) 
                 {
@@ -244,25 +257,23 @@ namespace bali
                     normal = normal.norm();
 
                     // the perp method is just (x, y) => (-y, x) or (y, -x)
-                    Axis axis;
-                    axis = normal;
-                    //axis.edge = edge.translate(vec::Vector2(offsetX, offsetY));
-                    //axis.edge.normal = normal;
-                    axis.edge.start = p1;// +vec::VECTOR2(offsetX, offsetY);
-                    axis.edge.end = p2;// +vec::VECTOR2(offsetX, offsetY);
+                    ContactInfo axis;
+                    axis.normal = normal;
+                    axis.edge.start = p1;
+                    axis.edge.end = p2;
                     
                     axes.push_back(axis);
                 }
                 return axes;
             }
 
-            Projection project(const Axis & axis)
+            Projection project(const ContactInfo & axis)
             {
-                float min = axis.dot(vertices[0]);
+                float min = axis.normal.dot(vertices[0]);
                 double max = min;
                 for (int i = 1; i < vertices.size(); i++) {
                     // NOTE: the axis must be normalized to get accurate projections
-                    double p = axis.dot(vertices[i]);
+                    double p = axis.normal.dot(vertices[i]);
                     if (p <= min) {
                         min = p;
                     }
@@ -275,12 +286,12 @@ namespace bali
                 return proj;
             }
 
-            bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, MTV & mtv, std::vector<MTV> & hitInfo)
+            bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, ContactInfo & mtv, std::vector<ContactInfo> & hitInfo)
             {
                 double overlap = 999999999.0;// really large value;
-                Axis smallest;
-                Axes axes1 = (*this).getAxes();
-                Axes axes2 = other.getAxes();
+                ContactInfo smallest;
+                Axes axes1 = (*this).getContactInfo();
+                Axes axes2 = other.getContactInfo();
                 bool collided = false;
                 float smallestLen = 9999999.0;//
                 // loop over the axes1
@@ -288,7 +299,7 @@ namespace bali
                 std::stringstream ss;
                 for (int i = 0; i < axes1.size(); i++) 
                 {
-                    Axis axis = axes1[i];
+                    ContactInfo axis = axes1[i];
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
@@ -304,22 +315,15 @@ namespace bali
                         // if this collision normal points to an adjacent tile, ignore it.
                         // get the overlap
                         double o = p1.getOverlap(p2);
+                        axis.overlap = o;
                         //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
                         // check for minimum
-                        hitInfo.push_back(MTV());
-                        hitInfo.back().overlap = o;
-                        hitInfo.back().smallest = axis;
-                        hitInfo.back().smallest.edge = axis.edge;
+                        hitInfo.push_back(ContactInfo(axis));
 
                         if (o <= overlap) 
                         {
-                            //if (vel.dot(axis) >= 0)
-                            //    continue;
-
                             // then set this one as the smallest
-                            overlap = o;
                             smallest = axis;
-                            smallest.edge = axis.edge;
                         }
                     }
                 }
@@ -327,7 +331,7 @@ namespace bali
                 // loop over the axes2
                 for (int i = 0; i < axes2.size(); i++) 
                 {
-                    Axis axis = axes2[i];
+                    ContactInfo axis = axes2[i];
                     // project both shapes onto the axis
                     Projection p1 = (*this).project(axis);
                     Projection p2 = other.project(axis);
@@ -342,24 +346,19 @@ namespace bali
                     {
                         // get the overlap
                         double o = p1.getOverlap(p2);
-
+                        axis.overlap = o;
                         // check for minimum
                         //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
-                        hitInfo.push_back(MTV());
-                        hitInfo.back().overlap = o;
-                        hitInfo.back().smallest = axis;
-                        hitInfo.back().smallest.edge = axis.edge;
+                        hitInfo.push_back(ContactInfo(axis));
 
                         if (o <= overlap) 
                         {
-                            overlap = o;
                             smallest = axis;
-                            smallest.edge = axis.edge;
                         }
                     }
                 }
                 //cout << "<<<<<<<<<" << std::endl;
-                mtv = MTV(smallest, overlap);
+                mtv = smallest;
                 // if we get here then we know that every axis had overlap on it
                 // so we can guarantee an intersection
                 std::cout << ss.str();
