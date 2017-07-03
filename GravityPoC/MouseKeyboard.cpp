@@ -9,7 +9,7 @@ using namespace bali;
 
 void MouseKeyboard::doKeyboard(GameContext & ctx)
 {
-    if (ctx.inputClock.getElapsedTime().asMilliseconds() >= 30)
+    if (ctx.inputClock.getElapsedTime().asMilliseconds() >= 50)
     {
         ctx.inputClock.restart();
         //if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))

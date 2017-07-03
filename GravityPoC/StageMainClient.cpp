@@ -177,7 +177,6 @@ namespace bali
 
         //Does the player hit anything?
         // convert All obstacle tiles into shapes.
-        
         std::vector<qt::XY> sr;
         sr = ctx->searchLayers.at(0)->search(searchRegion);
         
@@ -265,17 +264,15 @@ namespace bali
         auto fore = ctx->quadLayers[1];
         ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-        //// Hit Edges
-        //ctx->pRenderTexture0->draw(ctx->lineSegments);
-
-        for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-        {
-            sf::RenderStates polyVisiRenderStates;
-            poly->setOutlineColor(sf::Color::Red);
-            poly->setFillColor(sf::Color::Transparent);
-            poly->setOutlineThickness(1);
-            ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-        }
+        // Collision Polygons - debug
+        //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+        //{
+        //    sf::RenderStates polyVisiRenderStates;
+        //    poly->setOutlineColor(sf::Color::Red);
+        //    poly->setFillColor(sf::Color::Transparent);
+        //    poly->setOutlineThickness(1);
+        //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+        //}
 
         for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
         {
@@ -304,7 +301,6 @@ namespace bali
 
         sf::RenderStates totalRenderStates;
         totalRenderStates.shader = &ctx->shader;
-        //totalRenderStates.texture = (sf::Texture*)ctx->pRenderTexture0;
         ctx->shader.setUniform("view", ctx->mainView.getSize());
         ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
         vec::VECTOR2 pposTemp = ctx->player.pos;
@@ -317,16 +313,6 @@ namespace bali
 
         sf::Sprite sprite(ctx->pRenderTexture0->getTexture());
         ctx->window.draw(sprite, totalRenderStates);
-
-        //ctx->pRenderTexture0->draw(ctx->lineSegments);
-        //sprite = sf::Sprite(ctx->pRenderTexture0->getTexture());
-        //totalRenderStates.shader = nullptr;
-        //ctx->window.draw(sprite, totalRenderStates);
-        //
-        // Swap
-        //sf::RenderTexture* temp = ctx->pRenderTexture0;
-        //ctx->pRenderTexture0 = ctx->pRenderTexture1;
-        //ctx->pRenderTexture1 = temp;
 
         // Finalize it
         ctx->window.display();

@@ -14,7 +14,7 @@
 #define PHYSPRINT(x) \
     std::cout << x << std::endl;
 #endif
-
+#define EPSILON 0.0000001f
 namespace bali
 {
     namespace physics
@@ -32,18 +32,12 @@ namespace bali
         const int LEFTUP = 0;
         const int h = 100;
         const int GK = 4000;
-        const float FIXED_DELTA = 1.0f / 300.0f;
-        const float DRAG_CONSTANT = 0.15;
+        const float FIXED_DELTA = 1.0f / 325.0f;
+        const float DRAG_CONSTANT = 0.9;
         const int SKIP_FRAMES = 25;
         const float RESTITUTION =0.6f;
         const float TOO_STEEP  = -0.69f;
 #endif
-        /*
-        Ray X = r_px+r_dx*T1
-        Ray Y = r_py+r_dy*T1
-        Segment X = s_px+s_dx*T2
-        Segment Y = s_py+s_dy*T2
-        */
         class Intersection
         {
         public:
@@ -131,9 +125,9 @@ namespace bali
             // Adds a fuzz factor..because floating point is never perfect..
             // i don't really know what that means though.
             // but i kinda know what they're sayin'
-            const float epsilon = 5.0f;
-            if ((ray.x > edge.x - epsilon && ray.x < edge.x + epsilon) &&
-                (ray.y > edge.y - epsilon && ray.y < edge.y + epsilon))
+            
+            if ((ray.x > edge.x - EPSILON && ray.x < edge.x + EPSILON) &&
+                (ray.y > edge.y - EPSILON && ray.y < edge.y + EPSILON))
             {
                 return true;
             }
@@ -146,8 +140,8 @@ namespace bali
             // Adds a fuzz factor..because floating point is never perfect..
             // i don't really know what that means though.
             // but i kinda know what they're sayin'
-            const float epsilon = 0.0001f;
-            if (a > b-epsilon && a < b+epsilon)
+            
+            if (fabsf(a-b) < EPSILON)
             {
                 return true;
             }
@@ -183,41 +177,22 @@ namespace bali
             float det = (s_dx*r_dy - s_dy*r_dx);
             float T2 = (r_dx*(s_py - r_py) + r_dy*(r_px - s_px)) / det;
             float T1 = (s_px + s_dx*T2 - r_px) / r_dx;
-            // Must be within parametic whatevers for RAY/SEGMENT
 
-            if (r_dx - r_px == 0)
-            {
-                // Vertical Line
-            }
-            else if (r_dy - r_py == 0)
-            {
-                // Horizontal line
-            }
-            else
-            {
-              
-            }
+            // Must be a piece of the ray that is moving away from the origin
+            if (T1 < 0)         return false;
+            // Must be within the domain of the segment
+            if (T2 < 0 || T2>1) return false;
 
-            if (T1 < 0)
-            {
-                return false;
-            }
-            if (T2<0 || T2>1)
-            {
-                return false;
-            }
-
-            // Return the POINT OF INTERSECTION
+            // Return Intersection information
             intersection.time = T1;
             intersection.rayPoint = vec::VECTOR2(r_px + r_dx*T1, r_py + r_dy*T1);
             intersection.segPoint = vec::VECTOR2(s_px + s_dx*T2, s_py + s_dy*T2);
             intersection.segment = segment;
             intersection.distance = rayStart - intersection.segPoint;
+          
             return true;
         }
         bool sortHitsByAngle(physics::Intersection & i, physics::Intersection & j) { return (i.angle  > j.angle); }
-
-
         bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<SAT::Segment> & segments, physics::Intersection & intersect)
         {
             bool found = false;          
@@ -226,12 +201,12 @@ namespace bali
             float closest = 999999.9;
             for (auto seg = segments.begin(); seg != segments.end(); ++seg)
             {
-                physics::Intersection intersectTemp;
+                Intersection intersectTemp;
                 intersectTemp.expired = true;
-                intersectTemp.rayPoint = start + dir * 2500;
+                intersectTemp.rayPoint = start + dir * 3400;
                 intersectTemp.distance = intersectTemp.rayPoint - start;
                 intersectTemp.ray = dir;
-                getIntersection(start, dir, (*seg), intersectTemp);
+                getIntersection(start, dir, *seg, intersectTemp);
                 if (intersectTemp.distance.mag() <= closest)
                 {
                     closest = intersectTemp.distance.mag();
@@ -247,8 +222,13 @@ namespace bali
         {
             float radians = a * (PI / 180.0f);
 
-            vec::VECTOR2 dir(2.0f*cos(radians),
-                             2.0f*sin(radians));
+            vec::VECTOR2 dir(1.0f*cos(radians),
+                             1.0f*sin(radians));
+            if (fabs(dir.x) < 0.0001)
+                dir.x = 0.0f;
+
+            if (fabs(dir.y) < 0.0001)
+                dir.y = 0.0f;
             return RayCast(dir, start, segments, intersect);
         }
 
@@ -262,9 +242,28 @@ namespace bali
                 segments.insert(segments.end(), s.begin(), s.end());
             }
             {
+                //angle - starts at 
+                //   3 O'  Clock = 0   degree
+                //   6 O'  Clock = 90  degree
+                //   9 O'  Clock = 180 degree
+                //   12 O' Clock = 270 degree
+                //   3 O'  Clock = 360 degree
+
                 std::vector<physics::Intersection> intersections;
-                for (float a = 0; a < 360; a = a + 0.75)
+                //float a = 270;
+                //for (float a = 89.9; a < 91; a = a + 0.10)
+                for (float a = 0.0; a < 370.0; a = a + 1.00)
                 {
+
+                    if (a == 90)
+                        continue;
+                    if (a == 180)
+                        continue;
+                    if (a == 270)
+                        continue;
+                    if (a == 360)
+                        continue;
+                    
                     // A Ray will intersect with an obstacle or the maximum distance (that we cast)
                     // hence, we always will have an intersection..but 
                     // whether it's relevent or not is in the eye of the beholder.
@@ -277,11 +276,12 @@ namespace bali
                 ctx->lineSegments = sf::VertexArray(sf::PrimitiveType::TrianglesFan);//Lines);
                 vec::VECTOR2 positionFixed = ctx->player.pos;
                 ctx->lineSegments.append(positionFixed.sf());
+                
                 for (auto i = intersections.begin(); i != intersections.end(); ++i)
                 {
-                    if (!i->expired)
+                    if (true)//!i->expired)
                     {
-                        i->rayPoint += i->ray * 50.0f;
+                        i->rayPoint += i->ray * 60.0f;
                         ctx->lineSegments.append(i->rayPoint.sf());
                     }
                 }
@@ -290,11 +290,6 @@ namespace bali
 
         bool ResolveCollisions(std::vector<SAT::Shape> & shapes, std::vector<SAT::Shape> & playerShapes, Player & player)
         {
-            //
-            //
-            // 
-            //
-            //
             bool isCollided = false;
 
             float a_deg = 180 + player.angle;
@@ -384,9 +379,8 @@ namespace bali
 
             for (auto cinfo = cinfos.begin(); cinfo != cinfos.end(); ++cinfo)
             {
-                zxc++;
                 // When we collided with multiple edges at once
-                // we average all the collision normals together
+                // we add all collision normals together and normalize
                 newPos += cinfo->normal;
 
                 // When we collided with multiple polygons at once
@@ -395,7 +389,7 @@ namespace bali
                 {
                     overlap = cinfo->overlap;
                 }
-                ss << "<" << zxc << ">, ";
+                ss << "<" << ++zxc << ">, ";
                 ss << "<CN " << cinfo->normal.x << ", " << cinfo->normal.y << ">, ";
                 ss << "<OVR? " << cinfo->overlap << ">, ";
                 ss << "<EDGE (" << cinfo->edge.start.x << ", " << cinfo->edge.start.y << "), ";
@@ -426,7 +420,6 @@ namespace bali
 
                 float steepness = downVector(player.angle).dot(newPos);
                 if (steepness > TOO_STEEP || original_magnitude > 2000.0)
-                //if (original_magnitude > 80.0)
                 {
                     ss << "< " << "HARD " << original_magnitude << ">, ";
                 }
@@ -447,7 +440,7 @@ namespace bali
             if (!cinfos.empty())
             {
                 ss << "]" << endl;
-                cout << ss.str();
+                //cout << ss.str();
             }
             return isCollided;
         }
@@ -510,7 +503,7 @@ namespace bali
                 // but better. or something. TODO: find reference
                 {
                     player.pos += (player.vel + ((player.acc / 2) * FIXED_DELTA)) * FIXED_DELTA;
-                    player.vel += (player.acc * FIXED_DELTA/2.0f) + velAccum;
+                    player.vel += (player.acc * FIXED_DELTA / 2.0f) + velAccum;// 2.0f;
                     vec::VECTOR2 newAcceleration = player.impulse(accelAccum);
                     player.vel += ((newAcceleration - player.acc) / 2) * (FIXED_DELTA / 2.0f);
                 }

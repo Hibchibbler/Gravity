@@ -26,15 +26,20 @@ namespace bali
             gravitySkipFrames = 0;
             solidGround = false;
             skipCollision = 0;
+            onGround = false;
         }
 
 
         vec::VECTOR2 lastPosition;
         std::vector<vec::VECTOR2> velHist;
         std::vector<vec::VECTOR2> posHist;
-        //vec::VECTOR2 position;
-        //vec::VECTOR2 velocity;
-        //vec::VECTOR2 acceleration;
+        
+        //angle - starts at 
+        //   3 O'  Clock = 0   degree
+        //   6 O'  Clock = 90  degree
+        //   9 O'  Clock = 180 degree
+        //   12 O' Clock = 240 degree
+        //   3 O'  Clock = 360 degree
         float angle;
         bool rotated; //meta data
         bool solidGround;
@@ -59,6 +64,7 @@ namespace bali
         bool moveDown;
         bool moveUp;
         bool isCollided;
+        bool onGround;
     private:
 
         sf::Time updateTime;

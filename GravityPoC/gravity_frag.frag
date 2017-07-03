@@ -33,7 +33,7 @@ void main()
 	
 	if (maskColor == vec4(1.0, 1.0, 1.0, 1.0))
 	{
-		gl_FragColor = pixel - (1.0*cubicFalloff1);
+		gl_FragColor = pixel - (1.3*cubicFalloff1/len1);
 	}
 	else
 	{

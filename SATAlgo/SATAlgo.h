@@ -66,51 +66,12 @@ namespace bali
                 *this = ci;
             }
 
-            //ContactInfo operator=(const ContactInfo & ci)
-            //{
-            //    if (this != &ci)
-            //    {
-            //        *this = ci;
-            //        /*normal.x = a.x;
-            //        normal.y = a.y;
-            //        edge.start = a.edge.start;
-            //        edge.end = a.edge.end;*/
-            //    }
-            //    return *this;
-            //}
-
             vec::VECTOR2 normal;
             Segment edge;
             float overlap;
         };
         //typedef vec::Vector2 Axis;
         typedef std::vector<ContactInfo> Axes;
-                
-
-        //class MTV
-        //{
-        //public:
-        //    MTV() {}
-        //    MTV(const ContactInfo & smallest, double overlap)
-        //    {
-        //        this->smallest = smallest;
-        //        this->overlap = overlap;
-        //    }
-        //    MTV(const MTV & mtv)
-        //    {
-        //        this->smallest = mtv.smallest;
-        //        this->overlap = mtv.overlap;
-        //    }
-
-        //    Axis smallest;
-        //    double overlap;
-        //};
-
-        //class HitInfo
-        //{
-        //public:
-        //    MTV mtv;
-        //};
 
         class Projection : public vec::VECTOR2
         {
@@ -137,18 +98,6 @@ namespace bali
             }
             bool overlap(const Projection & p)
             {
-                //vec::VECTOR2 min1 = VECTOR2(min(this->x, p.x), min(0,0));
-                //vec::VECTOR2 max1 = VECTOR2(max(this->x, p.x), max(0, 0));
-
-                //vec::VECTOR2 min2 = VECTOR2(min(this->y, p.y), min(0, 0));
-                //vec::VECTOR2 max2 = VECTOR2(max(this->y, p.y), max(0, 0));
-
-
-                //vec::VECTOR2 minInt = VECTOR2(max(min1.x,min2.x), max(0,0));
-                //vec::VECTOR2 maxInt = VECTOR2(min(max1.x, max2.x), min(0,0));
-
-
-                //if (minInt.x < maxInt.x && minInt.y < maxInt.y)
                 if (x >= min(p.x, p.y) && x <= max(p.x, p.y) ||
                     y >= min(p.x, p.y) && y <= max(p.x, p.y))
                 {
@@ -164,33 +113,6 @@ namespace bali
                 return abs(M-m);
             }
         };
-
-        //class Ray
-        //{
-        //public:
-        //    Ray(float b_, float x_, float t0_=0.0f)
-        //        :   b(b_),
-        //            x(x_),
-        //            t0(t0_)
-        //    {
-
-        //    }
-
-        //    float f(float t)
-        //    {
-        //        return (b + (x * (t0+t)));
-        //    }
-
-        //    bool intersect()
-        //    {
-        //        // mx+b = mx+bc
-        //    }
-        //    float b, x, t0;
-        //    // y = b + x(t0+t)
-        //};
-
-        #define TI_PLAYER -1
-
 
         class Shape
         {
