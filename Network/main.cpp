@@ -9,39 +9,31 @@
 #define UNICODE
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-//
-//#include <winsock2.h>
-//#include <Ws2tcpip.h>
-//#include <stdio.h>
-//#include <list>
-//#include <memory>
-//// Link with ws2_32.lib
-//#pragma comment(lib, "Ws2_32.lib")
-#include "GravityNet.h"
+
+#include "Network.h"
 
 int main()
 {
-    bali::GravityNet gn;
+    bali::Network net;
     bali::Socket recvSock;
 
-    gn.initialize(1, 8967);
-    gn.createPort();
-    gn.createWorkerThreads();
+    net.initialize(1, 8967);
+    net.createPort();
+    net.createWorkerThreads();
     
-    gn.createSocket(gn.getReceiverSock());
-    gn.bindSocket(gn.getReceiverSock());
-    gn.associate(gn.getReceiverSock());
-    gn.startWorkerThreads();
-    gn.start();
+    net.createSocket(net.getReceiverSock());
+    net.bindSocket(net.getReceiverSock());
+    net.associate(net.getReceiverSock());
+    net.startWorkerThreads();
     int g;
     std::cin >> g;
-    gn.stop();
-    gn.cleanup();
+    net.cleanup();
     
     return 0;
 }
-///*
+
+
+///*  RANDOM SCRATCH
 //SOCKET RecvSocket;
 //sockaddr_in RecvAddr;
 //*/
