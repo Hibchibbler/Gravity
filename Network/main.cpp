@@ -25,6 +25,7 @@ int main()
     net.bindSocket(net.getReceiverSock());
     net.associate(net.getReceiverSock());
     net.startWorkerThreads();
+    net.readSocket(net.getReceiverSock());
     int g;
     std::cin >> g;
     net.cleanup();

@@ -6,13 +6,15 @@
 #include "Network.h"
 #include <Ws2tcpip.h>
 #include <iostream>
+#include <cassert>
 using namespace bali;
 
 #pragma comment(lib, "Ws2_32.lib")
 
 Network::Network()
 {
-
+    nextOID = 1;
+    nextSID = 1;
 }
 
 Network::~Network()
@@ -106,7 +108,8 @@ Network::Result Network::createPort()
 Network::Result Network::associate(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    HANDLE temp = CreateIoCompletionPort((HANDLE)s.handle, ioPort, s.key, 0);
+    s.sid = InterlockedIncrement(&nextSID);
+    HANDLE temp = CreateIoCompletionPort((HANDLE)s.handle, ioPort, COMPLETION_KEY_IO, 0);
     if (temp == NULL)
     {
         result.type = Network::ResultType::FAILED_IOPORT_ASSOCIATION;
@@ -143,6 +146,10 @@ Network::Result Network::bindSocket(Socket & s)
 
     return result;
 }
+//Overlapped::Iter getNewOverlapped()
+//{
+//
+//}
 
 Network::Result Network::writeSocket(Socket & s)
 {
@@ -150,64 +157,100 @@ Network::Result Network::writeSocket(Socket & s)
     return result;
 }
 
+
+
 Network::Result Network::readSocket(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    WSABUF wsaBuf;
-    Overlapped::Ptr o = std::make_unique<Overlapped>();
-    ZeroMemory(&o, sizeof(o));
-    o->ioType = Overlapped::IOType::READ;
-    o->buffer.reserve(256);
-    wsaBuf.buf = (CHAR*)&o->buffer;
-    wsaBuf.len = o->buffer.capacity();
-
-    SOCKADDR_STORAGE srcAddr;
-    int srcAddrLen = 0;
-    int ret = 0;
-    ret = 
-        WSARecvFrom(s.handle,
-                    &wsaBuf,
-                    1,
-                    NULL,
-                    0,
-                    (SOCKADDR*)&srcAddr,
-                    &srcAddrLen,
-                    o.get(),
-                    NULL);
-    if (ret != 0)
+    if (s.oIndex != 5)
     {
-        // Problem
-        int err = WSAGetLastError();
-        if (err != WSA_IO_PENDING) {
-            result.type = Network::ResultType::FAILED_SOCKET_RECVFROM;
-            result.code = err;
+        Overlapped::Ptr o = std::make_unique<Overlapped>();
+     
+        o->ioType = Overlapped::IOType::READ;
+        o->oid = InterlockedIncrement(&nextOID);
+
+        ZeroMemory(&o->srcAddr, sizeof(o->srcAddr));
+        o->srcAddrLen = sizeof(SOCKADDR_STORAGE);
+        
+        WSABUF wsaBuf;
+        wsaBuf.buf = (CHAR*)&o->buffer;
+        wsaBuf.len = Overlapped::Limits::MAX_DGRAM_SIZE;
+
+        DWORD flags = 0;
+        int ret = 0;
+        ret =
+            WSARecvFrom(s.handle,
+                &wsaBuf,
+                1,
+                NULL,// This can be NULL because lpOverlapped parameter is not NULL.
+                &flags,
+                (SOCKADDR*)&o->srcAddr,
+                &o->srcAddrLen,
+                o.get(),
+                NULL);
+        if (ret == 0)
+        {
+            // No Problem
+            assert(false);
+            s.addOutstanding(o);
+        }
+        else
+        {
+            // Problem
+            int err = WSAGetLastError();
+            if (err != WSA_IO_PENDING) {
+                result.type = Network::ResultType::FAILED_SOCKET_RECVFROM;
+                result.code = err;
+            }
+            else
+            {
+                s.addOutstanding(o);
+            }
         }
     }
     else
     {
-        // No Problem
-        s.outstanding.push_back(std::move(o));
+        result.type = Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED;
     }
     return result;
 }
 
-
 void* Network::WorkerThread(Network* context)
 {
     DWORD bytesTrans = 0;
-    ULONG_PTR ckey;
+    ULONG_PTR ckey = COMPLETION_KEY_UNKNOWN;
 
-    Overlapped* overlapped;
+    LPWSAOVERLAPPED pOver;
+    bool done = false;
+    while (!done)
+    {
+        BOOL ret = GetQueuedCompletionStatus(context->ioPort, &bytesTrans, &ckey, (LPOVERLAPPED*)&pOver, INFINITE);
+        if (ret == TRUE)
+        {
+            // Ok
+            assert(pOver != NULL);
+            if (pOver != NULL)
+            {
+                Overlapped* overlapped = reinterpret_cast<Overlapped*>(pOver);
+                if (ckey == COMPLETION_KEY_IO)
+                {
+                    std::string s((PCHAR)overlapped->buffer, bytesTrans);
+                    std::cout << s.c_str() << std::endl;
+                    context->recvSocket.removeOutstanding(overlapped);
+                    // Issue another Read to keep this perpetuating
+                    context->readSocket(context->recvSocket);
+                }
+                else if (ckey == COMPLETION_KEY_SHUTDOWN)
+                {
 
-    BOOL ret = GetQueuedCompletionStatus(context->ioPort, &bytesTrans, &ckey, (LPOVERLAPPED*)&overlapped, INFINITE);
-    if (ret == TRUE)
-    {
-        // Ok
-        // Issue another Read to keep this machine greased.
-    }
-    else
-    {
-        // Problem
+                }
+            }
+        }
+        else
+        {
+            // Problem
+            return NULL;
+        }
     }
     return NULL;
 }
@@ -223,7 +266,7 @@ bool Network::GetLocalAddressInfo(Socket & s)
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_DGRAM;
     /* Setting AI_PASSIVE will give you a wildcard address if addr is NULL */
     hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE;
 
