@@ -13,8 +13,7 @@ using namespace bali;
 
 Network::Network()
 {
-    nextOID = 1;
-    nextSID = 1;
+
 }
 
 Network::~Network()
@@ -30,7 +29,6 @@ Network::Result Network::initialize(uint32_t maxThreads, uint16_t port)
     this->ioPort = INVALID_HANDLE_VALUE;
 
     WSADATA wsaData;
-    //-----------------------------------------------
     // Initialize Winsock
     int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (r != NO_ERROR) {
@@ -44,8 +42,8 @@ Network::Result Network::initialize(uint32_t maxThreads, uint16_t port)
 Network::Result Network::cleanup()
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    //-----------------------------------------------
     // Clean up and exit.
+    recvSocket.overlapMutex.destroy();
     closesocket(recvSocket.handle);
     CloseHandle(ioPort);
     
@@ -108,7 +106,6 @@ Network::Result Network::createPort()
 Network::Result Network::associate(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    s.sid = InterlockedIncrement(&nextSID);
     HANDLE temp = CreateIoCompletionPort((HANDLE)s.handle, ioPort, COMPLETION_KEY_IO, 0);
     if (temp == NULL)
     {
@@ -122,11 +119,15 @@ Network::Result Network::associate(Socket & s)
 Network::Result Network::createSocket(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    s.handle = WSASocket(AF_UNSPEC, SOCK_DGRAM, IPPROTO_UDP, NULL , 0 , WSA_FLAG_OVERLAPPED);
+    s.handle = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL , 0 , WSA_FLAG_OVERLAPPED);
     if (s.handle == INVALID_SOCKET)
     {
         result.type = Network::ResultType::FAILED_SOCKET_CREATE;
         result.code = WSAGetLastError();
+    }
+    else
+    {
+        s.overlapMutex.create();
     }
     return result;
 }
@@ -146,10 +147,6 @@ Network::Result Network::bindSocket(Socket & s)
 
     return result;
 }
-//Overlapped::Iter getNewOverlapped()
-//{
-//
-//}
 
 Network::Result Network::writeSocket(Socket & s)
 {
@@ -162,16 +159,12 @@ Network::Result Network::writeSocket(Socket & s)
 Network::Result Network::readSocket(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    if (s.oIndex != 5)
+    //if (s.overCollection.oIndex != 5)
+    //{
+    Overlapped* o = nullptr;
+    if (s.overCollection.getOverlapped(&o, &s.overlapMutex))
     {
-        Overlapped::Ptr o = std::make_unique<Overlapped>();
-     
         o->ioType = Overlapped::IOType::READ;
-        o->oid = InterlockedIncrement(&nextOID);
-
-        ZeroMemory(&o->srcAddr, sizeof(o->srcAddr));
-        o->srcAddrLen = sizeof(SOCKADDR_STORAGE);
-        
         WSABUF wsaBuf;
         wsaBuf.buf = (CHAR*)&o->buffer;
         wsaBuf.len = Overlapped::Limits::MAX_DGRAM_SIZE;
@@ -182,17 +175,22 @@ Network::Result Network::readSocket(Socket & s)
             WSARecvFrom(s.handle,
                 &wsaBuf,
                 1,
-                NULL,// This can be NULL because lpOverlapped parameter is not NULL.
+                &o->bytesReceived,// This can be NULL because lpOverlapped parameter is not NULL.
                 &flags,
                 (SOCKADDR*)&o->srcAddr,
                 &o->srcAddrLen,
-                o.get(),
+                o,
                 NULL);
         if (ret == 0)
         {
-            // No Problem
-            assert(false);
-            s.addOutstanding(o);
+            // No Problem - the read completed here and now
+            std::string str((PCHAR)wsaBuf.buf, o->bytesReceived);
+            std::cout << "!![" << o->bytesReceived << "]" << str.c_str() << std::endl;
+
+            s.overCollection.expireOverlapped(o->index, &s.overlapMutex);
+
+            // Issue another Read to keep this perpetuating
+            readSocket(recvSocket);
         }
         else
         {
@@ -204,13 +202,14 @@ Network::Result Network::readSocket(Socket & s)
             }
             else
             {
-                s.addOutstanding(o);
+                // No Problem - the read has been successfully initiated
             }
         }
     }
     else
     {
         result.type = Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED;
+        std::cout << "Unable to read at the moment!" << std::endl;
     }
     return result;
 }
@@ -235,8 +234,8 @@ void* Network::WorkerThread(Network* context)
                 if (ckey == COMPLETION_KEY_IO)
                 {
                     std::string s((PCHAR)overlapped->buffer, bytesTrans);
-                    std::cout << s.c_str() << std::endl;
-                    context->recvSocket.removeOutstanding(overlapped);
+                    std::cout << "[" << bytesTrans << "]" << s.c_str() << std::endl;
+                    context->recvSocket.overCollection.expireOverlapped(overlapped->index, &context->recvSocket.overlapMutex);
                     // Issue another Read to keep this perpetuating
                     context->readSocket(context->recvSocket);
                 }
@@ -277,7 +276,7 @@ bool Network::GetLocalAddressInfo(Socket & s)
     }
     else
     {
-        /* Note, we're taking the first valid address, there may be more than one */
+        // Note, we're taking the first valid address, there may be more than one 
         memcpy(&s.addr, res->ai_addr, res->ai_addrlen);
         FreeAddrInfo(res);
     }

@@ -12,6 +12,7 @@
 #include <vector>
 #include <cassert>
 #include <stdint.h>
+#include <iostream>
 
 #define COMPLETION_KEY_UNKNOWN      0
 #define COMPLETION_KEY_IO           1
@@ -19,6 +20,32 @@
 
 namespace bali
 {
+    class Mutex
+    {
+    public:
+        void create()
+        {
+            InitializeCriticalSection(&critSection);
+        }
+
+        void destroy()
+        {
+            DeleteCriticalSection(&critSection);
+        }
+
+        void lock()
+        {
+            EnterCriticalSection(&critSection);
+        }
+
+        void unlock()
+        {
+            LeaveCriticalSection(&critSection);
+        }
+    private:
+        CRITICAL_SECTION critSection;
+    };
+
     class Thread
     {
     public:
@@ -52,22 +79,72 @@ namespace bali
             this->Offset = 0;
             this->OffsetHigh = 0;
             this->hEvent = 0;
-        }
+            inuse = false;
 
-        bool operator==(uint64_t oid)
-        {
-            if (this->oid == oid)
-                return true;
-            return false;
+            ZeroMemory(&srcAddr, sizeof(srcAddr));
+            srcAddrLen = sizeof(srcAddr);
         }
 
         SOCKADDR_STORAGE    srcAddr;
         INT                 srcAddrLen;
 
         IOType              ioType;
-        int                 bytesReceived;
-        uint64_t            oid;
+        DWORD               bytesReceived;
+        uint32_t            index;
         UCHAR               buffer[MAX_DGRAM_SIZE];
+        BOOL                inuse;
+    };
+
+    class OverlapCollection
+    {
+    public:
+        //std::vector<Overlapped> outstanding;
+        Overlapped overlaps[10];
+        uint32_t index;
+        HANDLE readMutex;
+        OverlapCollection()
+        {
+            index = 0;
+            readMutex = INVALID_HANDLE_VALUE;
+
+            for (uint32_t i = 0; i < 10; ++i)
+            {
+                overlaps[i].inuse = false;
+                overlaps[i].index = i;
+            }
+        }
+
+        bool getOverlapped(Overlapped** overlapped, Mutex* m)
+        {
+            bool status = false;
+            m->lock();
+            for (uint32_t i = 0; i <10; ++i)
+            {
+                *overlapped = &overlaps[i];
+                if ((*overlapped)->inuse == false)
+                {
+                    (*overlapped)->inuse = true;
+                    status = true;
+                    break;
+                }
+            };
+            m->unlock();
+            return status;
+        }
+
+        bool expireOverlapped(uint32_t i, Mutex* m)
+        {
+            bool status = false;
+            m->lock();
+            if (i < 10 && overlaps[i].inuse == true)
+            {
+                overlaps[i].inuse = false;
+                status = true;
+            }
+            m->unlock();
+            return status;
+        }
+    private:
     };
 
     class Socket
@@ -77,47 +154,14 @@ namespace bali
         {
             handle = INVALID_SOCKET;
             ZeroMemory(&addr, sizeof(addr));
-            sid = 0;
-            oIndex = 0;
         }
 
         SOCKET handle;
         SOCKADDR_STORAGE addr;
-        ULONG_PTR sid;
 
-        const uint8_t  MAX_OUTSTANDING = 5;
-        std::array<Overlapped::Ptr, 5> outstanding;
-        uint32_t oIndex;
-
-        bool addOutstanding(Overlapped::Ptr & ptr)
-        {
-            bool status = false;
-            for (auto o = outstanding.begin(); o != outstanding.end(); ++o)
-            {
-                if (!(*o))
-                {
-                    *o = std::move(ptr);
-                    status = true;
-                    break;
-                }
-            }
-            return status;
-        }
-
-        bool removeOutstanding(Overlapped* overlapped)
-        {
-            bool status = false;
-            for (int o = 0; o < outstanding.size(); ++o)
-            {
-                if (outstanding[o] && outstanding[o]->oid == overlapped->oid)
-                {
-                    status = true;
-                    outstanding[o].reset(nullptr);
-                    break;
-                }
-            }
-            return status;
-        }
+        const uint8_t  MAX_OUTSTANDING = 10;
+        Mutex overlapMutex;
+        OverlapCollection overCollection;
     };
 
     class Network
@@ -135,6 +179,7 @@ namespace bali
             FAILED_IOPORT_CREATE,
             FAILED_THREAD_CREATE,
             FAILED_THREAD_START,
+            FAILED_SYNCHR_CREATE_READER_MUTEX,
             FAILED_SOCKET_RECVFROM,
             FAILED_SOCKET_NOMOREOVERLAPPED,
             FAILED_SOCKET_SENDTO,
@@ -172,19 +217,12 @@ namespace bali
             return recvSocket;
         }
     private:
-        uint64_t nextOID; // Next Overlapped ID
-        uint64_t nextSID; // Next Socket ID
         HANDLE ioPort;
         Socket recvSocket;
         std::list<Thread> threads;
-        std::list<Socket> sockets;
 
         uint32_t maxThreads;
         uint16_t port;
-
-        SOCKADDR_STORAGE them;
-        INT themSize;
-        char rBuffer[1024];
     private:
         static void* WorkerThread(Network* context);
     };

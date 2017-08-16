@@ -162,13 +162,15 @@ namespace bali
         GameContext* ctx = getContext();
         sf::Time elapsed = ctx->mainClock.restart();
         vec::VECTOR2 zxc;
+
+        //Smooth out player position for camera
         for (int d = 0; d < ctx->player.posHist.size(); d++)
         {
             zxc += ctx->player.posHist[d];
         }
         zxc /= ctx->player.posHist.size();
         // Search for foreground that is visible        
-        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.0f);
+        qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.90f);
         TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
         TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
         sf::Uint32 tw = tilesetA->tilewidth;
