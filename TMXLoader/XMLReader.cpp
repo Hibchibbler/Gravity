@@ -12,7 +12,7 @@
 namespace bali {
 
 
-    bool XMLReader::load(const char *fn, void *ud, StartElementHandler se, EndElementHandler ee, CharacterDataHandler cdh) {
+    bool XMLReader::LoadXMLFile(const char *fn, void *ud, StartElementHandler se, EndElementHandler ee, CharacterDataHandler cdh) {
         XML_Parser parser;
         char* xmlBuffer;
 

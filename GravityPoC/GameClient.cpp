@@ -8,8 +8,8 @@ namespace bali
 {
     GameClient::GameClient()
     {
-        _isDone = false;
-        _curStageIndex = 0;
+        mIsDone = false;
+        mCurStageIndex = 0;
     }
 
     uint32_t GameClient::initialize()
@@ -75,37 +75,8 @@ namespace bali
 
     uint32_t GameClient::cleanup()
     {
-        _curStageIndex = 0;
+        mCurStageIndex = 0;
         gameStages.clear();
         return 0;
     }
-
-    uint32_t GameClient::getCurrentStageIndex()
-    {
-        return _curStageIndex;
-    }
-
-    void GameClient::addStage(Stage::Ptr stage) 
-    {
-        gameStages.push_back(stage);
-    }
-
-    bool GameClient::nextStage()
-    {
-        gameStages[_curStageIndex]->cleanup();
-        _curStageIndex++;
-        if (_curStageIndex < gameStages.size()) {
-            return true;
-        }
-
-        // Game is done because there are no more stages
-        done();
-        return false;
-    }
-
-    Stage::Ptr GameClient::getCurrentStage()
-    {
-        return gameStages[_curStageIndex];
-    }
-
 }

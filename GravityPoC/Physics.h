@@ -30,13 +30,13 @@ namespace bali
         const float TOO_STEEP = -0.69f;
 #else
         const int LEFTUP = 0;
-        const int h = 100;
-        const int GK = 4000;
-        const float FIXED_DELTA = 1.0f / 325.0f;
+        const int h = 75;
+        const int GK = 1000;
+        const float FIXED_DELTA = 1.0f / 375.0f;
         const float DRAG_CONSTANT = 0.9;
         const int SKIP_FRAMES = 25;
-        const float RESTITUTION =0.6f;
-        const float TOO_STEEP  = -0.69f;
+        const float RESTITUTION =0.05f;
+        const float TOO_STEEP  = -1.0f;
 #endif
         class Intersection
         {
@@ -118,35 +118,6 @@ namespace bali
 
             return v;
         }
-
-        bool
-        MoreOrLessEquivalent(vec::VECTOR2 ray, vec::VECTOR2 edge)
-        {
-            // Adds a fuzz factor..because floating point is never perfect..
-            // i don't really know what that means though.
-            // but i kinda know what they're sayin'
-            
-            if ((ray.x > edge.x - EPSILON && ray.x < edge.x + EPSILON) &&
-                (ray.y > edge.y - EPSILON && ray.y < edge.y + EPSILON))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool
-            MoreOrLessEquivalent(float a, float b)
-        {
-            // Adds a fuzz factor..because floating point is never perfect..
-            // i don't really know what that means though.
-            // but i kinda know what they're sayin'
-            
-            if (fabsf(a-b) < EPSILON)
-            {
-                return true;
-            }
-            return false;
-        }
         
         // Find intersection of RAY & SEGMENT
         bool getIntersection(vec::VECTOR2 rayStart, vec::VECTOR2 ray,SAT::Segment segment, Intersection & intersection)
@@ -170,10 +141,6 @@ namespace bali
                 return false;
             }
             // SOLVE FOR T1 & T2
-            // r_px+r_dx*T1 = s_px+s_dx*T2 && r_py+r_dy*T1 = s_py+s_dy*T2
-            // ==> T1 = (s_px+s_dx*T2-r_px)/r_dx = (s_py+s_dy*T2-r_py)/r_dy
-            // ==> s_px*r_dy + s_dx*T2*r_dy - r_px*r_dy = s_py*r_dx + s_dy*T2*r_dx - r_py*r_dx
-            // ==> T2 = (r_dx*(s_py-r_py) + r_dy*(r_px-s_px))/(s_dx*r_dy - s_dy*r_dx)
             float det = (s_dx*r_dy - s_dy*r_dx);
             float T2 = (r_dx*(s_py - r_py) + r_dy*(r_px - s_px)) / det;
             float T1 = (s_px + s_dx*T2 - r_px) / r_dx;
@@ -192,7 +159,7 @@ namespace bali
           
             return true;
         }
-        bool sortHitsByAngle(physics::Intersection & i, physics::Intersection & j) { return (i.angle  > j.angle); }
+
         bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<SAT::Segment> & segments, physics::Intersection & intersect)
         {
             bool found = false;          
@@ -252,7 +219,7 @@ namespace bali
                 std::vector<physics::Intersection> intersections;
                 //float a = 270;
                 //for (float a = 89.9; a < 91; a = a + 0.10)
-                for (float a = 0.0; a < 370.0; a = a + 1.00)
+                for (float a = 0.0; a < 370.0; a = a + 0.5)
                 {
 
                     if (a == 90)
@@ -281,7 +248,7 @@ namespace bali
                 {
                     if (true)//!i->expired)
                     {
-                        i->rayPoint += i->ray * 60.0f;
+                        i->rayPoint += i->ray * 400.0f;
                         ctx->lineSegments.append(i->rayPoint.sf());
                     }
                 }
@@ -306,20 +273,20 @@ namespace bali
 
             for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
             {
-                SAT::ContactInfo cinfo1;
                 SAT::Shape playerShape = playerShapes.back();
                 std::vector<SAT::ContactInfo> hitInfo;
-                bool collision = playerShape.collision(player.pos,player.vel,*shape, cinfo1, hitInfo);
+
+                bool collision = playerShape.collision(player.pos,player.vel,*shape, hitInfo);
                 if (collision)
                 {
                     float minimumOverlap  = 999999999.0f;
-                    SAT::ContactInfo cinfo;
+                    //SAT::ContactInfo cinfo;
                     
-                    // We want to find the smallest overlap.
+                    // We want to find the most smallest overlap.
                     // Unfortunately, there may be multiple answers
-                    // when the collision polygon has parallel edges.
-                    // here, we distinguish between the parallel egdes,
-                    // by using the one that is closest.
+                    // when the collision polygon has parallel edges,
+                    // and when there are multiple overlapping polygons
+                    // being hit.
                     for (auto h = hitInfo.begin(); h != hitInfo.end(); ++h)
                     {
                         if (h->overlap <= minimumOverlap)
@@ -329,67 +296,42 @@ namespace bali
                     }
 
                     // now only cycle through hits with minimum overlaps
-                    float minimumHitDistance = 999999999.0f;
+                    // probably only two.
+                    // find the one we are approaching
                     for (auto h = hitInfo.begin(); h != hitInfo.end(); ++h)
                     {
                         if (h->overlap != minimumOverlap)
                             continue;
-                        //ss << "<MinOVR " << minimumOverlap << "> ";
 
+                        // here, we distinguish between the parallel egdes,
+                        // by using the one that is closest.
                         if (original_velocity.dot(h->normal) > 0)
                             continue;
 
-                        vec::VECTOR2 edgeLine = h->edge.end - h->edge.start;
-                        edgeLine = edgeLine.norm();
-                        vec::VECTOR2 edgeStart = h->edge.start;// +edgeLine * 20.0f;
-
-                        float currentHitDistance = 9999999999.0;
-                        float t = 0;
-                        for (t = 0.05; t < 0.95; t = t=t+0.005)
-                        {
-                            vec::VECTOR2 edgePoint = (edgeStart * (1-t)) + (edgeLine)* t;
-                            vec::VECTOR2 yang = player.pos;
-
-                            vec::VECTOR2 dist = edgePoint - yang;
-                            float mag = dist.mag();
-                            if (mag <= currentHitDistance)
-                            {
-                                currentHitDistance = mag;
-                                //ss << "<m? " << m << "> ";
-                            }
-                        }
-
-                        if (currentHitDistance <= minimumHitDistance)
-                        {
-                            minimumHitDistance = currentHitDistance;
-                            cinfo = *h;
-                            //ss << "<m! " << m << "> ";
-                        }
+                        cinfos.push_back(*h);
                     }
-                    cinfos.push_back(cinfo);
                 }
             }
 
-            if (!cinfos.empty())
-                ss << "<#ofCI " << cinfos.size() << ">, ";
+            //    ss << "<#ofCI " << cinfos.size() << ">, ";
+            ss << "<#ofCI " << cinfos.size() << ">, ";
 
             vec::VECTOR2  newPos(0, 0);
             float overlap = 0.0;
-            int zxc = 0;
 
             for (auto cinfo = cinfos.begin(); cinfo != cinfos.end(); ++cinfo)
             {
                 // When we collided with multiple edges at once
                 // we add all collision normals together and normalize
                 newPos += cinfo->normal;
-
                 // When we collided with multiple polygons at once
                 // we only want to use the largest overlap
                 if (cinfo->overlap > overlap)
                 {
+                    //overlap = cinfo->overlap/2.0;
                     overlap = cinfo->overlap;
                 }
-                ss << "<" << ++zxc << ">, ";
+
                 ss << "<CN " << cinfo->normal.x << ", " << cinfo->normal.y << ">, ";
                 ss << "<OVR? " << cinfo->overlap << ">, ";
                 ss << "<EDGE (" << cinfo->edge.start.x << ", " << cinfo->edge.start.y << "), ";
@@ -398,7 +340,7 @@ namespace bali
 
             
 
-            if (!cinfos.empty() && newPos != vec::VECTOR2(0, 0))
+            if (newPos != vec::VECTOR2(0, 0))
             {
                 isCollided = true;
                 vec::VECTOR2 newVelocity;
@@ -415,32 +357,32 @@ namespace bali
                     player.vel.y = newVelocity.y;
                 }
 
-                vec::VECTOR2 posDelta = newPos * overlap * 2.0;
+                vec::VECTOR2 posDelta = newPos * overlap * 1.5;
                 player.pos += posDelta;
 
-                float steepness = downVector(player.angle).dot(newPos);
-                if (steepness > TOO_STEEP || original_magnitude > 2000.0)
-                {
-                    ss << "< " << "HARD " << original_magnitude << ">, ";
-                }
-                else
-                {
-                    ss << "< " << "SOFT" << ">, ";
-                    player.vel = vec::VECTOR2(0, 0);
-                    player.acc = vec::VECTOR2(0, 0);
-                }
+                //float steepness = downVector(player.angle).dot(newPos);
+                //if (steepness > TOO_STEEP || original_magnitude > 2000.0)
+                //{
+                //    ss << "< " << "HARD " << original_magnitude << ">, ";
+                //}
+                //else
+                //{
+                //    ss << "< " << "SOFT" << ">, ";
+                //    player.vel = vec::VECTOR2(0, 0);
+                //    player.acc = vec::VECTOR2(0, 0);
+                //}
 
                 ss << "<A " << player.angle << ">";
                 ss << "<PD " << posDelta.x << ", " << posDelta.y << "> ";//aggregate new position
                 ss << "<NV " << newVelocity.x << ", " << newVelocity.y << "> ";//aggregate new velocity
                 ss << "<OVR! " << overlap << ">, ";
-                ss << "<STEEP " << steepness << ">, ";
+                //ss << "<STEEP " << steepness << ">, ";
             }
 
             if (!cinfos.empty())
             {
                 ss << "]" << endl;
-                //cout << ss.str();
+                cout << ss.str();
             }
             return isCollided;
         }

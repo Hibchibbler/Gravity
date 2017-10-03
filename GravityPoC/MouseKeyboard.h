@@ -8,6 +8,5 @@ namespace bali {
     public:
         static void doKeyboard(GameContext & ctx);
         static void doMouse(GameContext & ctx);
-    private:
     };
 }

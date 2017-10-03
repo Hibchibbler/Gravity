@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="2017.05.26" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="1149">
+<map version="1.0" tiledversion="2017.06.20" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="32" tileheight="32" nextobjectid="1150">
  <tileset firstgid="1" name="tilesetA" tilewidth="32" tileheight="32" tilecount="240" columns="16">
   <image source="tilesetA.png" width="512" height="480"/>
  </tileset>
  <tileset firstgid="241" name="background_01" tilewidth="32" tileheight="32" tilecount="3844" columns="62">
   <image source="back_cave.png" width="2000" height="2000"/>
  </tileset>
- <layer name="Tile Layer 2" width="64" height="64" visible="0">
+ <layer name="Tile Layer 2" width="64" height="64">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4106,7 +4106,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <layer name="Tile Layer 1" width="64" height="64" visible="0">
+ <layer name="Tile Layer 1" width="64" height="64">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -5172,7 +5172,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
+   <tile gid="102"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -9064,6 +9064,9 @@
   </object>
   <object id="1148" x="864" y="256">
    <polyline points="0,0 64,0 64,16 0,16 0,0"/>
+  </object>
+  <object id="1149" x="1280" y="544">
+   <polyline points="0,0 0,-32 16,0 0,0"/>
   </object>
  </objectgroup>
  <objectgroup name="PlayerShape">

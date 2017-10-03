@@ -18,24 +18,34 @@ namespace bali
         uint32_t initialize();
         uint32_t doProcessing();
         uint32_t cleanup();
-    private:
-        std::vector<Stage::Ptr> gameStages;
-        void addStage(Stage::Ptr stage);
     public:
         GameContext* getContext() { return &ctx; }
-        bool isInitialized() { return _isInit; }
-        bool isDone() { return _isDone; }
+        bool isInitialized() { return mIsInit; }
+        bool isDone() { return mIsDone; }
     private:
-        uint32_t getCurrentStageIndex();
-        bool nextStage();
-        Stage::Ptr getCurrentStage();
-        void initialized() { _isDone = false; }
-        void done() { _isDone = true; std::cout << "GameClient - GameClient is done." << std::endl; }
-        bool _isDone;
-        bool _isInit;
-        uint32_t _curStageIndex;
+        bool mIsDone;
+        bool mIsInit;
+        uint32_t mCurStageIndex;
         GameContext ctx;
 
+        uint32_t getCurrentStageIndex() { return mCurStageIndex; }
+        Stage::Ptr getCurrentStage() { return gameStages[mCurStageIndex]; }
+        bool nextStage() {
+            gameStages[mCurStageIndex]->cleanup();
+            mCurStageIndex++;
+            if (mCurStageIndex < gameStages.size()) {
+                return true;
+            }
+
+            // Game is done because there are no more stages
+            done();
+            return false;
+        }
+        void initialized() { mIsDone = false; mIsInit = false; }
+        void done() { mIsDone = true; std::cout << "GameClient - GameClient is done." << std::endl; }
+    private:
+        std::vector<Stage::Ptr> gameStages;
+        void addStage(Stage::Ptr stage) { gameStages.push_back(stage); }
     private:
     };
 }

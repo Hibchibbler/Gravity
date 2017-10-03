@@ -558,17 +558,7 @@ namespace bali
         return 0;
     }
 
-    TMX::Tileset::Ptr getTileset(std::string name, TMX::Tileset::Vec & tilesets)
-    {
-        for (auto i = tilesets.begin(); i != tilesets.end(); i++)
-        {
-            if ((*i)->name == name)
-            {
-                return *i;
-            }
-        }
-        return nullptr;
-    }
+
     //
     // This creates an array of layers. where each layer is 
     // composed of quads, where the size of each quad is 

@@ -208,7 +208,7 @@ namespace bali
                 return proj;
             }
 
-            bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, ContactInfo & mtv, std::vector<ContactInfo> & hitInfo)
+            bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, std::vector<ContactInfo> & hitInfo)
             {
                 double overlap = 999999999.0;// really large value;
                 ContactInfo smallest;
@@ -242,11 +242,11 @@ namespace bali
                         // check for minimum
                         hitInfo.push_back(ContactInfo(axis));
 
-                        if (o <= overlap) 
-                        {
-                            // then set this one as the smallest
-                            smallest = axis;
-                        }
+                        //if (o <= overlap) 
+                        //{
+                        //    // then set this one as the smallest
+                        //    smallest = axis;
+                        //}
                     }
                 }
                 //cout << "-------" << std::endl;
@@ -273,14 +273,14 @@ namespace bali
                         //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                         hitInfo.push_back(ContactInfo(axis));
 
-                        if (o <= overlap) 
-                        {
-                            smallest = axis;
-                        }
+                        //if (o <= overlap) 
+                        //{
+                        //    smallest = axis;
+                        //}
                     }
                 }
                 //cout << "<<<<<<<<<" << std::endl;
-                mtv = smallest;
+                //mtv = smallest;
                 // if we get here then we know that every axis had overlap on it
                 // so we can guarantee an intersection
                 std::cout << ss.str();

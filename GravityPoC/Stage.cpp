@@ -1,18 +1,21 @@
 #include "Stage.h"
-
+#include "GameContext.h"
 namespace bali
 {
 
     Stage::Stage(GameContext* ctx)
-        
     {
-        _ctx = ctx;//reference to owner being set.
-        _isDone = false;
-        _isInit= false;
+        mCtx = ctx;//reference to owner being set.
+        mIsDone = false;
+        mIsInit = false;
     }
     Stage::~Stage()
     {
 
+    }
+    GameContext* Stage::getContext()
+    { 
+        return mCtx; 
     }
 
 }//end namespace bali

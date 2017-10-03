@@ -64,7 +64,7 @@ namespace bali
         bool moveDown;
         bool moveUp;
         bool isCollided;
-        bool onGround;
+        bool onGround;//
     private:
 
         sf::Time updateTime;

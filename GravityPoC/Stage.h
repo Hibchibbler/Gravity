@@ -31,17 +31,17 @@ namespace bali
         virtual uint32_t doDraw() = 0;
         virtual uint32_t cleanup() = 0;
     public:
-        GameContext* getContext() { return _ctx; }
-        bool isInitialized() { return _isInit; }
-        bool isDone() { return _isDone; }
+        GameContext* getContext();
+        bool isInitialized() { return mIsInit; }
+        bool isDone() { return mIsDone; }
     protected:
-        void initialized() { _isInit = true; }
-        void done() { _isDone = true; }
-        bool _isDone;
-        bool _isInit;
+        void initialized() { mIsInit = true; }
+        void done() { mIsDone = true; }
+        bool mIsDone;
+        bool mIsInit;
 
         // "weak" reference to context
-        GameContext* _ctx;
+        GameContext* mCtx;
     };
 
 };

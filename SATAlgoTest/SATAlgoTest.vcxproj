@@ -76,6 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -84,6 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -105,10 +107,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>vector.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,12 +147,25 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>vector.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\sfml-system.redist.2.4.2.0\build\native\sfml-system.redist.targets" Condition="Exists('..\packages\sfml-system.redist.2.4.2.0\build\native\sfml-system.redist.targets')" />
+    <Import Project="..\packages\sfml-system.2.4.2.0\build\native\sfml-system.targets" Condition="Exists('..\packages\sfml-system.2.4.2.0\build\native\sfml-system.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\sfml-system.redist.2.4.2.0\build\native\sfml-system.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sfml-system.redist.2.4.2.0\build\native\sfml-system.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\sfml-system.2.4.2.0\build\native\sfml-system.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sfml-system.2.4.2.0\build\native\sfml-system.targets'))" />
+  </Target>
 </Project>

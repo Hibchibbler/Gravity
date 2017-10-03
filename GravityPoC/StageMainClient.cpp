@@ -30,10 +30,11 @@ namespace bali
         GameContext* ctx = getContext();
         ///////////////////////////////////////////////////////////////////////
         // Load TMX
-        TMX::TMXReader::load("level5.tmx", ctx->mctx);
+        ctx->map = make_shared<bali::TMX::Map>();
+        TMX::TMXReader::load("level5.tmx", ctx->map);
 
         // Still playing with these...no clue yet
-        TMX::Objectgroup::Ptr pObjG = ctx->mctx.getObjectGroup(ctx->mctx.maps.back(), "PlayerShape");
+        TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShape");
         
 
         ctx->player.pos.x = pObjG->objects.back()->x;
@@ -49,38 +50,38 @@ namespace bali
         ///////////////////////////////////////////////////////////////////////
 
         // Let's use this tileset.wadasdsa
-        TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
+        TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetA");
         ctx->tilesetAImg.loadFromFile(tilesetA->images.back()->source);
         ctx->tilesetAImg.createMaskFromColor(sf::Color::Black);//transparent is black...
         ctx->tilesetATex.loadFromImage(ctx->tilesetAImg);
 
 
-        TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
+        TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("background_01");
         ctx->backgroundImg.loadFromFile(tilesetBkgnd->images.back()->source);
         ctx->backgroundTex.loadFromImage(ctx->backgroundImg);
         ///////////////////////////////////////////////////////////////////////
         // Store TMX map layers into our TileLayers data structure
         ctx->tileLayers.push_back(TileLayer());
-        buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->mctx.maps.back()->layers[0]);
+        buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->map->layers[0]);
 
         ctx->tileLayers.push_back(TileLayer());
-        buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->mctx.maps.back()->layers[1]);
+        buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->map->layers[1]);
         ///////////////////////////////////////////////////////////////////////
         buildPolygonLayers(ctx->polygons,
-            ctx->mctx.maps.back()->objectgroups);
+            ctx->map->objectgroups);
         
         buildSharedEdgesLayers(ctx->sharedEdges,
-            ctx->mctx.maps.back()->objectgroups);
+            ctx->map->objectgroups);
         
         buildPlayerObjectLayers(ctx->playerpolygons,
-            ctx->mctx.maps.back()->objectgroups);
+            ctx->map->objectgroups);
 
         ///////////////////////////////////////////////////////////////////////
         int maxDepth = 15;
         qt::AABB aabb;
         aabb.min.x = -64;
         aabb.min.y = -64;
-        aabb.max.x = aabb.max.y = (ctx->mctx.maps.back()->width+2) * 32;//in pixels
+        aabb.max.x = aabb.max.y = (ctx->map->width+2) * 32;//in pixels
         
         SearchLayer searchLayer = std::make_shared<qt::QuadTree>();
         searchLayer->initialize(aabb, maxDepth);
@@ -162,6 +163,12 @@ namespace bali
         GameContext* ctx = getContext();
         sf::Time elapsed = ctx->mainClock.restart();
         vec::VECTOR2 zxc;
+        TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetA");
+        TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("background_01");
+        
+        // TODO: these need to replace all hardcodes
+        sf::Uint32 tw = tilesetA->tilewidth;
+        sf::Uint32 th = tilesetA->tileheight;
 
         //Smooth out player position for camera
         for (int d = 0; d < ctx->player.posHist.size(); d++)
@@ -169,16 +176,12 @@ namespace bali
             zxc += ctx->player.posHist[d];
         }
         zxc /= ctx->player.posHist.size();
+
         // Search for foreground that is visible        
         qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.90f);
-        TMX::Tileset::Ptr tilesetA = getTileset("tilesetA", ctx->mctx.maps.back()->tilesets);
-        TMX::Tileset::Ptr tilesetBkgnd = getTileset("background_01", ctx->mctx.maps.back()->tilesets);
-        sf::Uint32 tw = tilesetA->tilewidth;
-        sf::Uint32 th = tilesetA->tileheight;
-
 
         //Does the player hit anything?
-        // convert All obstacle tiles into shapes.
+        // convert All obstacle tiles returned from quad tree into shapes for rendering.
         std::vector<qt::XY> sr;
         sr = ctx->searchLayers.at(0)->search(searchRegion);
         
@@ -189,8 +192,7 @@ namespace bali
             x = p->x;
             y = p->y;
 
-            ctx->polygonsVisible.push_back(CONVEXSHAPE());
-            ctx->polygonsVisible.back() = ctx->polygons[p->ti];
+            ctx->polygonsVisible.push_back(ctx->polygons[p->ti]);
         }
 
         // Every shape that is tested for collision by the player
@@ -211,9 +213,8 @@ namespace bali
             }
         }
 
-
-        // A player "shape" may be composed of multiple polygons.
-        // therefore, we need to convert each polygon to a shape.
+        // individual player shapes are to be placed into this vector.
+        //  Note: A player "shape" may be composed of multiple polygons.
         std::vector<SAT::Shape> playershapes;
 
         vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
@@ -294,12 +295,11 @@ namespace bali
         //    poly->setOutlineThickness(2);
         //    ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
         //}
+        ctx->pRenderTexture0->display();
+
         sf::RenderStates lineSegRenderState;
-        
         ctx->pRenderTexture1->draw(ctx->lineSegments, lineSegRenderState);
         ctx->pRenderTexture1->display();
-
-        ctx->pRenderTexture0->display();
 
         sf::RenderStates totalRenderStates;
         totalRenderStates.shader = &ctx->shader;

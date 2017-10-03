@@ -42,14 +42,14 @@ namespace bali
     {
     public:
         XMLReader() {}
-        ~XMLReader() {}
+        virtual ~XMLReader() {}
 
         typedef void(*StartElementHandler) (void* data, const char* element, const char** attribute);
         typedef void(*EndElementHandler) (void* data, const char* el);
         typedef void(*CharacterDataHandler)(void *data, const char *content, int length);
 
     public:
-        static bool load(const char *fn, void *ud, StartElementHandler se, EndElementHandler ee, CharacterDataHandler cdh);
+        static bool LoadXMLFile (const char *fn, void *ud, StartElementHandler se, EndElementHandler ee, CharacterDataHandler cdh);
 
     private:
 

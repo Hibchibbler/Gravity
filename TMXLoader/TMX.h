@@ -7,6 +7,7 @@
 #define tmx_structures_h_
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 
 namespace bali {
@@ -393,6 +394,7 @@ namespace bali {
         public:
             typedef std::shared_ptr<Map> Ptr;
             typedef std::vector<Ptr>     Vec;
+            typedef std::map<std::string, Ptr>     Dict;
             typedef std::shared_ptr<Vec> VecPtr;
         public:
             Map()
@@ -406,6 +408,28 @@ namespace bali {
             }
             Layer::Ptr getLayer() { return layers.back(); }
             Layer::Ptr getLayer(int i) { return layers[i]; }
+
+            TMX::Objectgroup::Ptr getObjectGroup(std::string name)
+            {
+                for (auto o = objectgroups.begin(); o != objectgroups.end(); ++o)
+                {
+                    if ((*o)->name != name)
+                        continue;
+                    return *o;
+                }
+            }
+
+            TMX::Tileset::Ptr getTileset(std::string name)
+            {
+                for (auto i = tilesets.begin(); i != tilesets.end(); i++)
+                {
+                    if ((*i)->name == name)
+                    {
+                        return *i;
+                    }
+                }
+                return nullptr;
+            }
         public:
             std::string         version;
             std::string         orientation;

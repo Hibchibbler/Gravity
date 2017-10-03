@@ -7,8 +7,8 @@
 
 int main()
 {
-    bali::TMX::MapContext mapCtx;
-    bali::TMX::TMXReader::load("level1.tmx", mapCtx);
+    bali::TMX::Map::Ptr map = make_shared<bali::TMX::Map>();
+    bali::TMX::TMXReader::load("level1.tmx", map);
 
     return 0;
 }
