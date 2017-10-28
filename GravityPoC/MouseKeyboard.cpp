@@ -24,7 +24,7 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
-            ctx.player.moveUp = true;
+
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
@@ -34,18 +34,18 @@ void MouseKeyboard::doKeyboard(GameContext & ctx)
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
         {
-            ctx.player.angle = ctx.player.angle - 2.0;
-            if (ctx.player.angle < 0)
-                ctx.player.angle = 360;
-            ctx.player.GravityOn();
+            ctx.player.nextangle = ctx.player.nextangle - 15.0;
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
-            ctx.player.angle = ctx.player.angle + 2.0;
-            if (ctx.player.angle >= 360)
-                ctx.player.angle = 0;
-            ctx.player.GravityOn();
+            ctx.player.nextangle = ctx.player.nextangle + 15.0;
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+        {// Jump
+            ctx.player.moveUp = true;
+
         }
     }
 }

@@ -362,11 +362,13 @@ namespace bali {
             else if (state == "map layer data tile")
             {//case MapContext::LoadState::MAP_LAYER_DATA_TILEA: {
                 TileA::Val val;
+                val.gid = 0;
                 for (size_t i = 0; attribute[i]; i += 2)
                 {
                     ASSIGNIFMATCHESINT("gid", val.gid);
                     cout << "Unexpected attribute " << attribute[i] << "=" << attribute[i + 1] << " in " << std::string(element) << endl;
                 }
+
                 ctx->map->layers.back()->data->tiles.push_back(val);
 
             }

@@ -33,11 +33,11 @@ void main()
 	
 	if (maskColor == vec4(1.0, 1.0, 1.0, 1.0))
 	{
-		gl_FragColor = pixel - (1.3*cubicFalloff1/len1);
+		gl_FragColor = pixel - (2.0*cubicFalloff1/len1);
 	}
 	else
 	{
-		gl_FragColor = pixel - (80.00*cubicFalloff1);	
+		gl_FragColor = pixel - (50.00*cubicFalloff1);	
 	}
 /* 	vec2 dist2 = distance(gl_FragCoord.xy, last_position.xy) / view.xy;
 	float len2 = length(dist2);

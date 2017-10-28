@@ -18,6 +18,7 @@ namespace bali
         int ti;
         bool n, e, s, w;
         int gid;
+        unsigned char flip;
     };
 
     class TileLayer : public std::vector<Tile> {};

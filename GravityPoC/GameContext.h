@@ -14,6 +14,7 @@
 #include "Vector\Vector2.h"
 #include "SATAlgo\SATAlgo.h"
 #include "Player.h"
+#include "ConfigLoader.h"
 
 namespace bali 
 {
@@ -58,7 +59,7 @@ namespace bali
         std::vector<CONVEXSHAPE>    polygons;         // All of them
         std::vector<CONVEXSHAPE>    polygonsVisible;  // Updated each iteration
         std::vector<CONVEXSHAPE>    playerpolygons;   // 
-        std::vector<vec::VECTOR2>   sharedEdges;      // 
+        std::vector<SAT::Segment>   sharedEdges;      // 
 
         sf::VertexArray             lineSegments;
 
@@ -69,6 +70,8 @@ namespace bali
         sf::Clock                   mainClock;
         sf::Clock                   inputClock;
         sf::Shader                  shader;
+
+        PhysicsConfig               physicsConfig;
     };
 
 

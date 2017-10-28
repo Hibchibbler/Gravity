@@ -11,6 +11,9 @@
 #include "Vector\Vector2.h"
 #include "SATAlgo\SATAlgo.h"
 #include "Physics.h"
+#include "ConfigLoader.h"
+#include "Timer.h"
+
 #define PIXELS_PER_SEC  4
 
 
@@ -28,13 +31,18 @@ namespace bali
     uint32_t StageMainClient::initialize()
     {
         GameContext* ctx = getContext();
+
+        ///////////////////////////////////////////////////////////////////////
+        ctx->physicsConfig = loadPhysicsConfig("physics.config.txt");
+
+
         ///////////////////////////////////////////////////////////////////////
         // Load TMX
         ctx->map = make_shared<bali::TMX::Map>();
-        TMX::TMXReader::load("level5.tmx", ctx->map);
+        TMX::TMXReader::load("level_test1.tmx", ctx->map);
 
         // Still playing with these...no clue yet
-        TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShape");
+        TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShapes");
         
 
         ctx->player.pos.x = pObjG->objects.back()->x;
@@ -50,22 +58,22 @@ namespace bali
         ///////////////////////////////////////////////////////////////////////
 
         // Let's use this tileset.wadasdsa
-        TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetA");
+        TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetFore");
         ctx->tilesetAImg.loadFromFile(tilesetA->images.back()->source);
         ctx->tilesetAImg.createMaskFromColor(sf::Color::Black);//transparent is black...
         ctx->tilesetATex.loadFromImage(ctx->tilesetAImg);
 
 
-        TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("background_01");
+        TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("tilesetBack");
         ctx->backgroundImg.loadFromFile(tilesetBkgnd->images.back()->source);
         ctx->backgroundTex.loadFromImage(ctx->backgroundImg);
         ///////////////////////////////////////////////////////////////////////
         // Store TMX map layers into our TileLayers data structure
         ctx->tileLayers.push_back(TileLayer());
-        buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->map->layers[0]);
+        buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->map->getLayer("BackgroundLayer"));
 
         ctx->tileLayers.push_back(TileLayer());
-        buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->map->layers[1]);
+        buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->map->getLayer("ForegroundLayer"));
         ///////////////////////////////////////////////////////////////////////
         buildPolygonLayers(ctx->polygons,
             ctx->map->objectgroups);
@@ -142,6 +150,10 @@ namespace bali
         }case sf::Event::MouseMoved: {
             break;
         }case sf::Event::KeyPressed:
+
+            break;
+        case sf::Event::KeyReleased:
+
             break;
         case sf::Event::Closed:
             break;
@@ -163,12 +175,12 @@ namespace bali
         GameContext* ctx = getContext();
         sf::Time elapsed = ctx->mainClock.restart();
         vec::VECTOR2 zxc;
-        TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetA");
-        TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("background_01");
-        
-        // TODO: these need to replace all hardcodes
-        sf::Uint32 tw = tilesetA->tilewidth;
-        sf::Uint32 th = tilesetA->tileheight;
+        //TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetFore");
+        //TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("tilesetBack");
+        //
+        //// TODO: these need to replace all hardcodes
+        //sf::Uint32 tw = tilesetA->tilewidth;
+        //sf::Uint32 th = tilesetA->tileheight;
 
         //Smooth out player position for camera
         for (int d = 0; d < ctx->player.posHist.size(); d++)
@@ -222,14 +234,18 @@ namespace bali
         for (int j = 0; j < ctx->playerpolygons.size(); ++j)
         {
             playershapes.push_back(SAT::Shape());
+            float hafWid = ctx->playerpolygons[j].getLocalBounds().width / 2.0;//getLocalBounds
+            float hafHite = ctx->playerpolygons[j].getLocalBounds().height / 2.0;
+
             for (int i = 0; i < ctx->playerpolygons[j].getPointCount(); i++)
             {
                 sf::Vector2f v = ctx->playerpolygons[j].getPoint(i);
                 playershapes.back().addVertex(v.x, v.y);
             }
-            float hafWid =  ctx->playerpolygons[j].getLocalBounds().width / 2.0;
-            float hafHite =  ctx->playerpolygons[j].getLocalBounds().height / 2.0;
-
+            
+            // center polygon on pos
+            // assume pos is top left corner.
+            // pollygon will shift left, and down
             ctx->playerpolygons[j].setPosition(pos.x - hafWid, pos.y + hafHite);
             playershapes.back().translate(pos.x - hafWid, pos.y + hafHite);
         }
@@ -238,9 +254,10 @@ namespace bali
         // Resolve collisions
         // Integrate motion
         // Create Line of Sight Triangle Fan
-        physics::ResolveCollisions(shapes, playershapes, ctx->player);
-        physics::update(ctx->player, elapsed);
         physics::createLoSTriFan(shapes, ctx);
+        physics::ResolveCollisions(shapes, playershapes, ctx->player, ctx->physicsConfig, ctx->sharedEdges);
+        physics::update(ctx->player, elapsed, ctx->physicsConfig);
+
 
         ctx->mainView.setCenter(zxc.x, zxc.y);
         getContext()->mainView.setRotation(getContext()->player.angle);
@@ -267,7 +284,7 @@ namespace bali
         auto fore = ctx->quadLayers[1];
         ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-        // Collision Polygons - debug
+        //// Collision Polygons - debug
         //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
         //{
         //    sf::RenderStates polyVisiRenderStates;
@@ -286,15 +303,16 @@ namespace bali
             ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
         }
 
-        // line segments - debug
+        //// line segments - debug
         //for (auto poly = ctx->lineSegments.begin(); poly != ctx->playerpolygons.end(); ++poly)
         //{
         //    sf::RenderStates polyPlayerRenderStates;
-        //    poly->setOutlineColor(sf::Color::Yellow);
+        //    //poly->setOutlineColor(sf::Color::Yellow);
         //    poly->setFillColor(sf::Color::Green);
-        //    poly->setOutlineThickness(2);
+        //    //poly->setOutlineThickness(2);
         //    ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
         //}
+
         ctx->pRenderTexture0->display();
 
         sf::RenderStates lineSegRenderState;
@@ -306,8 +324,8 @@ namespace bali
         ctx->shader.setUniform("view", ctx->mainView.getSize());
         ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
         vec::VECTOR2 pposTemp = ctx->player.pos;
-        pposTemp.x = pposTemp.x + 20;
-        pposTemp.y = pposTemp.y - 13;
+        pposTemp.x = pposTemp.x - 8;
+        pposTemp.y = pposTemp.y + 8;
         ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->window.mapCoordsToPixel(pposTemp.sf())));
         ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
         ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());

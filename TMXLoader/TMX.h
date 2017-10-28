@@ -37,7 +37,7 @@ namespace bali {
         public:
             TileA(){}
         public:
-            int32_t             gid;
+            uint32_t             gid;
         };
 
         class Point
@@ -422,6 +422,18 @@ namespace bali {
             TMX::Tileset::Ptr getTileset(std::string name)
             {
                 for (auto i = tilesets.begin(); i != tilesets.end(); i++)
+                {
+                    if ((*i)->name == name)
+                    {
+                        return *i;
+                    }
+                }
+                return nullptr;
+            }
+
+            TMX::Layer::Ptr getLayer(std::string name)
+            {
+                for (auto i = layers.begin(); i != layers.end(); i++)
                 {
                     if ((*i)->name == name)
                     {

@@ -33,6 +33,22 @@ namespace bali
                 end.x = x2;
                 end.y = y2;
             }
+            bool isEqual(Segment & other)
+            {
+                if (start.x == other.start.x &&
+                    start.y == other.start.y &&
+                    end.x == other.end.x &&
+                    end.y == other.end.y)
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            float getSlope()
+            {
+                return (end.y - start.y) / (end.x - start.x);
+            }
             vec::VECTOR2 start;
             vec::VECTOR2 end;
         };
@@ -70,7 +86,7 @@ namespace bali
             Segment edge;
             float overlap;
         };
-        //typedef vec::Vector2 Axis;
+
         typedef std::vector<ContactInfo> Axes;
 
         class Projection : public vec::VECTOR2
@@ -144,19 +160,16 @@ namespace bali
             std::vector<Segment> getSegments()
             {
                 std::vector<Segment> segments;
-                //if (vertices.size() > 1)
-                ///{
-                    for (int i = 0; i < vertices.size(); ++i)
-                    {
-                        // get the current vertex
-                        vec::VECTOR2 p1 = vertices[i];
+                for (int i = 0; i < vertices.size(); ++i)
+                {
+                    // get the current vertex
+                    vec::VECTOR2 p1 = vertices[i];
 
-                        // get the next vertex
-                        vec::VECTOR2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
+                    // get the next vertex
+                    vec::VECTOR2 p2 = vertices[i + 1 == vertices.size() ? 0 : i + 1];
 
-                        segments.push_back(Segment(p1.x, p1.y, p2.x, p2.y));
-                    }
-                //}
+                    segments.push_back(Segment(p1.x, p1.y, p2.x, p2.y));
+                }
                 return segments;
             }
             Axes getContactInfo()
@@ -175,8 +188,7 @@ namespace bali
                     vec::VECTOR2 edge = p2 - p1;//.subtract(p1);
 
                     // get either normal vector
-                    vec::VECTOR2 normal = edge.normal();//.normal();
-                    normal = normal.norm();
+                    vec::VECTOR2 normal = edge.normal().norm();
 
                     // the perp method is just (x, y) => (-y, x) or (y, -x)
                     ContactInfo axis;
@@ -193,8 +205,8 @@ namespace bali
             {
                 float min = axis.normal.dot(vertices[0]);
                 double max = min;
+
                 for (int i = 1; i < vertices.size(); i++) {
-                    // NOTE: the axis must be normalized to get accurate projections
                     double p = axis.normal.dot(vertices[i]);
                     if (p <= min) {
                         min = p;
@@ -208,14 +220,12 @@ namespace bali
                 return proj;
             }
 
-            bool collision(vec::VECTOR2 position, vec::VECTOR2 vel, Shape & other, std::vector<ContactInfo> & hitInfo)
+            bool collision(Shape & other, std::vector<ContactInfo> & hitInfo)
             {
-                double overlap = 999999999.0;// really large value;
-                ContactInfo smallest;
+                hitInfo.clear();
                 Axes axes1 = (*this).getContactInfo();
                 Axes axes2 = other.getContactInfo();
-                bool collided = false;
-                float smallestLen = 9999999.0;//
+                char collided = 0x00;
                 // loop over the axes1
                 //cout << ">>>>>>>>>" << std::endl;
                 std::stringstream ss;
@@ -234,19 +244,11 @@ namespace bali
                     }
                     else 
                     {
-                        // if this collision normal points to an adjacent tile, ignore it.
-                        // get the overlap
+                        // get the overlap, and store it
                         double o = p1.getOverlap(p2);
                         axis.overlap = o;
                         //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
-                        // check for minimum
                         hitInfo.push_back(ContactInfo(axis));
-
-                        //if (o <= overlap) 
-                        //{
-                        //    // then set this one as the smallest
-                        //    smallest = axis;
-                        //}
                     }
                 }
                 //cout << "-------" << std::endl;
@@ -266,21 +268,14 @@ namespace bali
                     }
                     else 
                     {
-                        // get the overlap
+                        // get the overlap, and store it
                         double o = p1.getOverlap(p2);
                         axis.overlap = o;
-                        // check for minimum
                         //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                         hitInfo.push_back(ContactInfo(axis));
-
-                        //if (o <= overlap) 
-                        //{
-                        //    smallest = axis;
-                        //}
                     }
                 }
                 //cout << "<<<<<<<<<" << std::endl;
-                //mtv = smallest;
                 // if we get here then we know that every axis had overlap on it
                 // so we can guarantee an intersection
                 std::cout << ss.str();

@@ -16,7 +16,7 @@
 
 #define ASSIGNIFMATCHESINT(a1, a2)                  \
         if (std::string(attribute[i]) == a1){       \
-            a2 = atoi(attribute[i+1]);              \
+            a2 = strtoul(attribute[i+1], NULL, 0);  \
             continue;                               \
         }
 //             cout << attribute[i] << " = " << attribute[i+1] << endl;    \

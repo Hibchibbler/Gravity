@@ -13,12 +13,13 @@ namespace bali
 
         Player()
             : PhysicalObject(),
-              lastPosition(0,0),
+            edgeContact(0,0),
               accumulator()
         {
             applyGravity = true;
             angle = 0.0;
             moveRight = moveLeft = moveDown = moveUp = false;
+            //jumpAccum = 0;
             isCollided = false;
             posCorrection.x = posCorrection.y = 0;
             velCorrection.x = velCorrection.y = 0;
@@ -41,12 +42,14 @@ namespace bali
         //   12 O' Clock = 240 degree
         //   3 O'  Clock = 360 degree
         float angle;
+        float nextangle;
         bool rotated; //meta data
         bool solidGround;
 
         QuadLayer playerQuads;
         vec::VECTOR2 velCorrection;
         vec::VECTOR2 posCorrection;
+        vec::VECTOR2 edgeContact;
         bool applyGravity;
         bool GravityOn() {
             return (applyGravity = true);
@@ -65,6 +68,7 @@ namespace bali
         bool moveUp;
         bool isCollided;
         bool onGround;//
+
     private:
 
         sf::Time updateTime;

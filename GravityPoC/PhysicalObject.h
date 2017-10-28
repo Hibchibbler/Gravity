@@ -26,6 +26,11 @@ namespace bali {
         vec::VECTOR2 vel;
         vec::VECTOR2 acc;
         uint32_t mass;
+
+        vec::VECTOR2 nextPos;
+        vec::VECTOR2 velAccu;
+
+
     public:
         vec::VECTOR2 impulse(vec::VECTOR2 force)
         {
