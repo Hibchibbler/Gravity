@@ -13,6 +13,8 @@
 #include <cassert>
 #include <stdint.h>
 #include <iostream>
+#include <queue>
+#include "RingBuffer.h"
 
 #define COMPLETION_KEY_UNKNOWN      0
 #define COMPLETION_KEY_IO           1
@@ -20,17 +22,21 @@
 
 namespace bali
 {
+    const ULONG MAX_PACKET_SIZE = 1024;
+
     class Mutex
     {
     public:
         void create()
         {
             InitializeCriticalSection(&critSection);
+            init++;
         }
 
         void destroy()
         {
             DeleteCriticalSection(&critSection);
+            init--;
         }
 
         void lock()
@@ -42,7 +48,13 @@ namespace bali
         {
             LeaveCriticalSection(&critSection);
         }
+
+        USHORT isInit()
+        {
+            return init;
+        }
     private:
+        USHORT init;
         CRITICAL_SECTION critSection;
     };
 
@@ -58,11 +70,6 @@ namespace bali
     public:
         typedef std::unique_ptr<Overlapped> Ptr;
 
-        enum Limits
-        {
-            MAX_DGRAM_SIZE = 1024
-        };
-
         enum IOType
         {
             READ,
@@ -73,7 +80,7 @@ namespace bali
         {
             ZeroMemory(&srcAddr, sizeof(srcAddr));
             srcAddrLen = 0;
-            bytesReceived = 0;
+            dstAddrLen = 0;
             this->Internal = 0;
             this->InternalHigh = 0;
             this->Offset = 0;
@@ -83,31 +90,34 @@ namespace bali
 
             ZeroMemory(&srcAddr, sizeof(srcAddr));
             srcAddrLen = sizeof(srcAddr);
+
+            ZeroMemory(&dstAddr, sizeof(dstAddr));
+            dstAddrLen = sizeof(dstAddr);
         }
 
         SOCKADDR_STORAGE    srcAddr;
         INT                 srcAddrLen;
-
+        SOCKADDR_STORAGE    dstAddr;
+        INT                 dstAddrLen;
         IOType              ioType;
-        DWORD               bytesReceived;
         uint32_t            index;
-        UCHAR               buffer[MAX_DGRAM_SIZE];
+        UCHAR               buffer[MAX_PACKET_SIZE];
         BOOL                inuse;
     };
 
     class OverlapCollection
     {
     public:
-        //std::vector<Overlapped> outstanding;
-        Overlapped overlaps[10];
+#define JACK 1
         uint32_t index;
         HANDLE readMutex;
+        Overlapped overlaps[JACK];
+
         OverlapCollection()
         {
             index = 0;
             readMutex = INVALID_HANDLE_VALUE;
-
-            for (uint32_t i = 0; i < 10; ++i)
+            for (uint32_t i = 0; i < JACK; ++i)
             {
                 overlaps[i].inuse = false;
                 overlaps[i].index = i;
@@ -118,7 +128,7 @@ namespace bali
         {
             bool status = false;
             m->lock();
-            for (uint32_t i = 0; i <10; ++i)
+            for (uint32_t i = 0; i <JACK; ++i)
             {
                 *overlapped = &overlaps[i];
                 if ((*overlapped)->inuse == false)
@@ -136,7 +146,7 @@ namespace bali
         {
             bool status = false;
             m->lock();
-            if (i < 10 && overlaps[i].inuse == true)
+            if (i < JACK && overlaps[i].inuse == true)
             {
                 overlaps[i].inuse = false;
                 status = true;
@@ -145,6 +155,12 @@ namespace bali
             return status;
         }
     private:
+    };
+    class Address
+    {
+    public:
+        SOCKADDR_STORAGE addr;
+        uint32_t addrLen;
     };
 
     class Socket
@@ -156,12 +172,56 @@ namespace bali
             ZeroMemory(&addr, sizeof(addr));
         }
 
+        void cleanup()
+        {
+            overlapMutex.destroy();
+            closesocket(handle);
+        }
+
         SOCKET handle;
         SOCKADDR_STORAGE addr;
 
         const uint8_t  MAX_OUTSTANDING = 10;
         Mutex overlapMutex;
         OverlapCollection overCollection;
+        ULONG_PTR completionKey;
+    };
+
+    class Data
+    {
+    public:
+        Data() = default;
+        Data(const Data & _data)
+        {
+            size = _data.size;
+            memcpy(payload, _data.payload, _data.size);
+            srcAddrLen = _data.srcAddrLen;
+            memcpy(&srcAddr, &_data.srcAddr, _data.srcAddrLen);
+        }
+
+        Data(uint32_t _size, void* _buffer, SOCKADDR_STORAGE & addr, int addrLen)
+        {
+            size = _size;
+            memcpy(payload, _buffer, MAX_PACKET_SIZE);
+            srcAddrLen = addrLen;
+            memcpy(&srcAddr, &addr, addrLen);
+        }
+
+        Data & operator=(const Data & _data)
+        {
+            if (this != &_data)
+            {
+                this->size = _data.size;
+                memcpy(this->payload, _data.payload, MAX_PACKET_SIZE);
+                srcAddrLen = _data.srcAddrLen;
+                memcpy(&this->srcAddr, &_data.srcAddr, _data.srcAddrLen);
+            }
+            return *this;
+        }
+        SOCKADDR_STORAGE srcAddr;
+        int              srcAddrLen;
+        uint32_t size;
+        uint8_t payload[1024];
     };
 
     class Network
@@ -175,6 +235,7 @@ namespace bali
         {
             SUCCESS,
             FAILED,
+            INFO_CLIENT_RXQUEUE_EMPTY,
             FAILED_IOPORT_ASSOCIATION,
             FAILED_IOPORT_CREATE,
             FAILED_THREAD_CREATE,
@@ -186,7 +247,8 @@ namespace bali
             FAILED_SOCKET_BIND,
             FAILED_SOCKET_CREATE,
             FAILED_SOCKET_STARTUP,
-            FAILED_SOCKET_CLEANUP
+            FAILED_SOCKET_CLEANUP,
+            INFO_SOCKET_READ_COMPLETED
         };
 
         class Result
@@ -197,32 +259,38 @@ namespace bali
             ResultType type;
             uint32_t code;
         };
+        typedef void(*IOHandler)(Data &data, Overlapped::IOType ioType);
 
-        Network::Result initialize(uint32_t maxThreads, uint16_t port);
+        Network::Result initialize(uint32_t maxThreads, uint16_t port, IOHandler handler);
         Network::Result cleanup();
-
         Network::Result createWorkerThreads();
-        Network::Result startWorkerThreads();
-        Network::Result createPort();
-        Network::Result associate(Socket & s);
-
-        Network::Result createSocket(Socket & s);
+        Network::Result startWorkerThreads(Socket & rSock);
+        //Network::Result stopWorkerThreads();
+        Network::Result createPort(HANDLE & iocport);
+        Network::Result associateSocketWithIOCPort(HANDLE iocport, Socket & s);
+        Network::Result registerReaderSocket(Socket & s);
+        Network::Result registerWriterSocket(Socket & s);
+        Network::Result createSocket(Socket & s, ULONG_PTR completionKey);
         Network::Result bindSocket(Socket & s);
-        Network::Result writeSocket(Socket & s);
+        Network::Result writeSocket(Socket & s, Data & data);
         Network::Result readSocket(Socket & s);
-
+        Network::Result popRxData(Data & data);
+        Network::Result pushTxData(Socket & s, Data & data);
         bool GetLocalAddressInfo(Socket & s);
-        Socket & getReceiverSock()
+        HANDLE & getIOCPort()
         {
-            return recvSocket;
+            return ioPort;
         }
     private:
+        Socket* readerSocket;
+        Socket* writerSocket;
         HANDLE ioPort;
-        Socket recvSocket;
         std::list<Thread> threads;
-
         uint32_t maxThreads;
         uint16_t port;
+        Mutex rxDataMutex;
+        std::queue<Data> rxData;
+        IOHandler ioHandler;
     private:
         static void* WorkerThread(Network* context);
     };
