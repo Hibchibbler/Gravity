@@ -20,6 +20,9 @@
 #define COMPLETION_KEY_IO           1
 #define COMPLETION_KEY_SHUTDOWN     2
 
+#define INUSE       1
+#define NOT_INUSE   0
+
 namespace bali
 {
     const ULONG MAX_PACKET_SIZE = 1024;
@@ -57,14 +60,23 @@ namespace bali
         USHORT init;
         CRITICAL_SECTION critSection;
     };
-
     class Thread
     {
     public:
         HANDLE handle;
         DWORD id;
     };
-
+    class Address
+    {
+    public:
+        Address() 
+        {
+            ZeroMemory(&addr, sizeof(SOCKADDR_STORAGE));
+            len = sizeof(SOCKADDR_STORAGE);
+        }
+        SOCKADDR_STORAGE    addr;
+        INT                 len;
+    };
     class Overlapped : public WSAOVERLAPPED
     {
     public:
@@ -78,89 +90,75 @@ namespace bali
 
         Overlapped()
         {
-            ZeroMemory(&srcAddr, sizeof(srcAddr));
-            srcAddrLen = 0;
-            dstAddrLen = 0;
             this->Internal = 0;
             this->InternalHigh = 0;
             this->Offset = 0;
             this->OffsetHigh = 0;
             this->hEvent = 0;
-            inuse = false;
-
-            ZeroMemory(&srcAddr, sizeof(srcAddr));
-            srcAddrLen = sizeof(srcAddr);
-
-            ZeroMemory(&dstAddr, sizeof(dstAddr));
-            dstAddrLen = sizeof(dstAddr);
+            inuse = NOT_INUSE;
         }
 
-        SOCKADDR_STORAGE    srcAddr;
-        INT                 srcAddrLen;
-        SOCKADDR_STORAGE    dstAddr;
-        INT                 dstAddrLen;
+        Address             remote;
+
         IOType              ioType;
         uint32_t            index;
+        UCHAR               inuse;
         UCHAR               buffer[MAX_PACKET_SIZE];
-        BOOL                inuse;
+        
     };
-
-    class OverlapCollection
+    class OverlapPool
     {
     public:
-#define JACK 1
+#define JACK 8
         uint32_t index;
-        HANDLE readMutex;
-        Overlapped overlaps[JACK];
+        Overlapped pool[JACK];
 
-        OverlapCollection()
+        OverlapPool()
         {
             index = 0;
-            readMutex = INVALID_HANDLE_VALUE;
             for (uint32_t i = 0; i < JACK; ++i)
             {
-                overlaps[i].inuse = false;
-                overlaps[i].index = i;
+                pool[i].inuse = NOT_INUSE;
+                pool[i].index = i;
             }
         }
 
-        bool getOverlapped(Overlapped** overlapped, Mutex* m)
+        ~OverlapPool()
         {
-            bool status = false;
-            m->lock();
+        }
+
+        //
+        // Acquire an unused overlap
+        // Return false when there is not an unused overlap available.
+        //
+        bool acquire(Overlapped** overlapped)
+        {
+            bool acquired = false;
             for (uint32_t i = 0; i <JACK; ++i)
             {
-                *overlapped = &overlaps[i];
-                if ((*overlapped)->inuse == false)
-                {
-                    (*overlapped)->inuse = true;
-                    status = true;
+                *overlapped = &pool[i];
+                if (InterlockedExchange8((char*)&(*overlapped)->inuse, INUSE) == NOT_INUSE)
+                {//Wasn't already in use. So, we want it, and we have it.
+                    acquired = true;
                     break;
                 }
+                else
+                {//Was already in use. So we don't want it,
+                 // We didn't change anything that wasn't already true;
+                    continue;
+                }
             };
-            m->unlock();
-            return status;
+            return acquired;
         }
 
-        bool expireOverlapped(uint32_t i, Mutex* m)
+        //
+        // Release a used overlap
+        //
+        void release(uint32_t i)
         {
-            bool status = false;
-            m->lock();
-            if (i < JACK && overlaps[i].inuse == true)
-            {
-                overlaps[i].inuse = false;
-                status = true;
-            }
-            m->unlock();
-            return status;
+            InterlockedExchange8((char*)&(pool[i].inuse), NOT_INUSE);
         }
     private:
-    };
-    class Address
-    {
-    public:
-        SOCKADDR_STORAGE addr;
-        uint32_t addrLen;
     };
 
     class Socket
@@ -169,42 +167,33 @@ namespace bali
         Socket()
         {
             handle = INVALID_SOCKET;
-            ZeroMemory(&addr, sizeof(addr));
         }
 
         void cleanup()
         {
-            overlapMutex.destroy();
             closesocket(handle);
         }
 
         SOCKET handle;
-        SOCKADDR_STORAGE addr;
-
-        const uint8_t  MAX_OUTSTANDING = 10;
-        Mutex overlapMutex;
-        OverlapCollection overCollection;
+        Address local;
+        OverlapPool overlapPool;
         ULONG_PTR completionKey;
     };
 
     class Data
     {
     public:
-        Data() = default;
         Data(const Data & _data)
         {
-            size = _data.size;
-            memcpy(payload, _data.payload, _data.size);
-            srcAddrLen = _data.srcAddrLen;
-            memcpy(&srcAddr, &_data.srcAddr, _data.srcAddrLen);
+            *this = _data;
         }
 
         Data(uint32_t _size, void* _buffer, SOCKADDR_STORAGE & addr, int addrLen)
         {
             size = _size;
             memcpy(payload, _buffer, MAX_PACKET_SIZE);
-            srcAddrLen = addrLen;
-            memcpy(&srcAddr, &addr, addrLen);
+            remote.len = addrLen;
+            memcpy(&remote.addr, &addr, sizeof(SOCKADDR_STORAGE));
         }
 
         Data & operator=(const Data & _data)
@@ -213,13 +202,12 @@ namespace bali
             {
                 this->size = _data.size;
                 memcpy(this->payload, _data.payload, MAX_PACKET_SIZE);
-                srcAddrLen = _data.srcAddrLen;
-                memcpy(&this->srcAddr, &_data.srcAddr, _data.srcAddrLen);
+                remote.len = _data.remote.len;
+                memcpy(&this->remote.addr, &_data.remote.addr, sizeof(SOCKADDR_STORAGE));
             }
             return *this;
         }
-        SOCKADDR_STORAGE srcAddr;
-        int              srcAddrLen;
+        Address remote;
         uint32_t size;
         uint8_t payload[1024];
     };
@@ -227,7 +215,7 @@ namespace bali
     class Network
     {
     public:
-        
+
         Network();
         ~Network();
 
@@ -264,7 +252,7 @@ namespace bali
         Network::Result initialize(uint32_t maxThreads, uint16_t port, IOHandler handler);
         Network::Result cleanup();
         Network::Result createWorkerThreads();
-        Network::Result startWorkerThreads(Socket & rSock);
+        Network::Result startWorkerThreads();
         //Network::Result stopWorkerThreads();
         Network::Result createPort(HANDLE & iocport);
         Network::Result associateSocketWithIOCPort(HANDLE iocport, Socket & s);
@@ -274,8 +262,6 @@ namespace bali
         Network::Result bindSocket(Socket & s);
         Network::Result writeSocket(Socket & s, Data & data);
         Network::Result readSocket(Socket & s);
-        Network::Result popRxData(Data & data);
-        Network::Result pushTxData(Socket & s, Data & data);
         bool GetLocalAddressInfo(Socket & s);
         HANDLE & getIOCPort()
         {
@@ -288,8 +274,6 @@ namespace bali
         std::list<Thread> threads;
         uint32_t maxThreads;
         uint16_t port;
-        Mutex rxDataMutex;
-        std::queue<Data> rxData;
         IOHandler ioHandler;
     private:
         static void* WorkerThread(Network* context);

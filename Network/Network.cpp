@@ -36,8 +36,6 @@ Network::Result Network::initialize(uint32_t maxThreads, uint16_t port, IOHandle
         result.type = Network::ResultType::FAILED_SOCKET_STARTUP;
         result.code = r;
     }
-
-    rxDataMutex.create();
     return result;
 }
 
@@ -46,7 +44,7 @@ Network::Result Network::cleanup()
     Network::Result result(Network::ResultType::SUCCESS);
     // Clean up and exit.
     CloseHandle(ioPort);
-    
+
     wprintf(L"Exiting.\n");
     WSACleanup();
     return result;
@@ -58,11 +56,11 @@ Network::Result  Network::createWorkerThreads()
     for (uint32_t t = 0; t < maxThreads; ++t)
     {
         Thread thread;
-        thread.handle = CreateThread(NULL, 0, 
-                                     (LPTHREAD_START_ROUTINE)Network::WorkerThread,
-                                     this, 
-                                     CREATE_SUSPENDED, 
-                                     &thread.id);
+        thread.handle = CreateThread(NULL, 0,
+            (LPTHREAD_START_ROUTINE)Network::WorkerThread,
+            this,
+            CREATE_SUSPENDED,
+            &thread.id);
 
         if (thread.handle == INVALID_HANDLE_VALUE)
         {// Bad thread, bail
@@ -74,7 +72,7 @@ Network::Result  Network::createWorkerThreads()
     }
     return result;
 }
-Network::Result Network::startWorkerThreads(Socket & rSock)
+Network::Result Network::startWorkerThreads()
 {
     Network::Result result(Network::ResultType::SUCCESS);
     for (auto t = threads.begin(); t != threads.end(); ++t)
@@ -91,7 +89,7 @@ Network::Result Network::startWorkerThreads(Socket & rSock)
     // Kick off the perpetual reads
     if (result.type == Network::ResultType::SUCCESS)
     {
-        result = readSocket(rSock);
+        result = readSocket(*readerSocket);
     }
     return result;
 }
@@ -124,11 +122,10 @@ Network::Result Network::associateSocketWithIOCPort(HANDLE iocport, Socket & s)
 Network::Result Network::createSocket(Socket & s, ULONG_PTR completionKey)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    s.handle = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL , 0 , WSA_FLAG_OVERLAPPED);
+    s.handle = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (s.handle != INVALID_SOCKET)
     {
         s.completionKey = completionKey;
-        s.overlapMutex.create();
     }
     else
     {
@@ -143,7 +140,7 @@ Network::Result Network::bindSocket(Socket & s)
     Network::Result result(Network::ResultType::SUCCESS);
     GetLocalAddressInfo(s);
 
-    int ret = bind(s.handle, (SOCKADDR*)&s.addr, sizeof(s.addr));
+    int ret = bind(s.handle, (SOCKADDR*)&s.local.addr, sizeof(s.local.addr));
     if (ret == SOCKET_ERROR)
     {
         result.type = Network::ResultType::FAILED_SOCKET_BIND;
@@ -158,32 +155,32 @@ Network::Result Network::writeSocket(Socket & s, Data & data)
 {
     Network::Result result(Network::ResultType::SUCCESS);
     Overlapped* o = nullptr;
-    if (s.overCollection.getOverlapped(&o, &s.overlapMutex))
+    if (s.overlapPool.acquire(&o))
     {
         DWORD flags = 0;
         int ret = 0;
         o->ioType = Overlapped::IOType::WRITE;
-        
-        memcpy(&o->dstAddr, &data.srcAddr, data.srcAddrLen);
-        o->dstAddrLen = data.srcAddrLen;
-        
+
+        memcpy(&o->remote.addr, &data.remote.addr, sizeof(SOCKADDR_STORAGE));
+        o->remote.len = data.remote.len;
+
         WSABUF wsaBuf;
         wsaBuf.buf = (CHAR*)&data.payload;
         wsaBuf.len = min(data.size, MAX_PACKET_SIZE);// Shit gets Truncated here.
-        ret = 
+        ret =
             WSASendTo(
                 s.handle,
-                &wsaBuf, 
-                1, 
+                &wsaBuf,
+                1,
                 NULL,
                 flags,
-                (SOCKADDR*)&o->dstAddr,
-                o->dstAddrLen, 
+                (SOCKADDR*)&o->remote.addr,
+                o->remote.len,
                 o,
                 NULL);
         if (ret == 0)
         {//Good
-            // SendTo finished now, but we'll let the worker thread handle the completion.
+         // SendTo finished now, but we'll let the worker thread handle the completion.
         }
         else
         {
@@ -195,14 +192,13 @@ Network::Result Network::writeSocket(Socket & s, Data & data)
             }
             else
             {//Good
-                // No Problem. The read has been posted.
+             // No Problem. The read has been posted.
             }
         }
     }
     else
     {
         result.type = Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED;
-        std::cout << "Unable to write at the moment!" << std::endl;
     }
     return result;
 }
@@ -222,10 +218,8 @@ When the API WSARecvFrom fails.
 Network::Result Network::readSocket(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
-    //if (s.overCollection.oIndex != 5)
-    //{
     Overlapped* o = nullptr;
-    if (s.overCollection.getOverlapped(&o, &s.overlapMutex))
+    if (s.overlapPool.acquire(&o))
     {
         o->ioType = Overlapped::IOType::READ;
         WSABUF wsaBuf;
@@ -240,8 +234,8 @@ Network::Result Network::readSocket(Socket & s)
                 1,
                 NULL,//&o->bytesReceived,// This can be NULL because lpOverlapped parameter is not NULL.
                 &flags,
-                (SOCKADDR*)&o->srcAddr,
-                &o->srcAddrLen,
+                (SOCKADDR*)&o->remote.addr,
+                &o->remote.len,
                 o,
                 NULL);
         if (ret == 0)
@@ -267,35 +261,7 @@ Network::Result Network::readSocket(Socket & s)
     else
     {
         result.type = Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED;
-        std::cout << "Unable to read at the moment!" << std::endl;
     }
-    return result;
-}
-
-Network::Result Network::popRxData(Data & data)
-{
-    Network::Result result(Network::ResultType::SUCCESS);
-    rxDataMutex.lock();
-    if (!rxData.empty())
-    {
-        data = rxData.front();
-        rxData.pop();
-        rxDataMutex.unlock();
-    }
-    else
-    {
-        rxDataMutex.unlock();
-        result.type = Network::ResultType::INFO_CLIENT_RXQUEUE_EMPTY;
-        //std::cout << "Rx Queue is Empty." << std::endl;
-    }
-
-    return result;
-}
-
-Network::Result Network::pushTxData(Socket & s, Data & data)
-{
-    Network::Result result(Network::ResultType::SUCCESS);
-    writeSocket(s, data);
     return result;
 }
 
@@ -325,8 +291,7 @@ void* Network::WorkerThread(Network* context)
     {
         BOOL ret = GetQueuedCompletionStatus(context->ioPort, &bytesTrans, &ckey, (LPOVERLAPPED*)&pOver, INFINITE);
         if (ret == TRUE)
-        {
-            // Ok
+        {// Ok
             assert(pOver != NULL);
             if (pOver != NULL)
             {
@@ -334,29 +299,18 @@ void* Network::WorkerThread(Network* context)
                 if (ckey == COMPLETION_KEY_IO)
                 {
                     // Capture all the packet information
-                    Data data(bytesTrans, overlapped->buffer, overlapped->srcAddr, overlapped->srcAddrLen);
+                    Data data(bytesTrans, overlapped->buffer, overlapped->remote.addr, overlapped->remote.len);
                     Overlapped::IOType ioType = overlapped->ioType;
+
                     if (ioType == Overlapped::IOType::READ)
                     {
-
                         // relinquish this overlapped structure
-                        context->readerSocket->overCollection.expireOverlapped(overlapped->index, &context->readerSocket->overlapMutex);
-
-                        //context->rxDataMutex.lock();
-                        //context->rxData.push(data);
-                        //context->rxDataMutex.unlock();
-
-                        // Issue another Read to keep this perpetuating
-                        result = context->readSocket(*context->readerSocket);
-                        if (result.type != Network::ResultType::SUCCESS)
-                            std::cout << "WorkerThread READ result(" << result.type << ")" << std::endl;
+                        context->readerSocket->overlapPool.release(overlapped->index);
                     }
                     else if (ioType == Overlapped::IOType::WRITE)
                     {
                         // reqlinquish this overlapped structure
-                        context->writerSocket->overCollection.expireOverlapped(overlapped->index, &context->writerSocket->overlapMutex);
-                        if (result.type != Network::ResultType::SUCCESS)
-                            std::cout << "WorkerThread WRITE result(" << result.type << ")" << std::endl;
+                        context->writerSocket->overlapPool.release(overlapped->index);
                     }
 
                     //Notify the user
@@ -367,7 +321,6 @@ void* Network::WorkerThread(Network* context)
                 }
                 else if (ckey == COMPLETION_KEY_SHUTDOWN)
                 {
-
                 }
             }
         }
@@ -403,7 +356,8 @@ bool Network::GetLocalAddressInfo(Socket & s)
     else
     {
         // Note; we're hoping that the first valid address is the right address. glta.
-        memcpy(&s.addr, res->ai_addr, res->ai_addrlen);
+        s.local.len = res->ai_addrlen;
+        memcpy(&s.local.addr, res->ai_addr, res->ai_addrlen);
         FreeAddrInfo(res);
     }
 
