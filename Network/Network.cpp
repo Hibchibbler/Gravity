@@ -89,11 +89,14 @@ Network::Result Network::startWorkerThreads()
     // Kick off the perpetual reads
     if (result.type == Network::ResultType::SUCCESS)
     {
-        result = readSocket(*readerSocket);
+        result = read(*readerSocket);
     }
     return result;
 }
 
+//
+// createPort creates an IO Completion Port, and returns a handle to it.
+//
 Network::Result Network::createPort(HANDLE & iocport)
 {
     Network::Result result(Network::ResultType::SUCCESS);
@@ -106,6 +109,9 @@ Network::Result Network::createPort(HANDLE & iocport)
     return result;
 }
 
+//
+// associateSocketWithIOCPort associates a Socket with an IO completion port
+//
 Network::Result Network::associateSocketWithIOCPort(HANDLE iocport, Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
@@ -151,7 +157,10 @@ Network::Result Network::bindSocket(Socket & s)
     return result;
 }
 
-Network::Result Network::writeSocket(Socket & s, Data & data)
+//
+// write() posts a write-request to the IOCP
+//
+Network::Result Network::write(Socket & s, Data & data)
 {
     Network::Result result(Network::ResultType::SUCCESS);
     Overlapped* o = nullptr;
@@ -204,18 +213,16 @@ Network::Result Network::writeSocket(Socket & s, Data & data)
 }
 
 
-/*
-Result.type == Sucess
-When a Read was posted to the IOCP
 
-Result.type == Read Completed
-When a Read was completed immediately,
-and therefore NOT posted.
-
-Result.type == RecvFrom
-When the API WSARecvFrom fails.
-*/
-Network::Result Network::readSocket(Socket & s)
+//
+// read() posts a read-request to the IOCP
+//
+// Result.type == Sucess
+//  When a Read was posted to the IOCP
+// Result.type == RecvFrom
+//  When the API WSARecvFrom fails.
+//
+Network::Result Network::read(Socket & s)
 {
     Network::Result result(Network::ResultType::SUCCESS);
     Overlapped* o = nullptr;
@@ -279,13 +286,20 @@ Network::Result Network::registerWriterSocket(Socket & s)
     return result;
 }
 
+//
+// Completes IO requests that were previously posted
+// to the IO completion port.
+// Processes Reads and Writes.
+//
 void* Network::WorkerThread(Network* context)
 {
     Network::Result result(Network::ResultType::SUCCESS);
     DWORD bytesTrans = 0;
     ULONG_PTR ckey = COMPLETION_KEY_UNKNOWN;
-
     LPWSAOVERLAPPED pOver;
+
+    uint32_t id = InterlockedIncrement16((USHORT)&context->threadidmax);
+
     bool done = false;
     while (!done)
     {

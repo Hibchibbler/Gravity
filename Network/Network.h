@@ -6,15 +6,14 @@
 #pragma once
 #include <WinSock2.h>
 #include <windows.h>
-#include <memory>
-#include <array>
+//#include <memory>
+//#include <array>
 #include <list>
-#include <vector>
+//#include <vector>
 #include <cassert>
 #include <stdint.h>
 #include <iostream>
-#include <queue>
-#include "RingBuffer.h"
+//#include <queue>
 
 #define COMPLETION_KEY_UNKNOWN      0
 #define COMPLETION_KEY_IO           1
@@ -80,8 +79,6 @@ namespace bali
     class Overlapped : public WSAOVERLAPPED
     {
     public:
-        typedef std::unique_ptr<Overlapped> Ptr;
-
         enum IOType
         {
             READ,
@@ -99,7 +96,6 @@ namespace bali
         }
 
         Address             remote;
-
         IOType              ioType;
         uint32_t            index;
         UCHAR               inuse;
@@ -160,7 +156,6 @@ namespace bali
         }
     private:
     };
-
     class Socket
     {
     public:
@@ -179,7 +174,6 @@ namespace bali
         OverlapPool overlapPool;
         ULONG_PTR completionKey;
     };
-
     class Data
     {
     public:
@@ -211,7 +205,6 @@ namespace bali
         uint32_t size;
         uint8_t payload[1024];
     };
-
     class Network
     {
     public:
@@ -253,15 +246,16 @@ namespace bali
         Network::Result cleanup();
         Network::Result createWorkerThreads();
         Network::Result startWorkerThreads();
-        //Network::Result stopWorkerThreads();
         Network::Result createPort(HANDLE & iocport);
         Network::Result associateSocketWithIOCPort(HANDLE iocport, Socket & s);
         Network::Result registerReaderSocket(Socket & s);
         Network::Result registerWriterSocket(Socket & s);
         Network::Result createSocket(Socket & s, ULONG_PTR completionKey);
         Network::Result bindSocket(Socket & s);
-        Network::Result writeSocket(Socket & s, Data & data);
-        Network::Result readSocket(Socket & s);
+        // write posts a write-request to the IOCP
+        Network::Result write(Socket & s, Data & data);
+        // read posts a read-request to the IOCP
+        Network::Result read(Socket & s);
         bool GetLocalAddressInfo(Socket & s);
         HANDLE & getIOCPort()
         {
