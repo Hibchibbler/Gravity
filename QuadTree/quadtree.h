@@ -88,9 +88,9 @@ namespace bali
         class QuadTree
         {
         public:
-            typedef std::shared_ptr<QuadTree> Ptr;
-            typedef std::vector<Ptr> Vec;
-            typedef std::shared_ptr<std::vector<Ptr>> VecPtr;
+            typedef std::shared_ptr<QuadTree> ShPtr;
+            typedef std::vector<ShPtr> Vec;
+            typedef std::shared_ptr<std::vector<ShPtr>> VecPtr;
             QuadTree()
             {
                 theRoot = nullptr;

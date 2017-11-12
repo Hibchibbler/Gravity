@@ -46,7 +46,7 @@ namespace bali
         bool rotated; //meta data
         bool solidGround;
 
-        QuadLayer playerQuads;
+        bali::QuadArray playerQuads;
         vec::VECTOR2 velCorrection;
         vec::VECTOR2 posCorrection;
         vec::VECTOR2 edgeContact;

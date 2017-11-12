@@ -298,7 +298,7 @@ void* Network::WorkerThread(Network* context)
     ULONG_PTR ckey = COMPLETION_KEY_UNKNOWN;
     LPWSAOVERLAPPED pOver;
 
-    uint32_t id = InterlockedIncrement16((USHORT)&context->threadidmax);
+    uint64_t id = InterlockedIncrement(&context->threadidmax);
 
     bool done = false;
     while (!done)
@@ -315,7 +315,7 @@ void* Network::WorkerThread(Network* context)
                     // Capture all the packet information
                     Data data(bytesTrans, overlapped->buffer, overlapped->remote.addr, overlapped->remote.len);
                     Overlapped::IOType ioType = overlapped->ioType;
-
+ 
                     if (ioType == Overlapped::IOType::READ)
                     {
                         // relinquish this overlapped structure
@@ -326,11 +326,11 @@ void* Network::WorkerThread(Network* context)
                         // reqlinquish this overlapped structure
                         context->writerSocket->overlapPool.release(overlapped->index);
                     }
-
+ 
                     //Notify the user
                     // nothing is locked, data is copied, 
                     // alls we're doin' now is 
-                    context->ioHandler(data, ioType);
+                    context->ioHandler(data, ioType, id);
 
                 }
                 else if (ckey == COMPLETION_KEY_SHUTDOWN)

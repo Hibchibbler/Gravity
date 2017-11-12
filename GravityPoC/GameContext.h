@@ -51,15 +51,15 @@ namespace bali
         sf::Vector2f                worldMousePos;
         sf::Vector2i                screenMousePos;
 
-        bali::SearchLayers          searchLayers;
-        bali::QuadLayers            quadLayers;       // Full time
-        bali::QuadLayer             visibleQuads;
+        qt::QuadTree::Vec           searchLayers;
+        bali::QuadArray::Vec        quadLayers;       // Full time
+        bali::QuadArray             visibleQuads;
 
-        bali::TileLayers            tileLayers;       // All the ones with a gid
-        std::vector<CONVEXSHAPE>    polygons;         // All of them
-        std::vector<CONVEXSHAPE>    polygonsVisible;  // Updated each iteration
-        std::vector<CONVEXSHAPE>    playerpolygons;   // 
-        std::vector<SAT::Segment>   sharedEdges;      // 
+        Tile::VecVec                tileLayers;       // All the ones with a gid
+        CONVEXSHAPE::Vec            polygons;         // All of them
+        CONVEXSHAPE::Vec            polygonsVisible;  // Updated each iteration
+        CONVEXSHAPE::Vec            playerpolygons;   // 
+        SAT::Segment::Vec           sharedEdges;      // 
 
         sf::VertexArray             lineSegments;
 

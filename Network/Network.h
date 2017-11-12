@@ -15,6 +15,15 @@
 #include <iostream>
 //#include <queue>
 
+//
+// Network, Socket, Overlap, and OverlapPool are used together
+// to create a UDP IOCP based Server.
+// Network 
+//  Used to coordinate everything. The flow is as follows:
+//  
+// 
+//
+
 #define COMPLETION_KEY_UNKNOWN      0
 #define COMPLETION_KEY_IO           1
 #define COMPLETION_KEY_SHUTDOWN     2
@@ -240,7 +249,7 @@ namespace bali
             ResultType type;
             uint32_t code;
         };
-        typedef void(*IOHandler)(Data &data, Overlapped::IOType ioType);
+        typedef void(*IOHandler)(Data &data, Overlapped::IOType ioType, uint64_t id);
 
         Network::Result initialize(uint32_t maxThreads, uint16_t port, IOHandler handler);
         Network::Result cleanup();
@@ -269,6 +278,7 @@ namespace bali
         uint32_t maxThreads;
         uint16_t port;
         IOHandler ioHandler;
+        uint64_t threadidmax;
     private:
         static void* WorkerThread(Network* context);
     };

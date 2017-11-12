@@ -26,7 +26,7 @@ namespace bali
         return ret;
     }
 
-    sf::Uint32 addQuad(sf::VertexArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip)
+    sf::Uint32 addQuad(bali::QuadArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip)
     {
         const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x4;
         const unsigned FLIPPED_VERTICALLY_FLAG = 0x2;
@@ -270,7 +270,7 @@ namespace bali
         return searchRegion;
     }
 
-    uint32_t buildTileLayer(TileLayer & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer)
+    uint32_t buildTileLayer(Tile::Vec & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer)
     {
         int tw = tileset->tilewidth;
         int th = tileset->tileheight;
@@ -319,22 +319,18 @@ namespace bali
         }
         return 0;
     }
-    uint32_t buildTileLayers(TileLayers & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layers)
+    uint32_t buildTileLayers(Tile::VecVec & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layers)
     {
         for (auto l = layers.begin(); l != layers.end(); l++)
         {
-            tileLayers.push_back(TileLayer());
+            tileLayers.push_back(Tile::Vec());
             buildTileLayer(tileLayers.back(), tileset, *l);
         }
         return 0;
     }
 
-    uint32_t buildQuadLayer(QuadLayer & quadLayer, TileLayer & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
+    uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
     {
-        //const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x4;
-        //const unsigned FLIPPED_VERTICALLY_FLAG = 0x2;
-        //const unsigned FLIPPED_DIAGONALLY_FLAG = 0x1;
-
         for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
         {
             addQuad(quadLayer,
@@ -343,9 +339,6 @@ namespace bali
                     sf::IntRect(tdi->tx, tdi->ty,
                     tileWidth, tileHeight),
                     tdi->flip);
-                    /*((tdi->flip & FLIPPED_DIAGONALLY_FLAG) > 0 ? true : false),
-                    ((tdi->flip & FLIPPED_HORIZONTALLY_FLAG) > 0 ? true : false),
-                    ((tdi->flip & FLIPPED_VERTICALLY_FLAG) > 0 ? true : false));*/
         }
         return 0;
     }
@@ -480,7 +473,7 @@ namespace bali
         return status;
     }
 
-    uint32_t buildPlayerObjectLayers(std::vector<CONVEXSHAPE> & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
+    uint32_t buildPlayerObjectLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
     {
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
@@ -531,7 +524,7 @@ namespace bali
         return false;
     }
 
-    uint32_t buildSharedEdgesLayers(std::vector<SAT::Segment> & sharedEdges, TMX::Objectgroup::Vec & objectGroups)
+    uint32_t buildSharedEdgesLayers(SAT::Segment::Vec & sharedEdges, TMX::Objectgroup::Vec & objectGroups)
     {
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
@@ -570,7 +563,7 @@ namespace bali
         return 0;
     }
 
-    uint32_t buildPolygonLayers(std::vector<CONVEXSHAPE> & polygons, TMX::Objectgroup::Vec & objectGroups)
+    uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Vec & objectGroups)
     {
         for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
         {
@@ -584,20 +577,18 @@ namespace bali
                  // TMX format is explicit about first and last point. even though they will always be the same.
                     polygons.push_back(CONVEXSHAPE());
                     buildPolyline(*obj, polygons.back(), true);
-
                 }
             }
         }
         return 0;
     }
 
-    uint32_t buildSearchLayer(SearchLayer & searchLayer, std::vector<CONVEXSHAPE> polygons)
+    uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXSHAPE> polygons)
     {
         for (int tdi = 0; tdi < polygons.size(); tdi++)
         {
             qt::XY pt;
             pt.ti = tdi;
-
             sf::FloatRect gb = polygons[tdi].getGlobalBounds();
             pt.x = gb.left + gb.width / 2.0;
             pt.y = gb.top + gb.height / 2.0;

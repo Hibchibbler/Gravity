@@ -18,32 +18,35 @@ bali::Network net;
 bali::Socket readerSocket;
 bali::Socket writerSocket;
 bali::Mutex ioHandleLock;
-void IOHandler(bali::Data & data, Overlapped::IOType ioType)
+void IOHandler(bali::Data & data, Overlapped::IOType ioType, uint64_t id)
 {
     bali::Network::Result result(bali::Network::ResultType::SUCCESS);
     if (ioType == Overlapped::IOType::READ)
     {
-        ioHandleLock.lock();
+        ////// Prepare response
+        ////memcpy(data.payload, "BAD Dog", 8);
+        ////data.size = 8;
+        ////
+        ////// Send response
+        ////net.write(writerSocket, data);
+
+        // Prepare another Read to keep this perpetuating.
+        // Hell, prepare two!
+        const uint64_t prepare_max = 1;
+        uint64_t prepared = 0;
+        do
+        {
+            result = net.read(readerSocket);
+            if (result.type == Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED)
+            {
+            }
+        } while ((result.type == bali::Network::ResultType::SUCCESS) && prepared++ < prepare_max);
+        
         // Print payload
         std::string payloadAscii((PCHAR)data.payload, data.size);
-        std::cout << "[" << data.size << "]" << payloadAscii.c_str() << std::endl;
+        ioHandleLock.lock();
+        std::cout << "<" << prepared << ">" << "[" << id << "][" << data.size << "]" << payloadAscii.c_str() << std::endl;
         ioHandleLock.unlock();
-        // Prepare response
-        memcpy(data.payload, "BAD Dog", 8);
-        data.size = 8;
-        // Send response
-        net.write(writerSocket, data);
-
-        // Prepare another Read to keep this perpetuating
-        result = net.read(readerSocket);
-        if (result.type == Network::ResultType::FAILED_SOCKET_NOMOREOVERLAPPED)
-            std::cout << "NMO ";
-
-
-        //do
-        //{
-        //    result = net.readSocket(readerSocket);
-        //} while (result.type == bali::Network::ResultType::SUCCESS);
     }
     else if (ioType == Overlapped::IOType::WRITE)
     {

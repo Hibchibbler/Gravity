@@ -4,23 +4,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "StageMainClient.h"
-#include "GameContext.h"
-#include "Utility.h"
-#include "MouseKeyboard.h"
 #include <math.h>
-#include "Vector\Vector2.h"
-#include "SATAlgo\SATAlgo.h"
-#include "Physics.h"
-#include "ConfigLoader.h"
-#include "Timer.h"
+#include "TMXloader/TMXReader.h"
+#include "SATAlgo/SATAlgo.h"
+#include "GravityCommon/Physics.h"
+#include "GravityCommon/ConfigLoader.h"
+#include "GravityCommon/Builders.h"
+
+#include "GameClientContext.h"
+#include "MouseKeyboard.h"
 
 #define PIXELS_PER_SEC  4
 
 
 namespace bali
 {
-    StageMainClient::StageMainClient(GameContext* ctx)
-        : Stage(ctx)
+    StageMainClient::StageMainClient()
     {
     }
 
@@ -28,10 +27,10 @@ namespace bali
     {
     }
 
-    uint32_t StageMainClient::initialize()
+    uint32_t StageMainClient::initialize(Context::Ptr context)
     {
-        GameContext* ctx = getContext();
-
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
+        
         ///////////////////////////////////////////////////////////////////////
         ctx->physicsConfig = loadPhysicsConfig("physics.config.txt");
 
@@ -78,8 +77,8 @@ namespace bali
         buildPolygonLayers(ctx->polygons,
             ctx->map->objectgroups);
         
-        buildSharedEdgesLayers(ctx->sharedEdges,
-            ctx->map->objectgroups);
+        //buildSharedEdgesLayers(ctx->sharedEdges,
+        //    ctx->map->objectgroups);
         
         buildPlayerObjectLayers(ctx->playerpolygons,
             ctx->map->objectgroups);
@@ -122,13 +121,14 @@ namespace bali
         return 0;
     }
 
-    uint32_t StageMainClient::doRemoteEvent()
+    uint32_t StageMainClient::doRemoteEvent(Context::Ptr ctx)
     {
         return 0;
     }
 
-    uint32_t StageMainClient::doWindowEvent(sf::Event & event)
+    uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
     {
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
         static float zoom = 1.0;
         switch (event.type) {
         case sf::Event::LostFocus:
@@ -136,12 +136,12 @@ namespace bali
         case sf::Event::GainedFocus:
             break;
         case sf::Event::MouseWheelScrolled: {
-            getContext()->mainView = getContext()->window.getView();
+            ctx->mainView = ctx->window.getView();
             zoom = (event.mouseWheelScroll.delta > 0 ? 1.2 : 0.8);
-            sf::Vector2f v = getContext()->mainView.getSize();
+            sf::Vector2f v = ctx->mainView.getSize();
             v.x *= 1.01 * zoom;
             v.y *= 1.01 * zoom;
-            getContext()->mainView.setSize(v);
+            ctx->mainView.setSize(v);
             //getContext()->mainView.zoom(zoom);
             std::cout << "Wheel Scrolled: " << event.mouseWheelScroll.delta << std::endl;
             break;
@@ -161,33 +161,27 @@ namespace bali
         return 0;
     }
 
-    uint32_t StageMainClient::doLocalInputs()
+    uint32_t StageMainClient::doLocalInputs(Context::Ptr context)
     {
-        MouseKeyboard::doMouse(*getContext());
-        MouseKeyboard::doKeyboard(*getContext());
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
+        MouseKeyboard::doMouse(ctx);
+        MouseKeyboard::doKeyboard(ctx);
 
         return 0;
     }
 
    
-    uint32_t StageMainClient::doUpdate()
+    uint32_t StageMainClient::doUpdate(Context::Ptr context)
     {
-        GameContext* ctx = getContext();
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
         sf::Time elapsed = ctx->mainClock.restart();
         vec::VECTOR2 zxc;
-        //TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetFore");
-        //TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("tilesetBack");
-        //
-        //// TODO: these need to replace all hardcodes
-        //sf::Uint32 tw = tilesetA->tilewidth;
-        //sf::Uint32 th = tilesetA->tileheight;
-
         //Smooth out player position for camera
         for (int d = 0; d < ctx->player.posHist.size(); d++)
         {
             zxc += ctx->player.posHist[d];
         }
-        zxc /= ctx->player.posHist.size();
+        zxc /= (float)ctx->player.posHist.size();
 
         // Search for foreground that is visible        
         qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.90f);
@@ -209,64 +203,35 @@ namespace bali
 
         // Every shape that is tested for collision by the player
         // shape is to be placed into this vector
-        std::vector<SAT::Shape> shapes;
-
-        // Convert generic convex polygons  to shapes
-        for (int j = 0; j < ctx->polygonsVisible.size(); ++j)
-        {
-            shapes.push_back(SAT::Shape());
-            shapes.back().offsetX = ctx->polygonsVisible[j].offsetX;
-            shapes.back().offsetY = ctx->polygonsVisible[j].offsetY;
-
-            for (int i = 0; i < ctx->polygonsVisible[j].getPointCount(); i++)
-            {
-                sf::Vector2f v = ctx->polygonsVisible[j].getPoint(i);
-                shapes.back().addVertex(v.x, v.y);
-            }
-        }
-
         // individual player shapes are to be placed into this vector.
         //  Note: A player "shape" may be composed of multiple polygons.
-        std::vector<SAT::Shape> playershapes;
-
         vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
-        // Convert Player polygons to shapes
         for (int j = 0; j < ctx->playerpolygons.size(); ++j)
         {
-            playershapes.push_back(SAT::Shape());
-            float hafWid = ctx->playerpolygons[j].getLocalBounds().width / 2.0;//getLocalBounds
-            float hafHite = ctx->playerpolygons[j].getLocalBounds().height / 2.0;
+            float hafWid = 0;// ctx->playerpolygons[j].getLocalBounds().width / 2.0;//getLocalBounds
+            float hafHite = 0;// ctx->playerpolygons[j].getLocalBounds().height / 2.0;
 
-            for (int i = 0; i < ctx->playerpolygons[j].getPointCount(); i++)
-            {
-                sf::Vector2f v = ctx->playerpolygons[j].getPoint(i);
-                playershapes.back().addVertex(v.x, v.y);
-            }
-            
-            // center polygon on pos
-            // assume pos is top left corner.
-            // pollygon will shift left, and down
             ctx->playerpolygons[j].setPosition(pos.x - hafWid, pos.y + hafHite);
-            playershapes.back().translate(pos.x - hafWid, pos.y + hafHite);
         }
 
 
         // Resolve collisions
         // Integrate motion
         // Create Line of Sight Triangle Fan
-        physics::createLoSTriFan(shapes, ctx);
-        physics::ResolveCollisions(shapes, playershapes, ctx->player, ctx->physicsConfig, ctx->sharedEdges);
+        //physics::createLoSTriFan(ctx->polygonsVisible, ctx->player.pos, ctx->lineSegments);
+        physics::ResolveCollisions(ctx->polygonsVisible, ctx->playerpolygons.back(), ctx->player, ctx->physicsConfig, ctx->sharedEdges);
         physics::update(ctx->player, elapsed, ctx->physicsConfig);
 
 
+        //ctx->mainView.setCenter(ctx->player.pos.x, ctx->player.pos.y);
         ctx->mainView.setCenter(zxc.x, zxc.y);
-        getContext()->mainView.setRotation(getContext()->player.angle);
+        ctx->mainView.setRotation(ctx->player.angle);
         return 0;
     }
 
-    uint32_t StageMainClient::doDraw()
+    uint32_t StageMainClient::doDraw(Context::Ptr context)
     {
-        GameContext* ctx = getContext();
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
         // Draw background
         ctx->pRenderTexture0->clear();
         ctx->pRenderTexture1->clear(sf::Color::Black);
@@ -284,15 +249,15 @@ namespace bali
         auto fore = ctx->quadLayers[1];
         ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-        //// Collision Polygons - debug
-        //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-        //{
-        //    sf::RenderStates polyVisiRenderStates;
-        //    poly->setOutlineColor(sf::Color::Red);
-        //    poly->setFillColor(sf::Color::Transparent);
-        //    poly->setOutlineThickness(1);
-        //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-        //}
+        // Collision Polygons - debug
+        for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+        {
+            sf::RenderStates polyVisiRenderStates;
+            poly->setOutlineColor(sf::Color::Red);
+            poly->setFillColor(sf::Color::Transparent);
+            poly->setOutlineThickness(1);
+            ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+        }
 
         for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
         {
@@ -302,16 +267,6 @@ namespace bali
             poly->setOutlineThickness(2);
             ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
         }
-
-        //// line segments - debug
-        //for (auto poly = ctx->lineSegments.begin(); poly != ctx->playerpolygons.end(); ++poly)
-        //{
-        //    sf::RenderStates polyPlayerRenderStates;
-        //    //poly->setOutlineColor(sf::Color::Yellow);
-        //    poly->setFillColor(sf::Color::Green);
-        //    //poly->setOutlineThickness(2);
-        //    ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
-        //}
 
         ctx->pRenderTexture0->display();
 
@@ -326,7 +281,7 @@ namespace bali
         vec::VECTOR2 pposTemp = ctx->player.pos;
         pposTemp.x = pposTemp.x - 8;
         pposTemp.y = pposTemp.y + 8;
-        ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->window.mapCoordsToPixel(pposTemp.sf())));
+        ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->window.mapCoordsToPixel(pposTemp)));
         ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
         ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());
 
@@ -339,8 +294,9 @@ namespace bali
         return 0;
     }
 
-    uint32_t StageMainClient::cleanup()
+    uint32_t StageMainClient::cleanup(Context::Ptr context)
     {
+        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
         return 0;
     }
 
