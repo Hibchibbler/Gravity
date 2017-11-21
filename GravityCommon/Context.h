@@ -30,7 +30,6 @@ public:
     uint32_t                    screenWidth;
     uint32_t                    screenHeight;
     sf::RenderWindow            window;
-
 };
 
 

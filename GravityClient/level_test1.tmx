@@ -1,92 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="2017.10.11" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextobjectid="99">
+<map version="1.0" tiledversion="2017.10.11" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextobjectid="101">
  <properties>
   <property name="DeleteTiles" value="true"/>
   <property name="NoOverlappingRules" value="true"/>
  </properties>
  <tileset firstgid="1" name="tilesetBack" tilewidth="32" tileheight="32" tilecount="3844" columns="62">
-  <image source="back_cave.png" trans="ff00ff" width="2000" height="2000"/>
+  <image source="../../GravityPoC/GravityPoC/back_cave.png" trans="ff00ff" width="2000" height="2000"/>
  </tileset>
  <tileset firstgid="3845" name="tilesetFore" tilewidth="32" tileheight="32" tilecount="240" columns="16">
-  <image source="tilesetB.png" trans="ff00ff" width="512" height="480"/>
+  <image source="../../GravityPoC/GravityPoC/tilesetB.png" trans="ff00ff" width="512" height="480"/>
  </tileset>
- <layer name="BackgroundLayer" width="25" height="25" visible="0">
+ <layer name="BackgroundLayer" width="25" height="25">
   <data>
-   <tile gid="1072"/>
-   <tile gid="1073"/>
-   <tile gid="1074"/>
-   <tile gid="1075"/>
-   <tile gid="1076"/>
-   <tile gid="1077"/>
-   <tile gid="1078"/>
-   <tile gid="1079"/>
-   <tile gid="1080"/>
-   <tile gid="1081"/>
-   <tile gid="1082"/>
-   <tile gid="1083"/>
-   <tile gid="1084"/>
-   <tile gid="1085"/>
-   <tile gid="1086"/>
-   <tile gid="1087"/>
-   <tile gid="1088"/>
-   <tile gid="1089"/>
-   <tile gid="1090"/>
-   <tile gid="1091"/>
-   <tile gid="1092"/>
-   <tile gid="1093"/>
-   <tile gid="1094"/>
-   <tile gid="1095"/>
-   <tile gid="1096"/>
-   <tile gid="1134"/>
-   <tile gid="1135"/>
-   <tile gid="1136"/>
-   <tile gid="1137"/>
-   <tile gid="1138"/>
-   <tile gid="1139"/>
-   <tile gid="1140"/>
-   <tile gid="1141"/>
-   <tile gid="1142"/>
-   <tile gid="1143"/>
-   <tile gid="1144"/>
-   <tile gid="1145"/>
-   <tile gid="1146"/>
-   <tile gid="1147"/>
-   <tile gid="1148"/>
-   <tile gid="1149"/>
-   <tile gid="1150"/>
-   <tile gid="1151"/>
-   <tile gid="1152"/>
-   <tile gid="1153"/>
-   <tile gid="1154"/>
-   <tile gid="1155"/>
-   <tile gid="1156"/>
-   <tile gid="1157"/>
-   <tile gid="1158"/>
-   <tile gid="1196"/>
-   <tile gid="1197"/>
-   <tile gid="1198"/>
-   <tile gid="1199"/>
-   <tile gid="1200"/>
-   <tile gid="1201"/>
-   <tile gid="1202"/>
-   <tile gid="1203"/>
-   <tile gid="1204"/>
-   <tile gid="1205"/>
-   <tile gid="1206"/>
-   <tile gid="1207"/>
-   <tile gid="1208"/>
-   <tile gid="1209"/>
-   <tile gid="1210"/>
-   <tile gid="1211"/>
-   <tile gid="1212"/>
-   <tile gid="1213"/>
-   <tile gid="1214"/>
-   <tile gid="1215"/>
-   <tile gid="1216"/>
-   <tile gid="1217"/>
-   <tile gid="1218"/>
-   <tile gid="1219"/>
-   <tile gid="1220"/>
+   <tile gid="1257"/>
    <tile gid="1258"/>
    <tile gid="1259"/>
    <tile gid="1260"/>
@@ -111,7 +37,7 @@
    <tile gid="1279"/>
    <tile gid="1280"/>
    <tile gid="1281"/>
-   <tile gid="1282"/>
+   <tile gid="1319"/>
    <tile gid="1320"/>
    <tile gid="1321"/>
    <tile gid="1322"/>
@@ -136,7 +62,7 @@
    <tile gid="1341"/>
    <tile gid="1342"/>
    <tile gid="1343"/>
-   <tile gid="1344"/>
+   <tile gid="1381"/>
    <tile gid="1382"/>
    <tile gid="1383"/>
    <tile gid="1384"/>
@@ -161,7 +87,7 @@
    <tile gid="1403"/>
    <tile gid="1404"/>
    <tile gid="1405"/>
-   <tile gid="1406"/>
+   <tile gid="1443"/>
    <tile gid="1444"/>
    <tile gid="1445"/>
    <tile gid="1446"/>
@@ -186,7 +112,7 @@
    <tile gid="1465"/>
    <tile gid="1466"/>
    <tile gid="1467"/>
-   <tile gid="1468"/>
+   <tile gid="1505"/>
    <tile gid="1506"/>
    <tile gid="1507"/>
    <tile gid="1508"/>
@@ -211,7 +137,7 @@
    <tile gid="1527"/>
    <tile gid="1528"/>
    <tile gid="1529"/>
-   <tile gid="1530"/>
+   <tile gid="1567"/>
    <tile gid="1568"/>
    <tile gid="1569"/>
    <tile gid="1570"/>
@@ -236,7 +162,7 @@
    <tile gid="1589"/>
    <tile gid="1590"/>
    <tile gid="1591"/>
-   <tile gid="1592"/>
+   <tile gid="1629"/>
    <tile gid="1630"/>
    <tile gid="1631"/>
    <tile gid="1632"/>
@@ -261,7 +187,7 @@
    <tile gid="1651"/>
    <tile gid="1652"/>
    <tile gid="1653"/>
-   <tile gid="1654"/>
+   <tile gid="1691"/>
    <tile gid="1692"/>
    <tile gid="1693"/>
    <tile gid="1694"/>
@@ -286,7 +212,7 @@
    <tile gid="1713"/>
    <tile gid="1714"/>
    <tile gid="1715"/>
-   <tile gid="1716"/>
+   <tile gid="1753"/>
    <tile gid="1754"/>
    <tile gid="1755"/>
    <tile gid="1756"/>
@@ -311,7 +237,7 @@
    <tile gid="1775"/>
    <tile gid="1776"/>
    <tile gid="1777"/>
-   <tile gid="1778"/>
+   <tile gid="1815"/>
    <tile gid="1816"/>
    <tile gid="1817"/>
    <tile gid="1818"/>
@@ -336,7 +262,7 @@
    <tile gid="1837"/>
    <tile gid="1838"/>
    <tile gid="1839"/>
-   <tile gid="1840"/>
+   <tile gid="1877"/>
    <tile gid="1878"/>
    <tile gid="1879"/>
    <tile gid="1880"/>
@@ -361,7 +287,7 @@
    <tile gid="1899"/>
    <tile gid="1900"/>
    <tile gid="1901"/>
-   <tile gid="1902"/>
+   <tile gid="1939"/>
    <tile gid="1940"/>
    <tile gid="1941"/>
    <tile gid="1942"/>
@@ -386,7 +312,7 @@
    <tile gid="1961"/>
    <tile gid="1962"/>
    <tile gid="1963"/>
-   <tile gid="1964"/>
+   <tile gid="2001"/>
    <tile gid="2002"/>
    <tile gid="2003"/>
    <tile gid="2004"/>
@@ -411,7 +337,7 @@
    <tile gid="2023"/>
    <tile gid="2024"/>
    <tile gid="2025"/>
-   <tile gid="2026"/>
+   <tile gid="2063"/>
    <tile gid="2064"/>
    <tile gid="2065"/>
    <tile gid="2066"/>
@@ -436,7 +362,7 @@
    <tile gid="2085"/>
    <tile gid="2086"/>
    <tile gid="2087"/>
-   <tile gid="2088"/>
+   <tile gid="2125"/>
    <tile gid="2126"/>
    <tile gid="2127"/>
    <tile gid="2128"/>
@@ -461,7 +387,7 @@
    <tile gid="2147"/>
    <tile gid="2148"/>
    <tile gid="2149"/>
-   <tile gid="2150"/>
+   <tile gid="2187"/>
    <tile gid="2188"/>
    <tile gid="2189"/>
    <tile gid="2190"/>
@@ -486,7 +412,7 @@
    <tile gid="2209"/>
    <tile gid="2210"/>
    <tile gid="2211"/>
-   <tile gid="2212"/>
+   <tile gid="2249"/>
    <tile gid="2250"/>
    <tile gid="2251"/>
    <tile gid="2252"/>
@@ -511,7 +437,7 @@
    <tile gid="2271"/>
    <tile gid="2272"/>
    <tile gid="2273"/>
-   <tile gid="2274"/>
+   <tile gid="2311"/>
    <tile gid="2312"/>
    <tile gid="2313"/>
    <tile gid="2314"/>
@@ -536,7 +462,7 @@
    <tile gid="2333"/>
    <tile gid="2334"/>
    <tile gid="2335"/>
-   <tile gid="2336"/>
+   <tile gid="2373"/>
    <tile gid="2374"/>
    <tile gid="2375"/>
    <tile gid="2376"/>
@@ -561,7 +487,7 @@
    <tile gid="2395"/>
    <tile gid="2396"/>
    <tile gid="2397"/>
-   <tile gid="2398"/>
+   <tile gid="2435"/>
    <tile gid="2436"/>
    <tile gid="2437"/>
    <tile gid="2438"/>
@@ -586,7 +512,7 @@
    <tile gid="2457"/>
    <tile gid="2458"/>
    <tile gid="2459"/>
-   <tile gid="2460"/>
+   <tile gid="2497"/>
    <tile gid="2498"/>
    <tile gid="2499"/>
    <tile gid="2500"/>
@@ -611,7 +537,7 @@
    <tile gid="2519"/>
    <tile gid="2520"/>
    <tile gid="2521"/>
-   <tile gid="2522"/>
+   <tile gid="2559"/>
    <tile gid="2560"/>
    <tile gid="2561"/>
    <tile gid="2562"/>
@@ -636,7 +562,81 @@
    <tile gid="2581"/>
    <tile gid="2582"/>
    <tile gid="2583"/>
-   <tile gid="2584"/>
+   <tile gid="2621"/>
+   <tile gid="2622"/>
+   <tile gid="2623"/>
+   <tile gid="2624"/>
+   <tile gid="2625"/>
+   <tile gid="2626"/>
+   <tile gid="2627"/>
+   <tile gid="2628"/>
+   <tile gid="2629"/>
+   <tile gid="2630"/>
+   <tile gid="2631"/>
+   <tile gid="2632"/>
+   <tile gid="2633"/>
+   <tile gid="2634"/>
+   <tile gid="2635"/>
+   <tile gid="2636"/>
+   <tile gid="2637"/>
+   <tile gid="2638"/>
+   <tile gid="2639"/>
+   <tile gid="2640"/>
+   <tile gid="2641"/>
+   <tile gid="2642"/>
+   <tile gid="2643"/>
+   <tile gid="2644"/>
+   <tile gid="2645"/>
+   <tile gid="2683"/>
+   <tile gid="2684"/>
+   <tile gid="2685"/>
+   <tile gid="2686"/>
+   <tile gid="2687"/>
+   <tile gid="2688"/>
+   <tile gid="2689"/>
+   <tile gid="2690"/>
+   <tile gid="2691"/>
+   <tile gid="2692"/>
+   <tile gid="2693"/>
+   <tile gid="2694"/>
+   <tile gid="2695"/>
+   <tile gid="2696"/>
+   <tile gid="2697"/>
+   <tile gid="2698"/>
+   <tile gid="2699"/>
+   <tile gid="2700"/>
+   <tile gid="2701"/>
+   <tile gid="2702"/>
+   <tile gid="2703"/>
+   <tile gid="2704"/>
+   <tile gid="2705"/>
+   <tile gid="2706"/>
+   <tile gid="2707"/>
+   <tile gid="2745"/>
+   <tile gid="2746"/>
+   <tile gid="2747"/>
+   <tile gid="2748"/>
+   <tile gid="2749"/>
+   <tile gid="2750"/>
+   <tile gid="2751"/>
+   <tile gid="2752"/>
+   <tile gid="2753"/>
+   <tile gid="2754"/>
+   <tile gid="2755"/>
+   <tile gid="2756"/>
+   <tile gid="2757"/>
+   <tile gid="2758"/>
+   <tile gid="2759"/>
+   <tile gid="2760"/>
+   <tile gid="2761"/>
+   <tile gid="2762"/>
+   <tile gid="2763"/>
+   <tile gid="2764"/>
+   <tile gid="2765"/>
+   <tile gid="2766"/>
+   <tile gid="2767"/>
+   <tile gid="2768"/>
+   <tile gid="2769"/>
   </data>
  </layer>
  <layer name="ForegroundLayer" width="25" height="25">
@@ -1273,10 +1273,10 @@
    <polyline points="0,0 32,-32 64,-32 96,0 96,16 64,32 0,32 0,0"/>
   </object>
   <object id="3" x="128" y="213">
-   <polyline points="0,0 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
+   <polyline points="0,-5 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
   </object>
   <object id="4" x="288" y="341">
-   <polyline points="0,0 0,-21 32,-53 64,-53 96,-21 96,11 32,11 0,-5"/>
+   <polyline points="0,-5 0,-21 32,-53 64,-53 96,-21 96,11 32,11 0,-5"/>
   </object>
   <object id="5" x="384" y="352">
    <polyline points="0,0 0,-32 64,-32 64,0 0,0"/>
@@ -1285,13 +1285,13 @@
    <polyline points="0,0 0,-32 64,-32 96,-16 96,0 64,32 32,32 0,0"/>
   </object>
   <object id="7" x="480" y="213">
-   <polyline points="0,0 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
+   <polyline points="0,-5 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
   </object>
   <object id="8" x="576" y="160">
    <polyline points="0,0 32,-32 64,-32 96,0 96,16 64,32 0,32 0,0"/>
   </object>
   <object id="9" x="320" y="661">
-   <polyline points="0,0 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
+   <polyline points="0,-5 0,-21 96,-53 96,-21 64,11 32,11 0,-5"/>
   </object>
   <object id="10" x="416" y="608">
    <polyline points="0,0 32,-32 64,-32 96,0 96,16 64,32 0,32 0,0"/>
@@ -1300,52 +1300,52 @@
    <polyline points="0,0 32,32 64,32 96,0 96,-16 64,-32 0,-32 0,0"/>
   </object>
   <object id="16" x="576" y="512">
-   <polyline points="0,0 0,-32 64,-32 96,-21 96,0 64,32 32,32 0,0"/>
+   <polyline points="0,0 0,-32 64,-32 96,-16 96,0 64,32 32,32 0,0"/>
   </object>
   <object id="17" x="224" y="480" rotation="180">
    <polyline points="0,0 32,32 64,32 96,0 96,-16 64,-32 0,-32 0,0"/>
   </object>
   <object id="18" x="224" y="512">
-   <polyline points="0,0 0,-32 64,-32 96,-21 96,0 64,32 32,32 0,0"/>
+   <polyline points="0,0 0,-32 64,-32 96,-16 96,0 64,32 32,32 0,0"/>
   </object>
   <object id="24" x="768" y="768">
    <polyline points="-32,-32 8,-192 32,-192 32,32 -32,-32"/>
   </object>
-  <object id="25" x="768" y="656">
-   <polyline points="0,0 0,-176 32,-176 32,0 0,0"/>
-  </object>
-  <object id="26" x="768" y="480">
+  <object id="25" x="768" y="608">
    <polyline points="0,0 0,-160 32,-160 32,0 0,0"/>
   </object>
-  <object id="27" x="768" y="192">
-   <polyline points="0,0 -32,-128 32,-192 32,0 0,0"/>
+  <object id="26" x="768" y="448">
+   <polyline points="0,0 0,-128 32,-128 32,0 0,0"/>
   </object>
-  <object id="30" x="512" y="32">
-   <polyline points="0,0 0,-32 144,-32 144,0 0,0"/>
+  <object id="27" x="768" y="192">
+   <polyline points="8,32 -32,-128 32,-192 32,32 8,32"/>
+  </object>
+  <object id="30" x="480" y="32">
+   <polyline points="0,0 0,-32 128,-32 128,0 0,0"/>
   </object>
   <object id="31" x="576" y="32">
-   <polyline points="0,0 0,-32 224,-32 160,32 0,-8"/>
+   <polyline points="0,-8 0,-32 224,-32 160,32 0,-8"/>
   </object>
-  <object id="34" x="400" y="800">
-   <polyline points="0,0 0,-32 208,-32 208,0 0,0"/>
+  <object id="34" x="480" y="800">
+   <polyline points="0,0 0,-32 128,-32 128,0 0,0"/>
   </object>
   <object id="35" x="608" y="800">
-   <polyline points="0,0 0,-32 128,-64 192,0 0,0"/>
+   <polyline points="-32,0 -32,-24 128,-64 192,0 -32,0"/>
   </object>
   <object id="88" x="768" y="320">
    <polyline points="0,0 0,-128 32,-128 32,0 0,0"/>
   </object>
   <object id="89" x="192" y="736" rotation="180">
-   <polyline points="0,-64 0,-32 128,0 192,-64 0,-64"/>
+   <polyline points="-32,-64 -32,-40 128,0 192,-64 -32,-64"/>
   </object>
-  <object id="90" x="400" y="768" rotation="180">
-   <polyline points="0,-32 0,0 208,0 208,-32 0,-32"/>
+  <object id="90" x="320" y="768" rotation="180">
+   <polyline points="0,-32 0,0 128,0 128,-32 0,-32"/>
   </object>
-  <object id="91" x="288" y="0" rotation="180">
-   <polyline points="0,-32 0,0 144,0 144,-32 0,-32"/>
+  <object id="91" x="320" y="0" rotation="180">
+   <polyline points="0,-32 0,0 128,0 128,-32 0,-32"/>
   </object>
   <object id="92" x="32" y="320" rotation="180">
-   <polyline points="0,-160 0,0 32,0 32,-160 0,-160"/>
+   <polyline points="0,-128 0,0 32,0 32,-128 0,-128"/>
   </object>
   <object id="93" x="32" y="608" rotation="180">
    <polyline points="-32,-128 8,32 32,32 32,-192 -32,-128"/>
@@ -1356,14 +1356,17 @@
   <object id="95" x="32" y="192" rotation="180">
    <polyline points="0,-128 0,0 32,0 32,-128 0,-128"/>
   </object>
-  <object id="96" x="32" y="480" rotation="180">
-   <polyline points="0,-176 0,0 32,0 32,-176 0,-176"/>
+  <object id="96" x="32" y="448" rotation="180">
+   <polyline points="0,-160 0,0 32,0 32,-160 0,-160"/>
   </object>
   <object id="97" x="32" y="0" rotation="180">
-   <polyline points="0,-192 -32,-64 32,0 32,-192 0,-192"/>
+   <polyline points="8,-224 -32,-64 32,0 32,-224 8,-224"/>
   </object>
-  <object id="98" x="288" y="32">
-   <polyline points="0,0 0,-32 224,-32 224,0 0,0"/>
+  <object id="98" x="320" y="32">
+   <polyline points="0,0 0,-32 160,-32 160,0 0,0"/>
+  </object>
+  <object id="100" x="320" y="800">
+   <polyline points="0,0 0,-32 160,-32 160,0 0,0"/>
   </object>
  </objectgroup>
  <objectgroup color="#00ff00" name="SharedEdges" visible="0">

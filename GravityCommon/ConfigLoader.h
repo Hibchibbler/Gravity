@@ -19,6 +19,7 @@ struct PhysicsConfig
     float DRAG_CONSTANT;// = 0.00009;
     float RESTITUTION;// = 0.30f;
     float FAST_THRESHOLD;// = 30.0f;
+    float SLOW_THRESHOLD;// = 30.0f;
     float KINETIC_FRICTION;// = 1.75f;
     float DYNAMIC_FRICTION;// = 0.10f;
     float FAST_JUMP_THRESHOLD;

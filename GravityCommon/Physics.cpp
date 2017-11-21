@@ -17,6 +17,7 @@
 #include "GravityCommon/ConfigLoader.h"
 #include "GravityCommon/Player.h"
 #include "SATAlgo/SATAlgo.h"
+#include <assert.h>
 
 using namespace bali;
 using namespace bali::vec;
@@ -291,7 +292,6 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
         for (auto cinfo = cinfos.begin(); cinfo != cinfos.end(); ++cinfo)
         {
             newPos += cinfo->normal;
-            ///overlap += cinfo->overlap;
 #ifdef PRINT_DIAGNOSTICS
             ss << "<CN " << cinfo->normal.x << ", " << cinfo->normal.y << ">";
             ss << "<OVR? " << cinfo->overlap << ">, ";
@@ -303,20 +303,23 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
 
         if (newPos != vec::VECTOR2(0, 0))
         {
+            ////////////////////////////////////////////////////////
+            // BEGIN Modification of Player Position, Velocity, 
+            // and Render Shape (playerShape)
+            ////////////////////////////////////////////////////////
             newPos = vec::norm(newPos);
             player.isCollided = true;
             vec::VECTOR2 newVelocity;
 
             vec::VECTOR2 posDelta = newPos * overlap * 1.50f;
-            player.pos += posDelta;
+            //player.pos += posDelta;
+            player.addAddPosition(posDelta);
 
-            player.posCorrection = newPos;
-            player.edgeContact = biggest.edge.end - biggest.edge.start;
+
             newVelocity = newPos*(vec::dot(original_velocity, newPos)) * -1.f * (1 + pc.RESTITUTION) + original_velocity;
-            player.vel = newVelocity;
+            player.addSetVelocity(newVelocity);
 
             playerShape.move(posDelta);
-            //bali::translateShape(playerShape, posDelta);// Yea ... Important
 
             vec::VECTOR2 tangent = newVelocity - (newPos * vec::dot(newVelocity, newPos));
             tangent = vec::norm(tangent);
@@ -329,19 +332,29 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
             // friction.
             if (vec::mag(player.vel) < pc.FAST_THRESHOLD)
             {
-                player.vel += tangent * pc.KINETIC_FRICTION * jt;
+                player.addAddVelocity(tangent * pc.KINETIC_FRICTION * jt);
+
+                //
+                // We only want these to be registered
+                // when we are moving slow. 
+                //
+                player.posCorrection = newPos;
+                player.edgeContact = biggest.edge.end - biggest.edge.start;
 #ifdef PRINT_DIAGNOSTICS
                 ss << "< --- KJT>";
 #endif
             }
             else
             {
-                player.vel += tangent * pc.DYNAMIC_FRICTION * jt;
+                player.addAddVelocity(tangent * pc.DYNAMIC_FRICTION * jt);
 #ifdef PRINT_DIAGNOSTICS
                 ss << "< !!! DJT>";
 #endif
             }
-
+            ////////////////////////////////////////////////////////
+            // END Modification of Player Position, Velocity, 
+            // and Render Shape (playerShape)
+            ////////////////////////////////////////////////////////
 #ifdef PRINT_DIAGNOSTICS
             ss << "< " << player.vel.mag() << " >";
 #endif
@@ -366,6 +379,8 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
     while (player.accumulator.asSeconds() > pc.FIXED_DELTA)
     {
         player.accumulator -= sf::seconds(pc.FIXED_DELTA);
+        //player.velAccu = vec::VECTOR2(0.f, 0.f);
+        
 
         player.posHist.push_back(player.pos);
         if (player.posHist.size() > 150)
@@ -388,7 +403,8 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
             {
                 u = upVector(player.angle) * pc.JUMP_STRENGTH * 0.05f;
             }
-            player.velAccu += player.impulse(u);
+            player.addAddVelocity(player.impulse(u));
+            //player.velAccu += player.impulse(u);
             player.moveUp = false;
         }
 
@@ -404,14 +420,16 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
             {// otherwise, move left (because we're probably in the middle of a jump or fall)
                 l = leftVector(player.angle + pc.HORIZONTAL_MOVE_ANGLE_OFFSET) * (float)pc.MOVE_STRENGTH * 0.75f;
             }
-            player.velAccu += player.impulse(l);
+            player.addAddVelocity(player.impulse(l));
+            //player.velAccu += player.impulse(l);
             player.moveLeft = false;
         }
 
         if (player.moveDown)
         {
             vec::VECTOR2 d = downVector(player.angle)  * (float)pc.MOVE_STRENGTH;
-            player.velAccu += player.impulse(d);
+            player.addAddVelocity(player.impulse(d));
+            //player.velAccu += player.impulse(d);
             player.moveDown = false;
         }
 
@@ -427,7 +445,8 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
             {// otherwise, move right (because we're probably in the middle of a jump or fall)
                 r = rightVector(player.angle + pc.HORIZONTAL_MOVE_ANGLE_OFFSET) * (float)pc.MOVE_STRENGTH * 0.75f;
             }
-            player.velAccu += player.impulse(r);
+            player.addAddVelocity(player.impulse(r));
+            //player.velAccu += player.impulse(r);
             player.moveRight = false;
         }
 
@@ -437,20 +456,57 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
             player.angle += delta;
         }
 
+        //
         // Integrate motion
+        //  Apply gravity only if player is moving more than a hair
+        //  Update velocity
         // google: "2d game physics motion integration symplectic verlet euler rk rk4"
+        ////////////////////////////////////////////////////////
+        // BEGIN Modification of Player Position, Velocity, 
+        // and Render Shape (playerShape)
+        ////////////////////////////////////////////////////////
+
+        //if (vec::mag(player.vel) > pc.SLOW_THRESHOLD)
+        player.accel = downVector(player.angle) * (float)pc.GRAVITY_CONSTANT;
+        //if (vec::mag(player.vel) < pc.MAX_VELOCITY)
+        //player.vel += player.velAccu + (player.accel * pc.FIXED_DELTA);
+        player.vel += (player.accel * pc.FIXED_DELTA);
+        Command cmd;
+        while (player.getCommand(cmd))
         {
-            player.acc = downVector(player.angle) * (float)pc.GRAVITY_CONSTANT;
-
-            if (vec::mag(player.vel) < pc.MAX_VELOCITY)
-                player.vel += player.velAccu + (player.acc * pc.FIXED_DELTA);
-            player.vel = player.vel - (player.vel * pc.DRAG_CONSTANT);
-
-            player.pos += player.vel * pc.FIXED_DELTA;
-
-
-            player.velAccu = vec::VECTOR2(0.f, 0.f);
+            if (cmd.code == Command::Code::ADDVELOCITY)
+            {
+                player.vel += cmd.av.delta;
+                //std::cout << "av ";
+            }
+            else if(cmd.code == Command::Code::SETVELOCITY)
+            {
+                player.vel = cmd.sv.vel;
+                //std::cout << "sv ";
+            }
+            else if (cmd.code == Command::Code::ADDPOSITION)
+            {
+                player.pos += cmd.ap.delta;
+                //std::cout << "ap ";
+            }
+            //player.vel += player.velAccu + (player.accel * pc.FIXED_DELTA);
         }
+        if (player.vel.x > pc.MAX_VELOCITY) {
+            player.vel.x = pc.MAX_VELOCITY;
+        }
+
+        if (player.vel.y > pc.MAX_VELOCITY) {
+            player.vel.y = pc.MAX_VELOCITY;
+        }
+
+        player.vel -= player.vel * pc.DRAG_CONSTANT;
+        //if (vec::mag(player.vel) > pc.SLOW_THRESHOLD) {
+        player.pos += player.vel * pc.FIXED_DELTA;
+
+        ////////////////////////////////////////////////////////
+        // END Modification of Player Position, Velocity, 
+        // and Render Shape (playerShape)
+        ////////////////////////////////////////////////////////
     }
 }
 
@@ -480,8 +536,9 @@ vec::VECTOR2 physics::upVector(float angle)
 {
     float a = DEG_TO_RAD(angle - 90);
     vec::VECTOR2 v(0, 1);
-    v.x = vec::mag(v) * cos(a);//TODO: mag only one please
-    v.y = vec::mag(v) * sin(a);
+    float m = vec::mag(v);
+    v.x = m * cos(a);//TODO: mag only one please
+    v.y = m * sin(a);
     v = vec::norm(v);
 
     return v;
@@ -492,8 +549,9 @@ vec::VECTOR2 physics::leftVector(float angle)
     //float a = DEG_TO_RAD(angle - 180 - LEFTUP);
     float a = DEG_TO_RAD(angle - 180);
     vec::VECTOR2 v(0, 1);
-    v.x = vec::mag(v) * cos(a);//TODO: mag only one please
-    v.y = vec::mag(v) * sin(a);
+    float m = vec::mag(v);
+    v.x = m * cos(a);//TODO: mag only one please
+    v.y = m * sin(a);
     v = vec::norm(v);
 
     return v;
@@ -503,8 +561,9 @@ vec::VECTOR2 physics::downVector(float angle)
 {
     float a = DEG_TO_RAD(angle - 270);
     vec::VECTOR2 v(0, 1);
-    v.x = vec::mag(v) * cos(a);//TODO: mag only one please
-    v.y = vec::mag(v) * sin(a);
+    float m = vec::mag(v);
+    v.x = m * cos(a);//TODO: mag only one please
+    v.y = m * sin(a);
     v = vec::norm(v);
 
     return v;
@@ -515,8 +574,9 @@ vec::VECTOR2 physics::rightVector(float angle)
     //float a = DEG_TO_RAD(angle - 360 + LEFTUP);
     float a = DEG_TO_RAD(angle - 360);
     vec::VECTOR2 v(0, 1);
-    v.x = vec::mag(v) * cos(a);//TODO: mag only one please
-    v.y = vec::mag(v) * sin(a);
+    float m = vec::mag(v);
+    v.x = m * cos(a);//TODO: mag only one please
+    v.y = m * sin(a);
     v = vec::norm(v);
 
     return v;

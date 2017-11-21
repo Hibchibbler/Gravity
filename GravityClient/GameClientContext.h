@@ -47,11 +47,9 @@ public:
     CONVEXSHAPE::Vec            polygons;         // All of them
     CONVEXSHAPE::Vec            polygonsVisible;  // Updated each iteration
     CONVEXSHAPE::Vec            playerpolygons;   // 
-    Segment::Vec           sharedEdges;      // 
+    Segment::Vec                sharedEdges;      // 
 
     sf::VertexArray             lineSegments;
-
-    sf::Transform               levelRotTrans;
 
     Player                      player;
 

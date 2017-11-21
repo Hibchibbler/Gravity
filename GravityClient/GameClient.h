@@ -18,8 +18,6 @@ namespace bali
         uint32_t initialize();
         uint32_t doProcessing();
         uint32_t cleanup();
-
-        GameClientContext gcc;
     };
 }
 

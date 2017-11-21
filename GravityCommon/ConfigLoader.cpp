@@ -21,6 +21,7 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
     c.KINETIC_FRICTION = 1.65f;
     c.DYNAMIC_FRICTION = 0.05f;
     c.FAST_JUMP_THRESHOLD = 400.0;
+    c.SLOW_THRESHOLD = 2.0;
     c.JUMP_STRENGTH = 700.0;
     c.MAX_VELOCITY = 700.0;
 
@@ -58,9 +59,11 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
         c.DRAG_CONSTANT = std::stof(configValues["DRAG_CONSTANT"]);
         c.RESTITUTION = std::stof(configValues["RESTITUTION"]);
         c.FAST_THRESHOLD = std::stof(configValues["FAST_THRESHOLD"]);
+        c.SLOW_THRESHOLD = std::stof(configValues["SLOW_THRESHOLD"]);
         c.KINETIC_FRICTION = std::stof(configValues["KINETIC_FRICTION"]);
         c.DYNAMIC_FRICTION = std::stof(configValues["DYNAMIC_FRICTION"]);
         c.MAX_VELOCITY = std::stof(configValues["MAX_VELOCITY"]);
+        c.JUMP_STRENGTH = std::stof(configValues["JUMP_STRENGTH"]);
     }
     else
     {

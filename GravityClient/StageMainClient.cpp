@@ -48,7 +48,7 @@ namespace bali
         ctx->player.pos.y = pObjG->objects.back()->y;
 
         ctx->player.vel = vec::VECTOR2(0.0, 0.0);
-        ctx->player.acc = vec::VECTOR2(0.0, 0.0);
+        ctx->player.accel = vec::VECTOR2(0.0, 0.0);
 
         ctx->size.x = ctx->size.y = 1000;
         ctx->mainView.setCenter(ctx->player.pos.x, ctx->player.pos.y);
@@ -163,9 +163,8 @@ namespace bali
 
     uint32_t StageMainClient::doLocalInputs(Context::Ptr context)
     {
-        GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-        MouseKeyboard::doMouse(ctx);
-        MouseKeyboard::doKeyboard(ctx);
+        MouseKeyboard::doMouse(context);
+        MouseKeyboard::doKeyboard(context);
 
         return 0;
     }
@@ -186,8 +185,12 @@ namespace bali
         // Search for foreground that is visible        
         qt::AABB searchRegion = getSearchRegion(ctx->mainView, 0.90f);
 
-        //Does the player hit anything?
-        // convert All obstacle tiles returned from quad tree into shapes for rendering.
+        //Does the player hit a Collision polygon?
+        // 
+        // We have a master polygon list.
+        // a quad tree search result tells us 
+        // the index into the master polygon list
+        // of which polygons are nearby.
         std::vector<qt::XY> sr;
         sr = ctx->searchLayers.at(0)->search(searchRegion);
         
@@ -201,16 +204,13 @@ namespace bali
             ctx->polygonsVisible.push_back(ctx->polygons[p->ti]);
         }
 
-        // Every shape that is tested for collision by the player
-        // shape is to be placed into this vector
-        // individual player shapes are to be placed into this vector.
+        // Construct the Player Polygons
         //  Note: A player "shape" may be composed of multiple polygons.
         vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
         for (int j = 0; j < ctx->playerpolygons.size(); ++j)
         {
             float hafWid = 0;// ctx->playerpolygons[j].getLocalBounds().width / 2.0;//getLocalBounds
             float hafHite = 0;// ctx->playerpolygons[j].getLocalBounds().height / 2.0;
-
             ctx->playerpolygons[j].setPosition(pos.x - hafWid, pos.y + hafHite);
         }
 

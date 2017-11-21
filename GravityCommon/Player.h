@@ -3,6 +3,7 @@
 
 #include <SFML/System/Time.hpp>
 #include <vector>
+#include <queue>
 
 #include "PhysicalObject.h"
 

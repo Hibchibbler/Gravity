@@ -13,7 +13,7 @@ namespace bali
 {
     namespace qt
     {
-        class XY//Point
+        class XY//Point //TODO: use something defined in Common. dont' defined something new.
         {
         public:
             float x;

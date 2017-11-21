@@ -51,21 +51,17 @@ public:
 
 vec::VECTOR2 rotVector(float angle);
 vec::VECTOR2 upVector(float angle);
-
 vec::VECTOR2 leftVector(float angle);
-
 vec::VECTOR2 downVector(float angle);
-
 vec::VECTOR2 rightVector(float angle);
 // Find intersection of RAY & SEGMENT
 bool getIntersection(vec::VECTOR2 rayStart, vec::VECTOR2 ray, Segment segment, Intersection & intersection);
-
 bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<Segment> & segments, physics::Intersection & intersect);
-
 bool RayCast(float a, vec::VECTOR2 start, std::vector<Segment> & segments, physics::Intersection & intersect);
-
 void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::VertexArray & lineSegments);
-
+#undef PRINT_DIAGNOSTICS
+bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
+void update(Player & player, sf::Time elapsed, PhysicsConfig & pc);
 //vec::VECTOR2 getContactPosition(vec::VECTOR2 pos, vec::VECTOR2 vel, SAT::Shape & shape, std::vector<SAT::Shape> & playerShapes, std::vector<SAT::ContactInfo> & hitInfo, PhysicsConfig & pc)
 //{
 //    //
@@ -99,12 +95,6 @@ void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::Ve
 //    std::cout << "~~~" << posAdjustment.x << ", " << posAdjustment.y << "~~~" << std::endl;
 //    return posAdjustment;
 //}
-
-
-//bool ciGreater(SAT::ContactInfo a, SAT::ContactInfo b);
-#undef PRINT_DIAGNOSTICS
-bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
-void update(Player & player, sf::Time elapsed, PhysicsConfig & pc);
 }
 }
 
