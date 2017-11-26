@@ -5,15 +5,16 @@
 #ifndef PHYSICS_H_
 #define PHYSICS_H_
 
-#include "GravityCommon/Polygons.h"
+#include "Polygons.h"
 #include <list>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <functional>
 #include <iostream>
-#include "GravityCommon/ConfigLoader.h"
-#include "GravityCommon/Player.h"
+#include "ConfigLoader.h"
+#include "Player.h"
+#include "MouseKeyboard.h"
 
 #ifdef PHYSICS_DEBUG
 #define PHYSPRINT(x) \
@@ -49,6 +50,8 @@ public:
     vec::VECTOR2 delta;
 };
 
+
+
 vec::VECTOR2 rotVector(float angle);
 vec::VECTOR2 upVector(float angle);
 vec::VECTOR2 leftVector(float angle);
@@ -61,7 +64,7 @@ bool RayCast(float a, vec::VECTOR2 start, std::vector<Segment> & segments, physi
 void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::VertexArray & lineSegments);
 #undef PRINT_DIAGNOSTICS
 bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
-void update(Player & player, sf::Time elapsed, PhysicsConfig & pc);
+void update(Player & player, sf::Time elapsed, PhysicsConfig & pc, float & moveRightIntensity, float & moveLeftIntensity, float & jumpIntensity);
 //vec::VECTOR2 getContactPosition(vec::VECTOR2 pos, vec::VECTOR2 vel, SAT::Shape & shape, std::vector<SAT::Shape> & playerShapes, std::vector<SAT::ContactInfo> & hitInfo, PhysicsConfig & pc)
 //{
 //    //

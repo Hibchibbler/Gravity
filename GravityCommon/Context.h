@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 #include <SFML/Graphics.hpp>
+#include "ConfigLoader.h"
+#include "MouseKeyboard.h"
 
 namespace bali 
 {
@@ -30,6 +32,12 @@ public:
     uint32_t                    screenWidth;
     uint32_t                    screenHeight;
     sf::RenderWindow            window;
+    MouseKeyboard               mouseKeyboard;
+    PhysicsConfig               physicsConfig;
+
+    Player                      player;
+
+    sf::Time                    currentElapsed;
 };
 
 

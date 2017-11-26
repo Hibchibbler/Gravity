@@ -2,13 +2,19 @@
 #define Player_H_
 
 #include <SFML/System/Time.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <vector>
 #include <queue>
-
+#include <map>
 #include "PhysicalObject.h"
 
 namespace bali
 {
+
+
+
+
+
 class Player : public PhysicalObject
 {
 public:
@@ -22,7 +28,7 @@ public:
         accumulator()
     {
         applyGravity = true;
-        angle = nextangle = 0.0;
+        angle = targetangle = 0.0;
         moveRight = moveLeft = moveDown = moveUp = false;
         //jumpAccum = 0;
         isCollided = false;
@@ -33,6 +39,7 @@ public:
         solidGround = false;
         skipCollision = 0;
         onGround = false;
+        moving = 0;
     }
 
 
@@ -47,7 +54,8 @@ public:
     //   12 O' Clock = 240 degree
     //   3 O'  Clock = 360 degree
     float angle;
-    float nextangle;
+    float targetangle;
+    uint32_t granularity;
     bool rotated; //meta data
     bool solidGround;
 
@@ -71,8 +79,9 @@ public:
     bool moveLeft;
     bool moveDown;
     bool moveUp;
+    uint32_t moving;
     bool isCollided;
-    bool onGround;//
+    bool onGround;
 
 private:
 

@@ -12,6 +12,7 @@
 #include "SATAlgo/SATAlgo.h"
 #include "GravityCommon/ConfigLoader.h"
 #include "GravityCommon/Player.h"
+#include "GravityCommon/MouseKeyboard.h"
 
 namespace bali 
 {
@@ -51,13 +52,9 @@ public:
 
     sf::VertexArray             lineSegments;
 
-    Player                      player;
-
     sf::Clock                   mainClock;
     sf::Clock                   inputClock;
     sf::Shader                  shader;
-
-    PhysicsConfig               physicsConfig;
 };
 
 

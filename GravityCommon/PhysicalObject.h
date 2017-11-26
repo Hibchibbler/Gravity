@@ -7,20 +7,15 @@
 
 #include <stdint.h>
 #include <queue>
+#include <list>
 #include "Vector2.h"
 #include "Command.h"
-//#include "Observer.h"
+
 namespace bali {
 class GameObject
 {
 public:
     uint32_t id;
-};
-
-class Impulse
-{
-public:
-
 };
 
 class PhysicalObject
@@ -32,18 +27,18 @@ public:
     }
 
     vec::VECTOR2 impulse(vec::VECTOR2 force);
-    //void addImpulse(vec::VECTOR2 v);
-    //bool  getImpulse(vec::VECTOR2 & v);
 
     void addAddVelocity(vec::VECTOR2 v);
-
     void addSetVelocity(vec::VECTOR2 v);
-
     void addAddPosition(vec::VECTOR2 v);
-
-
     void addSetPosition(vec::VECTOR2 v);
-    bool getCommand(Command & c);
+    void addSetTargetAngle(float ta, uint32_t g);
+    void addAddImpulse(vec::VECTOR2 v, float duration_ms);
+    void addMove(float str, vec::VECTOR2 dir, bool right);
+    void addJump(float str, float dur, vec::VECTOR2 dir);
+
+    bool getAddCommand(Command & c);
+    bool getSetCommand(Command & c);
 
 
 
@@ -57,7 +52,9 @@ public:
 
 
 public:
-    std::queue<Command> cmdQueue;
+    std::queue<Command> cmdAddQueue;
+    std::queue<Command> cmdSetQueue;
+    std::list<Command>  cmdTimedMoves;
 
 
 };

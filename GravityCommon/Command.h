@@ -5,6 +5,13 @@
 namespace bali
 {
 
+class Impulse
+{
+public:
+    vec::VECTOR2 force;
+    float duration;
+};
+
 class Command
 {
 public:
@@ -14,6 +21,10 @@ public:
         ADDPOSITION,
         SETVELOCITY,
         ADDVELOCITY,
+        SETTARGETANGLE,
+        ADDIMPULSE,
+        MOVE,
+        JUMP
     };
 
     class AddPosition {
@@ -36,17 +47,48 @@ public:
         vec::VECTOR2 delta;
     };
 
+    class SetTargetAngle{
+    public:
+        float targetangle;
+        uint32_t granularity;
+    };
+
+    class AddImpulse {
+    public:
+        vec::VECTOR2 force;
+        float duration;
+    };
+
+    class Move {
+    public:
+        float str;
+        vec::VECTOR2 dir;
+        bool right;
+    };
+
+    class Jump{
+    public:
+        float str;//TODO: maybe a function
+        float dur;
+        float cur;
+        vec::VECTOR2 dir;//initial jump vector
+    };
+
     Command();
 
     uint32_t code;
+    uint32_t timed;
 
     union
     {
-        //Impulse      im;
-        SetPosition  sp;
-        AddPosition  ap;
-        SetVelocity  sv;
-        AddVelocity  av;
+        SetPosition     sp;
+        AddPosition     ap;
+        SetVelocity     sv;
+        AddVelocity     av;
+        SetTargetAngle  sta;
+        AddImpulse      ai;
+        Move            mv;
+        Jump            jmp;
     };
 };
 

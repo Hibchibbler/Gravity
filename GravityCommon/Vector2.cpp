@@ -3,7 +3,7 @@
 // TODO: There were problems with dependencies when Polygon didn't have it's own
 // compilation unit.
 //
-
+#include <sstream>
 #include <cmath>
 using namespace bali;
 using namespace bali::vec;
@@ -31,3 +31,12 @@ float vec::cross(const VECTOR2 a, const VECTOR2 b)
 {
     return ((a.x*b.y) - (a.y*b.x));
 }
+
+
+std::string vec::stringify(const VECTOR2 & a)
+{
+    std::stringstream ss;
+    ss << "<" << a.x << " , " << a.y << ">";
+    return ss.str();
+}
+

@@ -69,7 +69,6 @@ namespace bali
                     return 0;
                 }
             }
-
             // Process local keyboard/mouse inputs
             getCurrentStage()->doLocalInputs(ctx);
             // Update and Draw game frame

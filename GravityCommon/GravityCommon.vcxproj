@@ -142,6 +142,7 @@
     <ClInclude Include="ConfigLoader.h" />
     <ClInclude Include="Context.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="MouseKeyboard.h" />
     <ClInclude Include="PhysicalObject.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
@@ -154,6 +155,7 @@
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="PhysicalObject.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Polygons.cpp" />

@@ -152,13 +152,11 @@
   <ItemGroup>
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="GameClientContext.h" />
-    <ClInclude Include="MouseKeyboard.h" />
     <ClInclude Include="StageMainClient.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameClient.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="StageMainClient.cpp" />
   </ItemGroup>
   <ItemGroup>
