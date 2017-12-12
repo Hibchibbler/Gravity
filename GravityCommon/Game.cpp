@@ -14,10 +14,7 @@ namespace bali
         mCurStageIndex = 0;
         context = c;
     }
-    //void Game::stowContext(Context::Ptr c)
-    //{
-    //    context = c;
-    //}
+
     Context::Ptr Game::getContext()
     {
         return context;
@@ -52,23 +49,24 @@ namespace bali
 
             // Process window events, if there are any.
             sf::Event wevent;
-            while (ctx->window.pollEvent(wevent))
+            while (ctx->gameWindow.window.pollEvent(wevent))
             {
                 getCurrentStage()->doWindowEvent(ctx, wevent);
                 if (wevent.type == sf::Event::Resized)
                 {
-                    ctx->screenWidth = wevent.size.width;
-                    ctx->screenHeight = wevent.size.height;
-                    std::cout << "GameClient - Window Resized; " << ctx->screenWidth << ", " << ctx->screenHeight << std::endl;
+                    ctx->gameWindow.screenWidth = wevent.size.width;
+                    ctx->gameWindow.screenHeight = wevent.size.height;
+                    std::cout << "GameClient - Window Resized; " << ctx->gameWindow.screenWidth << ", " << ctx->gameWindow.screenHeight << std::endl;
                 }
                 else if (wevent.type == sf::Event::Closed)
                 {
-                    ctx->window.close();
+                    ctx->gameWindow.window.close();
                     std::cout << "GameClient - Window Closed " << std::endl;
                     done();
                     return 0;
                 }
             }
+            getCurrentStage()->doRemoteEvent(ctx);
             // Process local keyboard/mouse inputs
             getCurrentStage()->doLocalInputs(ctx);
             // Update and Draw game frame

@@ -6,9 +6,10 @@
 #define CONTEXT_H_
 
 #include <stdint.h>
-#include <SFML/Graphics.hpp>
+
 #include "ConfigLoader.h"
 #include "MouseKeyboard.h"
+#include "GameWindow.h"
 
 namespace bali 
 {
@@ -22,21 +23,16 @@ class Context
 {
 public:
     typedef Context* Ptr;
-    typedef void* Owner;
+
     enum TargetTexture {
         FRONT = 0,
         BACK = 0,
-
     };
-    Owner                       owner;
-    uint32_t                    screenWidth;
-    uint32_t                    screenHeight;
-    sf::RenderWindow            window;
+    GameWindow                  gameWindow;
     MouseKeyboard               mouseKeyboard;
     PhysicsConfig               physicsConfig;
-
+    KeyboardConfig              keyboardConfig;
     Player                      player;
-
     sf::Time                    currentElapsed;
 };
 

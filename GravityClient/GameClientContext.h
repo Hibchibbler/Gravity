@@ -13,6 +13,7 @@
 #include "GravityCommon/ConfigLoader.h"
 #include "GravityCommon/Player.h"
 #include "GravityCommon/MouseKeyboard.h"
+#include "TMXLoader/TextureAtlasLoader.h"
 
 namespace bali 
 {
@@ -55,6 +56,11 @@ public:
     sf::Clock                   mainClock;
     sf::Clock                   inputClock;
     sf::Shader                  shader;
+
+    //TextureAtlas                textureAtlas1;
+    bali::tilemap::TileMap      playerAniTileMap;
+    sf::Image                   textureAtlas1Image;
+    sf::Texture                 textureAtlas1Tex;
 };
 
 

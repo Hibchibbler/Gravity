@@ -63,6 +63,7 @@ public:
     public:
         float str;
         vec::VECTOR2 dir;
+        bool grounded;
         bool right;
     };
 

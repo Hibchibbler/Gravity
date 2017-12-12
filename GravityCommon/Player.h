@@ -7,13 +7,10 @@
 #include <queue>
 #include <map>
 #include "PhysicalObject.h"
+#include "Animation.h"
 
 namespace bali
 {
-
-
-
-
 
 class Player : public PhysicalObject
 {
@@ -24,23 +21,33 @@ public:
 
     Player()
         : PhysicalObject(),
-        edgeContact(0, 0),
         accumulator()
     {
-        applyGravity = true;
         angle = targetangle = 0.0;
-        moveRight = moveLeft = moveDown = moveUp = false;
-        //jumpAccum = 0;
-        isCollided = false;
-        posCorrection.x = posCorrection.y = 0;
-        velCorrection.x = velCorrection.y = 0;
-        rotated = false;
-        gravitySkipFrames = 0;
-        solidGround = false;
-        skipCollision = 0;
-        onGround = false;
+        isCollided = isCollidedLast = false;
+        jumpNormal = vec::Zero();
+        latNormal = vec::Zero();
         moving = 0;
+        state = State::IDLE;
+        isMovingRight = isMovingLeft = isJumping = false;
     }
+
+    enum class State
+    {
+        IDLE,
+        RIGHTWARDS,
+        LEFTWARDS,
+        JUMPING,
+        FALLING,
+        SLIDING,
+        HANGING,
+        CLIMBING,
+        DYING,
+        SHOOTING,
+        SWINGING,
+        PUNCHING,
+        TEETERING
+    };
 
 
     vec::VECTOR2 lastPosition;
@@ -56,32 +63,29 @@ public:
     float angle;
     float targetangle;
     uint32_t granularity;
-    bool rotated; //meta data
-    bool solidGround;
 
-    //sf::VertexArray playerQuads;
-    vec::VECTOR2 velCorrection;
-    vec::VECTOR2 posCorrection;
-    vec::VECTOR2 edgeContact;
-    bool applyGravity;
-    bool GravityOn() {
-        return (applyGravity = true);
-    }
-    bool GravityOff() {
-        return (applyGravity = false);
-    }
-    const uint32_t GravitySkipFramesMax = 100;
-    uint32_t gravitySkipFrames;
+    vec::VECTOR2 jumpNormal;
+    vec::VECTOR2 latNormal;
 
     sf::Time accumulator;
-    uint32_t skipCollision;
-    bool moveRight;
-    bool moveLeft;
-    bool moveDown;
-    bool moveUp;
+
     uint32_t moving;
+    bool isMovingRight;
+    bool isMovingLeft;
+    bool isJumping;
+
     bool isCollided;
-    bool onGround;
+    bool isCollidedLast;
+
+    State state;
+    bali::ani::AnimationManager aniMan;
+
+    void doJumping();
+    void doRightward();
+    void doLeftward();
+    void doIdle(Player::State s);
+
+    bool isMoving();
 
 private:
 

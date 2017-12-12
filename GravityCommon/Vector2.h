@@ -7,6 +7,7 @@
 
 #include <string>
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
 // Defines
 #define PI 3.14159265358979323846F
@@ -16,7 +17,9 @@ namespace bali
 namespace vec
 {
 typedef sf::Vector2f VECTOR2;
+typedef sf::IntRect  INTRECT;
 
+VECTOR2 Zero();
 float dot(const VECTOR2 a, const VECTOR2 b);
 float mag(const VECTOR2 a);
 VECTOR2 norm(const VECTOR2 a);

@@ -137,11 +137,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Builders.h" />
     <ClInclude Include="Command.h" />
     <ClInclude Include="ConfigLoader.h" />
     <ClInclude Include="Context.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameWindow.h" />
     <ClInclude Include="MouseKeyboard.h" />
     <ClInclude Include="PhysicalObject.h" />
     <ClInclude Include="Physics.h" />
@@ -149,8 +151,10 @@
     <ClInclude Include="Polygons.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Vector2.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Builders.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
@@ -158,6 +162,7 @@
     <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="PhysicalObject.cpp" />
     <ClCompile Include="Physics.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Polygons.cpp" />
     <ClCompile Include="Stage.cpp" />
     <ClCompile Include="Vector2.cpp" />

@@ -173,15 +173,15 @@ bool ciGreater(SAT::ContactInfo a, SAT::ContactInfo b)
 #undef PRINT_DIAGNOSTICS
 bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges)
 {
-    float a_deg = 180 + player.angle;
-    float a = DEG_TO_RAD(a_deg);
     std::stringstream ss;
     ss << std::setprecision(5);
+
     int cnt = 0;
     bool collision = false;
-
-    collision = false;
+    player.isCollidedLast = player.isCollided;
     player.isCollided = false;
+
+    //player.posCorrection = vec::Zero();
 
     vec::VECTOR2 original_velocity = player.vel;
 #ifdef PRINT_DIAGNOSTICS
@@ -194,9 +194,7 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
     for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
     {
         std::vector<SAT::ContactInfo> hitInfo;
-
         collision = SAT::Shape::collision(playerShape, *shape, hitInfo);
-
         if (collision)
         {
             float minimumOverlap = 999999999.0f;
@@ -251,10 +249,6 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
 
         if (newPos != vec::VECTOR2(0, 0))
         {
-            ////////////////////////////////////////////////////////
-            // BEGIN Modification of Player Position, Velocity, 
-            // and Render Shape (playerShape)
-            ////////////////////////////////////////////////////////
             float newMag = 0.f;
             newPos = vec::norm(newPos);
             player.isCollided = true;
@@ -264,11 +258,9 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
             //player.pos += posDelta;
             player.addAddPosition(posDelta);
 
-
             newVelocity = newPos*(vec::dot(original_velocity, newPos)) * -1.f * (1 + pc.RESTITUTION) + original_velocity;
             newMag = vec::mag(newVelocity);
             player.addSetVelocity(newVelocity);
-
             playerShape.move(posDelta);
 
             vec::VECTOR2 tangent = newVelocity - (newPos * vec::dot(newVelocity, newPos));
@@ -283,17 +275,23 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
                 // when we are moving at a velocity less
                 // than MAX_JUMP_VELOCITY
                 //
-                player.posCorrection = newPos;
-                player.edgeContact = biggest.edge.end - biggest.edge.start;
+                player.jumpNormal = newPos;
             }
-            // If velocity is low,
-            // use kinetic friction
+
             //
+            // We can laterally move, no matter what.
+            //
+            {
+                player.latNormal = newPos;
+            }
+
+            //
+            // If velocity is low,
+            // use static friction
             // otherwise, use dynamic
             // friction.
-            if (newMag < pc.STATIC_FRICTION_VELOCITY_MAX && !player.moving)
+            if (newMag < pc.STATIC_FRICTION_VELOCITY_MAX && !player.isMoving())
             {
-                
                 player.addAddVelocity(tangent * pc.STATIC_FRICTION * jt);
 #ifdef PRINT_DIAGNOSTICS
                 ss << "< --- KJT>";
@@ -306,10 +304,6 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
                 ss << "< !!! DJT>";
 #endif
             }
-            ////////////////////////////////////////////////////////
-            // END Modification of Player Position, Velocity, 
-            // and Render Shape (playerShape)
-            ////////////////////////////////////////////////////////
 #ifdef PRINT_DIAGNOSTICS
             ss << "< " << vec::mag(player.vel) << " >";
 #endif
@@ -330,7 +324,6 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
 void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc, float & moveRightIntensity, float & moveLeftIntensity, float & jumpIntensity)
 {
     player.accumulator += elapsed;
-    //(player.accumulator.asSeconds() > 100 * pc.FIXED_DELTA)
     while (player.accumulator.asMilliseconds() > pc.FIXED_DELTA)
     {
         player.accumulator -= sf::seconds(pc.FIXED_DELTA);
@@ -347,26 +340,10 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc, floa
             player.angle += delta;
         }
 
-
         //
         // Integrate motion
         //  Apply gravity only if player is moving more than a hair
         //  Update velocity
-        ////////////////////////////////////////////////////////
-        // BEGIN Modification of Player Position, Velocity, 
-        // and Render Shape (playerShape)
-        ////////////////////////////////////////////////////////
-
-        //
-        // semi-implicit euler
-        //
-        
-        // Constant Acceleration
-        if (player.applyGravity)
-            player.accel = downVector(player.angle) * (float)pc.GRAVITY_CONSTANT;
-        // Velocity
-        //player.vel += (player.accel * pc.FIXED_DELTA);
-        // User input modified velocity through impulses
         Command cmd;
         vec::VECTOR2 velAcc;
         vec::VECTOR2 theVel;
@@ -374,20 +351,16 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc, floa
         {
             if (cmd.code == Command::Code::SETVELOCITY)
             {
-                // Note: This undoes application of gravity
                 player.vel = cmd.sv.vel;
-                //std::cout << "SV" << vec::stringify(cmd.sv.vel) << std::endl;
             }
             else if (cmd.code == Command::Code::SETPOSITION)
             {
                 player.pos = cmd.sp.pos;
-                //std::cout << "SP" << vec::stringify(cmd.sp.pos) << std::endl;
             }
             else if (cmd.code == Command::Code::SETTARGETANGLE)
             {
                 player.targetangle = cmd.sta.targetangle;
                 player.granularity = cmd.sta.granularity;
-                //std::cout << "STA" << cmd.sta.targetangle << ", " << cmd.sta.granularity << std::endl;
             }
         }
         while (player.getAddCommand(cmd))
@@ -395,40 +368,44 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc, floa
             if (cmd.code == Command::Code::ADDVELOCITY)
             {
                 player.vel += cmd.av.delta;
-                //std::cout << "ADD"<< std::endl;
             }
             else if (cmd.code == Command::Code::ADDPOSITION)
             {
                 player.pos += cmd.ap.delta;
-                //std::cout << "AP" << vec::stringify(cmd.ap.delta) << std::endl;
             }
             else if (cmd.code == Command::Code::MOVE)
             {
-                if (cmd.mv.dir != vec::VECTOR2(0, 0))
+                if (cmd.mv.dir == vec::Zero())
                 {
-                    vec::VECTOR2 up = upVector(player.angle) * 0.0f;
-                    vec::VECTOR2 norm = vec::norm(cmd.mv.dir);
-                    vec::VECTOR2 m = ((norm + up) / 2.0f) * cmd.mv.str;
-                    
+                    vec::VECTOR2 m;
+                    if (cmd.mv.right)
+                        m = rightVector(player.angle) * cmd.mv.str * pc.FREEFALL_MOVE_STRENGTH;
+                    else
+                        m = leftVector(player.angle) * cmd.mv.str * pc.FREEFALL_MOVE_STRENGTH;
                     player.vel += player.impulse(m);
                 }
                 else
                 {
-                    vec::VECTOR2 m;
-                    if (cmd.mv.right)
-                        m = rightVector(player.angle) * cmd.mv.str * 0.15f;
-                    else
-                        m = leftVector(player.angle) * cmd.mv.str * 0.15f;
+                    vec::VECTOR2 up = upVector(player.angle) * 0.0f;
+                    vec::VECTOR2 norm = vec::norm(cmd.mv.dir);
+                    vec::VECTOR2 m = ((norm + up) / 2.0f) * cmd.mv.str * pc.MOVE_STRENGTH;
                     player.vel += player.impulse(m);
                 }
             }
             else if (cmd.code == Command::Code::JUMP)
             {
                 vec::VECTOR2 u;
-                u = cmd.jmp.dir * cmd.jmp.str;
-                player.vel += player.impulse(u);
+                vec::VECTOR2 up = upVector(player.angle);// *0.25f;
+                if (cmd.jmp.dir != vec::Zero())
+                {
+                    u = vec::norm(cmd.jmp.dir + up)  * cmd.jmp.str * pc.JUMP_STRENGTH;
+                    player.vel += player.impulse(u);
+                }
+                else
+                {
+                    std::cout << "? ";
+                }
             }
-            
         }
 
         if (player.vel.x > pc.VELOCITY_MAX) {
@@ -438,14 +415,28 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc, floa
         if (player.vel.y > pc.VELOCITY_MAX) {
             player.vel.y = pc.VELOCITY_MAX;
         }
+
+        //
+        // semi-implicit euler
+        //
+        player.accel = downVector(player.angle) * (float)pc.GRAVITY_CONSTANT;
         player.vel += (player.accel * pc.FIXED_DELTA);
-        player.vel -= player.vel * pc.DRAG_CONSTANT;
+        player.vel -= player.vel * (player.isCollided ? pc.DRAG_CONSTANT : pc.DRAG_CONSTANT * 3.f);//player.vel *  pc.DRAG_CONSTANT;// 
         player.pos += player.vel * pc.FIXED_DELTA;
 
-        ////////////////////////////////////////////////////////
-        // END Modification of Player Position, Velocity, 
-        // and Render Shape (playerShape)
-        ////////////////////////////////////////////////////////
+        if (!player.isMovingRight && !player.isMovingLeft)
+        {
+            if (!player.isJumping &&
+                vec::dot(physics::downVector(player.angle), player.vel) > 0.25f &&
+                vec::mag(player.vel) > 30.0f)
+            {
+                player.state = Player::State::FALLING;
+            }
+            else if (!player.isJumping)
+            {
+                player.state = Player::State::IDLE;
+            }
+        }
     }
 }
 

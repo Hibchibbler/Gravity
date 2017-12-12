@@ -145,11 +145,11 @@ public:
 
     static Projection project(bali::CONVEXSHAPE & shape, const ContactInfo & axis)
     {
-        float min = vec::dot(axis.normal, shape.getPoint(0) + shape.getPosition());
+        float min = vec::dot(axis.normal, shape.getPoint(0) + shape.getPosition() - shape.getOrigin());
         double max = min;
 
         for (int i = 1; i < shape.getPointCount(); i++) {
-            double p = vec::dot(axis.normal, shape.getPoint(i)+shape.getPosition());
+            double p = vec::dot(axis.normal, shape.getPoint(i)+(shape.getPosition() - shape.getOrigin()));
             if (p <= min) {
                 min = p;
             }

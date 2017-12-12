@@ -33,7 +33,7 @@ namespace bali
         static void KeyPressedHandler(Keypress & kp, void* ud);
         static void KeyHeldHandler(Keypress & kp, void* ud);
         static void KeyReleasedHandler(Keypress & kp, void* ud);
-        static void KeyExpiredHandler(Keypress & kp, void* ud);
+        //static void KeyExpiredHandler(Keypress & kp, void* ud);
     };
 }//end namespace bali
 #endif // StageMainClient_h_

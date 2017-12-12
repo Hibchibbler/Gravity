@@ -73,13 +73,14 @@ void PhysicalObject::addAddImpulse(vec::VECTOR2 v, float duration_ms)
     cmdAddQueue.push(newCmd);
 }
 
-void PhysicalObject::addMove(float str, vec::VECTOR2 dir, bool right)
+void PhysicalObject::addMove(float str, vec::VECTOR2 dir, bool right, bool grounded)
 {
     Command newCmd;
     newCmd.code = (uint32_t)Command::Code::MOVE;
     newCmd.mv.str = str;
     newCmd.mv.dir = dir;
     newCmd.mv.right = right;
+    newCmd.mv.grounded = grounded;
     cmdAddQueue.push(newCmd);
 }
 void PhysicalObject::addJump(float str, float dur, vec::VECTOR2 dir )

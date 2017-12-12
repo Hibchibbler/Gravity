@@ -28,7 +28,23 @@ struct PhysicsConfig
     float JUMP_VELOCITY_MAX;//=100
 };
 
+struct KeyboardConfig
+{
+    uint32_t JUMP_KEY;//='Space'
+    uint32_t JUMP_TIME;//=200 ms
+    uint32_t RIGHT_KEY;//='D'
+    uint32_t RIGHT_TIME;//=0 ms
+    uint32_t LEFT_KEY;//='A'
+    uint32_t LEFT_TIME;//=0 ms
+};
+
+struct AnimationConfig
+{
+
+};
+
 PhysicsConfig loadPhysicsConfig(std::string filename);
+KeyboardConfig loadKeyboardConfig(std::string filename);
 
 }
 

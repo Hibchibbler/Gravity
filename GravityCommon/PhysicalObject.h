@@ -34,7 +34,7 @@ public:
     void addSetPosition(vec::VECTOR2 v);
     void addSetTargetAngle(float ta, uint32_t g);
     void addAddImpulse(vec::VECTOR2 v, float duration_ms);
-    void addMove(float str, vec::VECTOR2 dir, bool right);
+    void addMove(float str, vec::VECTOR2 dir, bool right, bool grounde);
     void addJump(float str, float dur, vec::VECTOR2 dir);
 
     bool getAddCommand(Command & c);

@@ -40,3 +40,7 @@ std::string vec::stringify(const VECTOR2 & a)
     return ss.str();
 }
 
+VECTOR2 vec::Zero()
+{
+    return VECTOR2(0, 0);
+}

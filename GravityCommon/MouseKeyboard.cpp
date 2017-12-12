@@ -14,39 +14,33 @@ Keypress & MouseKeyboard::getKeypress(sf::Keyboard::Key k)
 {
     return keyStates[k];
 }
-void MouseKeyboard::doKeyboard(sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released, KeyExpired expired)
+void MouseKeyboard::doKeyboard(sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released)
 {
     Context::Ptr ctx = (Context::Ptr)ud;
+    this->totalTime += elapsed;
 
-    //std::cout << elapsed.asSeconds() << std::endl;
-    updateJumpKeypress(keyStates[sf::Keyboard::Space], elapsed, ud, pressed, held, released, expired);
-    updateRightLeftKeypress(keyStates[sf::Keyboard::D], elapsed, ud, pressed, held, released, expired);
-    updateRightLeftKeypress(keyStates[sf::Keyboard::A], elapsed, ud, pressed, held, released, expired);
+    if (this->totalTime.asMilliseconds() > 5.f)
+    {   // std::cout << totalTime.asMilliseconds() << " ";
+        this->totalTime = sf::Time::Zero;
+        //std::cout << elapsed.asSeconds() << std::endl;
+        updateKeypress(keyStates[sf::Keyboard::Space], elapsed, ud, pressed, held, released);
+        updateKeypress(keyStates[sf::Keyboard::D], elapsed, ud, pressed, held, released);
+        updateKeypress(keyStates[sf::Keyboard::A], elapsed, ud, pressed, held, released);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-    {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+        {
+            float ta = ctx->player.angle - 35.0f;
+            uint32_t g = 400;
+            ctx->player.addSetTargetAngle(ta, g);
+        }
 
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+        {
+            float ta = ctx->player.angle + 35.0f;
+            uint32_t g = 400;
+            ctx->player.addSetTargetAngle(ta, g);
+        }
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-    {
-        //ctx->player.velocity.y += 0.3f;
-        //ctx->player.moveDown = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-    {
-        float ta = ctx->player.angle - 25.0f;
-        uint32_t g = 500;
-        ctx->player.addSetTargetAngle(ta, g);
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-    {
-        float ta = ctx->player.angle + 25.0f;
-        uint32_t g = 500;
-        ctx->player.addSetTargetAngle(ta, g);
-    }
-
 }
 
 void MouseKeyboard::doMouse(sf::Time elapsed)
@@ -59,79 +53,71 @@ void MouseKeyboard::doMouse(sf::Time elapsed)
     //    ctx->worldMousePos = ctx->window.mapPixelToCoords(ctx->screenMousePos);
     //}
 }
-void MouseKeyboard::registerKeypress(sf::Keyboard::Key k, float range, float ampl)
+void MouseKeyboard::registerKeypress(sf::Keyboard::Key k, float range, float ampl, bool repeat)
 {
-    keyStates[k] = Keypress(k, range, ampl);
+    keyStates[k] = Keypress(k, range, ampl, repeat);
 }
 
-void MouseKeyboard::updateRightLeftKeypress(Keypress & kp, sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released, KeyExpired expired)
+
+void MouseKeyboard::updateKeypress(Keypress & kp, sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released)
 {
     kp.pre = kp.cur;
     kp.cur = sf::Keyboard::isKeyPressed(kp.key);
-
     if (kp.pre == true && kp.cur == false)
     {
         // Released
-        released(kp, ud);
+        if (!kp.exp)
+        {
+            // We do not want to call release, if we already expired
+            //kp.nml = vec::VECTOR2(0, 0);
+            kp.str = 0.0f;
+            kp.elp = sf::Time::Zero;
+            kp.exp = false;
+            released(kp, ud);
+        }
     }
     else if (kp.pre == false && kp.cur == true)
     {
         // Pressed
+        kp.elp = sf::Time::Zero;
+        kp.exp = false;
         pressed(kp, ud);
-    }
-    else
-    {
-        // Still held, or still released.
-    }
-
-    if (sf::Keyboard::isKeyPressed(kp.key))
-    {
-        kp.elp += elapsed;
         held(kp, ud);
     }
-    else
+    else if (kp.pre == true && kp.cur == true)
     {
-    }
-}
-
-void MouseKeyboard::updateJumpKeypress(Keypress & kp, sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released, KeyExpired expired)
-{
-#define MY_PI 3.14159265359f
-    kp.pre = kp.cur;
-    kp.cur = sf::Keyboard::isKeyPressed(kp.key);
-    if (kp.pre == true && kp.cur == false)
-    {
-        // Released
-        released(kp, ud);
-    }
-    else if (kp.pre == false && kp.cur == true)
-    {
-        // Pressed
-        pressed(kp, ud);
-    }
-    else
-    {
-        // Still held, or still released.
-    }
-
-    if (kp.cur)
-    {
-        kp.elp += elapsed;
-        float ms = kp.elp.asMilliseconds();
-        if (ms < kp.rng)
+        //
+        // Still held
+        // We only care if we haven't expired.
+        //
+        if (!kp.exp)
         {
-            held(kp, ud);
-        }
-        else
-        {
-            expired(kp, ud);
+            kp.elp += elapsed;
+            float ms = kp.elp.asMilliseconds();
+            if (ms < kp.dur || kp.dur == 0.f)
+            {
+                // And holding
+                held(kp, ud);
+            }
+            else
+            {
+                //
+                // Held it too long. Expired.
+                //
+                //kp.nml = vec::VECTOR2(0, 0);
+                kp.str = 0.0f;
+                kp.elp = sf::Time::Zero;
+                kp.exp = true;
+                std::cout << "expired ";
+                released(kp, ud);
+
+            }
         }
         //std::cout << kp.str << std::endl;
     }
     else
     {
-        kp.str = 0.0f;
-        kp.elp = sf::Time::Zero;
+        // Still released
     }
 }
 

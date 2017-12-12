@@ -139,6 +139,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TextureAtlasLoader.h" />
     <ClInclude Include="TMX.h" />
     <ClInclude Include="TMXReader.h" />
     <ClInclude Include="XMLReader.h" />

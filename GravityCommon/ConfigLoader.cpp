@@ -73,3 +73,59 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
     }
     return c;
 }
+
+KeyboardConfig bali::loadKeyboardConfig(std::string filename)
+{
+    KeyboardConfig c;
+    // Set Defaults
+    c.JUMP_KEY = ' ';
+    c.JUMP_TIME = 220;
+    c.RIGHT_KEY = 'D';
+    c.RIGHT_TIME = 0;
+    c.LEFT_KEY = 'A';
+    c.LEFT_TIME = 0;
+
+    std::ifstream configIn(filename);
+    if (configIn.is_open())
+    {
+        //std::istringstream is_file(configIn.get);
+
+        typedef std::map<std::string, std::string> ConfigInfo;
+        ConfigInfo configValues;
+        std::string line;
+        while (std::getline(configIn, line))
+        {
+            std::istringstream is_line(line);
+            std::string key;
+            if (std::getline(is_line, key, '='))
+            {
+                std::string value;
+                if (key[0] == '#')
+                    continue;
+
+                if (std::getline(is_line, value))
+                {
+                    configValues[key] = value;
+                    //cout << "config[\"" << key << "\"] = " << value << endl;
+                }
+            }
+        }
+
+        // Set from config file
+        
+        c.JUMP_KEY = std::strtoul(configValues["JUMP_KEY"].c_str(), NULL, 0);
+        c.JUMP_TIME = std::stoi(configValues["JUMP_TIME"]);
+        c.RIGHT_KEY = std::strtoul(configValues["RIGHT_KEY"].c_str(), NULL, 0);
+        c.RIGHT_TIME = std::stoi(configValues["RIGHT_TIME"]);
+        c.LEFT_KEY = std::strtoul(configValues["LEFT_KEY"].c_str(), NULL, 0);
+        c.LEFT_TIME = std::stoi(configValues["LEFT_TIME"]);
+    }
+    else
+    {
+        cout << "Unable to load Keyboard Configuration file!" << endl;
+    }
+    return c;
+}
+
+
+
