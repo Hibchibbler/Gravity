@@ -42,12 +42,13 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     // Create Player shape from TMX
     TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShapes");
         
-    // Set defaults player position from TMX player shape.
+    // Set initial player position from TMX player shape.
     ctx->player.pos.x = pObjG->objects.back()->x;
     ctx->player.pos.y = pObjG->objects.back()->y;
 
     // Center the camera on the player.
-    ctx->size.x = ctx->size.y = 1000;
+    ctx->size.x = 1000;
+    ctx->size.y = 1000;
     //ctx->mainView.setCenter(ctx->player.pos.x, ctx->player.pos.y);
     //ctx->mainView.setSize(sf::Vector2f(ctx->size.x, ctx->size.y));
 
@@ -80,7 +81,11 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     
     // Create Collision Polygon geometry from TMX
     buildPolygonLayers(ctx->polygons,
-        ctx->map->objectgroups);
+        ctx->map->getObjectGroup("CollisionPolygons"));
+
+
+    buildPolygonLayers(ctx->glowPolygons,
+        ctx->map->getObjectGroup("GlowPolygons"));
 
     // Create player collision polygon geometry from TMX
     buildPlayerObjectLayers(ctx->playerpolygons,
@@ -98,32 +103,61 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     buildSearchLayer(searchLayer, ctx->polygons);
     ctx->searchLayers.push_back(searchLayer);
 
+
+
+    ctx->parallaxBackgrounds[0].img.loadFromFile(ctx->map->imagelayers[0]->image->source);
+    ctx->parallaxBackgrounds[0].img.createMaskFromColor(sf::Color::White);
+    ctx->parallaxBackgrounds[0].tex.loadFromImage(ctx->parallaxBackgrounds[0].img);
+    ctx->parallaxBackgrounds[0].sprite.setTexture(ctx->parallaxBackgrounds[0].tex);
+    ctx->parallaxBackgrounds[0].sprite.scale(8.0f, 8.0f);
+
+    ctx->parallaxBackgrounds[1].img.loadFromFile(ctx->map->imagelayers[1]->image->source);
+    ctx->parallaxBackgrounds[1].img.createMaskFromColor(sf::Color::White);
+    ctx->parallaxBackgrounds[1].tex.loadFromImage(ctx->parallaxBackgrounds[1].img);
+    ctx->parallaxBackgrounds[1].sprite.setTexture(ctx->parallaxBackgrounds[1].tex);
+    ctx->parallaxBackgrounds[1].sprite.scale(8.0f, 8.0f);
+
+    ctx->parallaxBackgrounds[2].img.loadFromFile(ctx->map->imagelayers[2]->image->source);
+    ctx->parallaxBackgrounds[2].img.createMaskFromColor(sf::Color::White);
+    ctx->parallaxBackgrounds[2].tex.loadFromImage(ctx->parallaxBackgrounds[2].img);
+    ctx->parallaxBackgrounds[2].sprite.setTexture(ctx->parallaxBackgrounds[2].tex);
+    ctx->parallaxBackgrounds[2].sprite.scale(8.0f, 8.0f);
+
+    ctx->parallaxBackgrounds[3].img.loadFromFile(ctx->map->imagelayers[3]->image->source);
+    ctx->parallaxBackgrounds[3].img.createMaskFromColor(sf::Color::White);
+    ctx->parallaxBackgrounds[3].tex.loadFromImage(ctx->parallaxBackgrounds[3].img);
+    ctx->parallaxBackgrounds[3].sprite.setTexture(ctx->parallaxBackgrounds[3].tex);
+    ctx->parallaxBackgrounds[3].sprite.scale(8.0f, 8.0f);
+
+    ctx->parallaxBackgrounds[4].img.loadFromFile(ctx->map->imagelayers[4]->image->source);
+    ctx->parallaxBackgrounds[4].img.createMaskFromColor(sf::Color::White);
+    ctx->parallaxBackgrounds[4].tex.loadFromImage(ctx->parallaxBackgrounds[4].img);
+    ctx->parallaxBackgrounds[4].sprite.setTexture(ctx->parallaxBackgrounds[4].tex);
+    ctx->parallaxBackgrounds[4].sprite.scale(8.0f, 8.0f);
+
     // Initialize render texture, and shaders
     ctx->pRenderTexture0 = &ctx->renderTextures[0];
-    ctx->pRenderTexture0->create(2048,2048);
+    ctx->pRenderTexture0->create(4096, 4096);
     //
     ctx->pRenderTexture1 = &ctx->renderTextures[1];
-    ctx->pRenderTexture1->create(2048, 2048);
+    ctx->pRenderTexture1->create(4096, 4096);
     ctx->shader.loadFromFile("gravity_vert.vert", "gravity_frag.frag");
 
     // Register interesting Keyboard key presses
     ctx->mouseKeyboard.registerKeypress(MouseKeyboard::getKeyFromConfigCode(ctx->keyboardConfig.JUMP_KEY), 
-                                        ctx->keyboardConfig.JUMP_TIME,
-                                        ctx->physicsConfig.JUMP_STRENGTH, false);
+                                        ctx->keyboardConfig.JUMP_TIME);
     ctx->mouseKeyboard.registerKeypress(MouseKeyboard::getKeyFromConfigCode(ctx->keyboardConfig.RIGHT_KEY), 
-                                        ctx->keyboardConfig.RIGHT_TIME,
-                                        ctx->physicsConfig.MOVE_STRENGTH, false);
+                                        ctx->keyboardConfig.RIGHT_TIME);
     ctx->mouseKeyboard.registerKeypress(MouseKeyboard::getKeyFromConfigCode(ctx->keyboardConfig.LEFT_KEY), 
-                                        ctx->keyboardConfig.LEFT_TIME,
-                                        ctx->physicsConfig.MOVE_STRENGTH, false);
+                                        ctx->keyboardConfig.LEFT_TIME);
 
-    // Load Texture Packer texture atlas
+    //
+    // Load Pyxel Edit texture atlas, and texture.
+    //
     bali::tilemap::TileMapLoader::load("MegaMan_v0.xml", ctx->playerAniTileMap);
     ctx->textureAtlas1Image.loadFromFile("MegaMan_v0.png");
     ctx->textureAtlas1Image.createMaskFromColor(sf::Color::White, 0);
     ctx->textureAtlas1Tex.loadFromImage(ctx->textureAtlas1Image);
-
-    
 
     //
     // Prepare the animations for each of the different player states.
@@ -186,7 +220,6 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
     static float zoom = 1.0;
     switch (event.type) {
     case sf::Event::LostFocus:
-        //ctx->mouseKeyboard.kbClock.restart();
         break;
     case sf::Event::GainedFocus:
         break;
@@ -219,19 +252,15 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
 uint32_t StageMainClient::doLocalInputs(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-    ctx->currentElapsed = ctx->mainClock.restart();
-    ctx->mouseKeyboard.doMouse(ctx->currentElapsed);
 
-    ctx->mouseKeyboard.doKeyboard(ctx->currentElapsed,  context,
-                                                        StageMainClient::KeyPressedHandler,
-                                                        StageMainClient::KeyHeldHandler,
-                                                        StageMainClient::KeyReleasedHandler);
+
     return 0;
 }
 
 uint32_t StageMainClient::doUpdate(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
+    ctx->currentElapsed = ctx->mainClock.restart();
     vec::VECTOR2 camPos;
 
     for (auto a = ctx->player.aniMan.animations.begin(); a != ctx->player.aniMan.animations.end(); a++)
@@ -267,18 +296,23 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     // Construct the Player Polygons
     //
     vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
-
-    float hafWid =  ctx->playerpolygons[0].getLocalBounds().width / 3.5;
-    float hafHite = ctx->playerpolygons[0].getLocalBounds().height / 2.0;
-
     // TODO: SAT needs to take into account setRotation;
-    ctx->playerpolygons[0].setPosition(pos.x, pos.y);//(pos.x - hafWid, pos.y + hafHite);//
-    ctx->playerpolygons[0].setOrigin(hafWid,-hafHite);
+    ctx->playerpolygons[0].setOrigin(8, 16);
+    ctx->playerpolygons[0].setPosition(pos);
     ctx->playerpolygons[0].setRotation(ctx->player.angle);
-    ctx->playerpolygons[0].setScale(1.00, 1.00);
-    
-    ctx->playerpolygons[0].setTexture(&ctx->textureAtlas1Tex, false);//TODO: only needs to be done once.
+    ctx->playerpolygons[0].setScale(1.45, 1.45);
 
+    CONVEXSHAPE rotatedPlayerShape;
+    rotatedPlayerShape.setPointCount(8);
+    for (int w = 0; w < 8;w++) {
+        rotatedPlayerShape.setPoint(w,
+            ctx->playerpolygons[0].getTransform().transformPoint(
+                ctx->playerpolygons[0].getPoint(w)
+            )
+        );
+    }
+
+    ctx->playerpolygons[0].setTexture(&ctx->textureAtlas1Tex, false);//TODO: only needs to be done once.
     ani::Frame f = ctx->player.aniMan.animations[(uint32_t)ctx->player.state].getCurrentFrame(ctx->player.angle, ctx->player.vel);
     ctx->playerpolygons[0].setTextureRect(f.getIntRect(false, false));
 
@@ -289,14 +323,43 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     //
     //physics::createLoSTriFan(ctx->polygonsVisible, ctx->player.pos, ctx->lineSegments);
     
-    physics::ResolveCollisions(ctx->polygonsVisible, ctx->playerpolygons.back(), ctx->player, ctx->physicsConfig, ctx->sharedEdges);
-    
+    //
+    // Collision Detection and Resolution
+    //
+    physics::ResolveCollisions(ctx->polygonsVisible, rotatedPlayerShape, ctx->player, ctx->physicsConfig, ctx->sharedEdges);
+
+
+    //
+    // Jump State Reset
+    //
+    if (ctx->player.isCollided)
+    {
+        float d = vec::dot(physics::downVector(ctx->player.angle), ctx->player.surfaceNormal );
+        if (d < 0.01f)
+        {
+            if (ctx->player.doubleJumpCnt != ctx->physicsConfig.JUMP_COUNT)
+            {
+                std::cout << "CJ ";
+            }
+            ctx->player.doubleJumpCnt = ctx->physicsConfig.JUMP_COUNT;
+        }
+    }
+
+    //
+    // User Input
+    //
+    ctx->mouseKeyboard.doMouse(ctx->currentElapsed);
+
+    ctx->mouseKeyboard.doKeyboard(ctx->currentElapsed, context,
+        StageMainClient::KeyPressedHandler,
+        StageMainClient::KeyHeldHandler,
+        StageMainClient::KeyReleasedHandler);
+    //
+    // Motion Integration
+    //
     physics::update(ctx->player, 
                     ctx->currentElapsed,
-                    ctx->physicsConfig, 
-                    ctx->mouseKeyboard.keyStates[sf::Keyboard::D].str,
-                    ctx->mouseKeyboard.keyStates[sf::Keyboard::A].str,
-                    ctx->mouseKeyboard.keyStates[sf::Keyboard::Space].str);
+                    ctx->physicsConfig);
 
     ctx->mainView.setCenter(camPos);
     ctx->mainView.setRotation(ctx->player.angle);
@@ -306,25 +369,49 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
 uint32_t StageMainClient::doDraw(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-    // Draw background
-    ctx->pRenderTexture0->clear();
-    ctx->pRenderTexture1->clear(sf::Color::Black);
+
+    ctx->pRenderTexture0->clear(sf::Color::Black);//sf::Color(95,95,95));
+    ctx->pRenderTexture1->clear(sf::Color::Black);// sf::Color(95, 95, 95));
     
     ctx->gameWindow.window.setView(ctx->mainView);
     ctx->gameWindow.window.clear();
 
-    sf::RenderStates bkgndRenderStates;
-    bkgndRenderStates.texture = &ctx->backgroundTex;
-    auto back = ctx->quadLayers[0];
-    ctx->pRenderTexture0->draw(back, bkgndRenderStates);
 
-    // Draw visible foregound
+
+    //// Draw background tiles
+    //sf::RenderStates bkgndRenderStates;
+    //bkgndRenderStates.texture = &ctx->backgroundTex;
+    //bali::QuadArray back = ctx->quadLayers[0];
+    //ctx->pRenderTexture0->draw(back, bkgndRenderStates);
+
+    ctx->parallaxBackgrounds[0].sprite.setPosition(ctx->player.pos / 1.5f);
+    ctx->parallaxBackgrounds[0].sprite.move(-100, -100);
+    
+    ctx->parallaxBackgrounds[1].sprite.setPosition(ctx->player.pos / 2.5f);
+    ctx->parallaxBackgrounds[1].sprite.move(-50, -50);
+    
+    ctx->parallaxBackgrounds[2].sprite.setPosition(ctx->player.pos / 3.0f);
+    ctx->parallaxBackgrounds[2].sprite.move(-25, -25);
+
+    ctx->parallaxBackgrounds[3].sprite.setPosition(ctx->player.pos / 3.5f);
+    ctx->parallaxBackgrounds[3].sprite.move(-15, -15);
+
+    ctx->parallaxBackgrounds[4].sprite.setPosition(ctx->player.pos / 4.0f);
+    ctx->parallaxBackgrounds[4].sprite.move(-10, -10);
+    
+    ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[0].sprite);
+    ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[1].sprite);
+    ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[2].sprite);
+    ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[3].sprite);
+    ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[4].sprite);
+
+    // Draw foregound tiles
     sf::RenderStates foreRenderstates;
     foreRenderstates.texture = &ctx->tilesetATex;
     auto fore = ctx->quadLayers[1];
     ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-    //// Collision Polygons - debug
+    //// Draw collision polygons - debug
     //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
     //{
     //    sf::RenderStates polyVisiRenderStates;
@@ -334,6 +421,7 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
     //}
 
+    // Draw player polygons
     for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
     {
         sf::RenderStates polyPlayerRenderStates;
@@ -344,39 +432,38 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
         ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
     }
 
+    //// Draw a small box at the player position - debug
+    //// this represents the players' center of mass
     {
-        sf::RenderStates polyPlayerRenderStates;
-        polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
-        CONVEXSHAPE cs;
-        float px = ctx->player.pos.x;
-        float py = ctx->player.pos.y;
+    sf::RenderStates polyPlayerRenderStates;
+    polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
+    CONVEXSHAPE cs;
+    float px = ctx->player.pos.x;
+    float py = ctx->player.pos.y;
 
-        cs.setPointCount(4);
-        cs.setPoint(0, vec::VECTOR2(px+0,py+0));
-        cs.setPoint(1, vec::VECTOR2(px+3,py+0));
-        cs.setPoint(2, vec::VECTOR2(px+3, py+3));
-        cs.setPoint(3, vec::VECTOR2(px+0, py+3));
-        
-        cs.setOutlineColor(sf::Color::Green);
-        //poly->setFillColor(sf::Color::Transparent);
-        cs.setOutlineThickness(1);
-        ctx->pRenderTexture0->draw(cs, polyPlayerRenderStates);
+    cs.setPointCount(4);
+    cs.setPoint(0, vec::VECTOR2(px - 1, py - 1));
+    cs.setPoint(1, vec::VECTOR2(px + 1, py - 1));
+    cs.setPoint(2, vec::VECTOR2(px + 1, py + 1));
+    cs.setPoint(3, vec::VECTOR2(px - 1, py + 1));
+
+    cs.setOutlineColor(sf::Color::Green);
+    //poly->setFillColor(sf::Color::Transparent);
+    cs.setOutlineThickness(1);
+    ctx->pRenderTexture0->draw(cs, polyPlayerRenderStates);
     }
 
     ctx->pRenderTexture0->display();
 
-    sf::RenderStates lineSegRenderState;
-    ctx->pRenderTexture1->draw(ctx->lineSegments, lineSegRenderState);
-    ctx->pRenderTexture1->display();
+    //sf::RenderStates lineSegRenderState;
+    //ctx->pRenderTexture1->draw(ctx->glowPolygons.back(), lineSegRenderState);
+    //ctx->pRenderTexture1->display();
 
     sf::RenderStates totalRenderStates;
     totalRenderStates.shader = &ctx->shader;
     ctx->shader.setUniform("view", ctx->mainView.getSize());
     ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
-    vec::VECTOR2 pposTemp = ctx->player.pos;
-    pposTemp.x = pposTemp.x - 8;
-    pposTemp.y = pposTemp.y + 8;
-    ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->gameWindow.window.mapCoordsToPixel(pposTemp)));
+    ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->gameWindow.window.mapCoordsToPixel(ctx->player.pos)));
     ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
     ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());
 
@@ -398,15 +485,38 @@ uint32_t StageMainClient::cleanup(Context::Ptr context)
 void StageMainClient::KeyPressedHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
-
-    //std::cout << (ctx->player.posCorrection != vec::VECTOR2(0, 0) ? "1 " : "0 ");
-
     if (kp.key == sf::Keyboard::Space)
     {
-        if (vec::dot(ctx->player.vel, ctx->player.jumpNormal) < -0.9f)
+        
+    //if (ctx->player.jumpNormal != vec::Zero())
+    {
+        //if (vec::dot(physics::upVector(ctx->player.angle), ctx->player.jumpNormal) > 0.10f)
         {
-            kp.nml = ctx->player.jumpNormal;
+            if (ctx->player.doubleJumpCnt == ctx->physicsConfig.JUMP_COUNT)
+            {
+                if (vec::dot(physics::upVector(ctx->player.angle), ctx->player.jumpNormal) > -0.001f)
+                {
+                    kp.nml = ctx->player.jumpNormal;
+                    std::cout << "FJ ";
+                    ctx->player.doubleJumpCnt--;
+                }
+            }
+            else if (ctx->player.doubleJumpCnt <= 0)
+            {
+                ctx->player.jumpNormal = vec::Zero();
+                std::cout << "LJ ";
+            }
+            else
+            {
+                std::cout << "SJ ";
+                kp.nml = physics::upVector(ctx->player.angle);
+                ctx->player.doubleJumpCnt--;
+            }
         }
+    }
+        
+        
+        
         ctx->player.doJumping();
     }
     else if (kp.key == sf::Keyboard::D)
@@ -428,26 +538,65 @@ void StageMainClient::KeyHeldHandler(Keypress & kp, void* ud)
 
     if (kp.key == sf::Keyboard::Space)
     {
-        kp.str = cos((kp.elp.asMilliseconds() * ((0.5f * PI) / kp.dur))) + 0.0f;
-        ctx->player.jumpNormal = vec::Zero();
-        ctx->player.addJump(kp.str, kp.dur, kp.nml);
+        float str = cos((kp.elp.asMilliseconds() * ((0.5f * PI) / kp.dur))) + 0.0f;
+        ctx->player.addJump(str, kp.dur, kp.nml);
         ctx->player.doJumping();
     }
     else if (kp.key == sf::Keyboard::D)
     {
-        kp.str = 1;// kp.amp;
-        kp.nml = vec::normal(ctx->player.latNormal) * -1.0f;
-        ctx->player.latNormal = vec::Zero();
-        ctx->player.addMove(kp.str, kp.nml, true, (ctx->player.latNormal == vec::Zero() ? false : true));
-        ctx->player.doRightward();
+        float str = 1.f;
+        bool grounded = false;
+        
+        if (ctx->player.latNormal == vec::Zero())
+        {
+            kp.nml = physics::rightVector(ctx->player.angle);
+        }
+        //else if (ctx->player.latNormal == vec::VECTOR2(-1, 0) ||
+        //    ctx->player.latNormal == vec::VECTOR2(1, 0))
+        //{
+        //    kp.nml = physics::upVector(ctx->player.angle);
+        //    std::cout << "R";
+        //    grounded = true;
+        //}
+        else
+        {
+            kp.nml = vec::normal(ctx->player.latNormal) * -1.0f;
+            grounded = true;
+        }
+        ctx->player.addMove(str,
+            kp.nml,
+            grounded);
+            ctx->player.doRightward();
+            ctx->player.latNormal = vec::Zero();
     }
     else if (kp.key == sf::Keyboard::A)
     {
-        kp.str = 1;// kp.amp;
-        kp.nml = vec::normal(ctx->player.latNormal) * 1.0f;
-        ctx->player.latNormal = vec::Zero();
-        ctx->player.addMove(kp.str, kp.nml, false, (ctx->player.latNormal == vec::Zero() ? false : true));
+        //std::cout << vec::dot(physics::upVector(ctx->player.angle), ctx->player.latNormal) << "  ";
+        float str = 1.f;
+        bool grounded = false;
+        
+        if (ctx->player.latNormal == vec::Zero())
+        {
+            kp.nml = physics::leftVector(ctx->player.angle);
+        }
+        //else if (ctx->player.latNormal == vec::VECTOR2(-1, 0)  ||
+        //         ctx->player.latNormal == vec::VECTOR2(1, 0))
+        //{
+        //    kp.nml = physics::upVector(ctx->player.angle);
+        //    std::cout << "L";
+        //    grounded = true;
+        //}
+        else
+        {
+            kp.nml = vec::normal(ctx->player.latNormal) * 1.0f;
+            grounded = true;
+        }
+        ctx->player.addMove(str,
+                            kp.nml,
+                            grounded);
+
         ctx->player.doLeftward();
+        ctx->player.latNormal = vec::Zero();
     }
 }
 

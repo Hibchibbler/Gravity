@@ -30,6 +30,8 @@ public:
         moving = 0;
         state = State::IDLE;
         isMovingRight = isMovingLeft = isJumping = false;
+        applyGravity = true;
+        doubleJumpCnt = 3;
     }
 
     enum class State
@@ -64,8 +66,9 @@ public:
     float targetangle;
     uint32_t granularity;
 
-    vec::VECTOR2 jumpNormal;
-    vec::VECTOR2 latNormal;
+    vec::VECTOR2 surfaceNormal; // This is always set
+    vec::VECTOR2 jumpNormal;    // This is set when a jump is performed, and cleared when jump is done done.
+    vec::VECTOR2 latNormal;     // This is set when lateral move is performed.
 
     sf::Time accumulator;
 
@@ -79,12 +82,13 @@ public:
 
     State state;
     bali::ani::AnimationManager aniMan;
-
+    bool applyGravity;
     void doJumping();
     void doRightward();
     void doLeftward();
     void doIdle(Player::State s);
 
+    uint32_t doubleJumpCnt;
     bool isMoving();
 
 private:

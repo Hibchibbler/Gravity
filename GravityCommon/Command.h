@@ -61,10 +61,9 @@ public:
 
     class Move {
     public:
-        float str;
+        float        str;
+        bool         gnd;
         vec::VECTOR2 dir;
-        bool grounded;
-        bool right;
     };
 
     class Jump{

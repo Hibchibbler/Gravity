@@ -17,6 +17,14 @@
 
 namespace bali 
 {
+
+struct SingleSprite
+{
+    sf::Image                   img;
+    sf::Texture                 tex;
+    sf::Sprite                  sprite;
+};
+
 class GameClientContext : public Context
 {
 public:
@@ -34,6 +42,8 @@ public:
     sf::Image                   backgroundImg;
     sf::Texture                 backgroundTex;
 
+    SingleSprite                parallaxBackgrounds[5];
+
     sf::View                    mainView;
     sf::Uint32                  centerx;
     sf::Uint32                  centery;
@@ -44,6 +54,8 @@ public:
     qt::QuadTree::Vec           searchLayers;
     QuadArray::Vec              quadLayers;       // Full time
     QuadArray                   visibleQuads;
+
+    CONVEXSHAPE::Vec            glowPolygons;
 
     Tile::VecVec                tileLayers;       // All the ones with a gid
     CONVEXSHAPE::Vec            polygons;         // All of them

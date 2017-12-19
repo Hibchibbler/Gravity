@@ -5,6 +5,7 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <vector>
 #include <iterator>
 
@@ -22,6 +23,18 @@ sf::Vector2i GID2XY(int gid, int total_columns)
     ret.y = gid / total_columns;
     ret.x = gid % total_columns;
     return ret;
+}
+
+vec::VECTOR2 rotatePoint(vec::VECTOR2 v, vec::VECTOR2 origin, float angle)
+{
+    //std::cout << angle << " ";
+    angle = angle*(PI / 180.0f);
+    
+    v -= origin;
+    v.x = v.x * cos(angle) - v.y * sin(angle);
+    v.y = v.x * sin(angle) + v.y * cos(angle);
+    v += origin;
+    return v;
 }
 
 uint32_t addQuad(bali::QuadArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip)
@@ -104,6 +117,7 @@ uint32_t addRotShape(CONVEXSHAPE & s, sf::FloatRect p, float angle)
 
     px4 = ((0 - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
     py4 = ((0 - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
+
     s.setPointCount(4);
     s.setPoint(0, sf::Vector2f(px1, py1));
     s.setPoint(0, sf::Vector2f(px2, py2));
@@ -437,24 +451,19 @@ uint32_t buildPlayerObjectLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::
 //    return 0;
 //}
 
-uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Vec & objectGroups)
+uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Ptr & objectGroup)
 {
-    for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
+
+    for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
     {
-        if ((*objG)->name != "CollisionPolygons")
-            continue;
-
-        for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
-        {
-            if ((*obj)->polyline != nullptr)
-            {//NOTE: discard last point, engine assume last point is same as first.
-                // TMX format is explicit about first and last point. even though they will always be the same.
-                polygons.push_back(CONVEXSHAPE());
-                buildPolyline(*obj, polygons.back(), true);
-
-            }
+        if ((*obj)->polyline != nullptr)
+        {//NOTE: discard last point, engine assume last point is same as first.
+            // TMX format is explicit about first and last point. even though they will always be the same.
+            polygons.push_back(CONVEXSHAPE());
+            buildPolyline(*obj, polygons.back(), true);
         }
     }
+
     return 0;
 }
 

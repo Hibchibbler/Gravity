@@ -18,39 +18,35 @@ class Keypress
     friend class MousKeyboard;
 public:
     Keypress() {}
-    Keypress(sf::Keyboard::Key k, float r, float a, bool repeat)
+    Keypress(sf::Keyboard::Key k, float duration)
     {
-        str = 0.f;
         pre = cur = exp = false;
         elp = sf::Time::Zero;
+        nml = vec::Zero();
         key = k;
-        dur = r;
-        amp = a;
-        rpt = repeat;
+        dur = duration;
     }
-    float               str; // This is the pressure of the key press
+
     bool                pre; // previous state
     bool                cur; // current state
     bool                exp;
     sf::Time            elp; //how long it was held
     float               dur; // Even if held, longer, this will be the maximum duration reported.
-    float               amp; // Amplitude; This is the max power of a key press
     sf::Keyboard::Key   key;
     vec::VECTOR2        nml;
-    bool                rpt;
 };
 class MouseKeyboard
 {
 public:
-    typedef void(*KeyPressed)(Keypress & kp, void* ud);
-    typedef void(*KeyHeld)(Keypress & kp, void* ud);
-    typedef void(*KeyReleased)(Keypress & kp, void* ud);
+    typedef void(*KeyPressedEvent)(Keypress & kp, void* ud);
+    typedef void(*KeyHeldEvent)(Keypress & kp, void* ud);
+    typedef void(*KeyReleasedEvent)(Keypress & kp, void* ud);
 
-    void registerKeypress(sf::Keyboard::Key k, float range, float ampl, bool repeat);
-    void updateKeypress(Keypress & glank, sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released);
-    void doKeyboard(sf::Time elapsed, void* ud, KeyPressed pressed, KeyHeld held, KeyReleased released);
+    void registerKeypress(sf::Keyboard::Key k, float duration);
+    void updateKeypress(Keypress & glank, sf::Time elapsed, void* ud, KeyPressedEvent pressed, KeyHeldEvent held, KeyReleasedEvent released);
+    void doKeyboard(sf::Time elapsed, void* ud, KeyPressedEvent pressed, KeyHeldEvent held, KeyReleasedEvent released);
     void doMouse(sf::Time elapsed);
-
+    void MouseKeyboard::updateElapsed(Keypress & kp, sf::Time elapsed);
     static sf::Keyboard::Key getKeyFromConfigCode(uint32_t cc)
     {
         switch (cc)

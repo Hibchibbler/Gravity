@@ -26,6 +26,7 @@ struct PhysicsConfig
     float FREEFALL_MOVE_STRENGTH;//=25
     float VELOCITY_MAX;//=650
     float JUMP_VELOCITY_MAX;//=100
+    uint32_t JUMP_COUNT;//=1
 };
 
 struct KeyboardConfig

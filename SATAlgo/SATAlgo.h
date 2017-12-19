@@ -77,12 +77,16 @@ public:
     }
     bool overlap(const Projection & p)
     {
-        if (x >= min(p.x, p.y) && x <= max(p.x, p.y) ||
-            y >= min(p.x, p.y) && y <= max(p.x, p.y))
+        if (x > min(p.x, p.y) && x <= max(p.x, p.y) ||
+            y > min(p.x, p.y) && y <= max(p.x, p.y))
         {
             return true;
         }
         return false;
+        //return (y >= x) ? 
+        //            (((x <= p.x) && (p.x <= y)) || 
+        //             ((x <= p.y) && (p.y <= y)) ) : 
+        //             (((y <= p.x) && (p.x <= x)) || ((y <= p.y) && (p.y <= x)));
     }
     double getOverlap(const Projection & p)
     {
@@ -137,7 +141,7 @@ public:
             axis.normal = normal;
             axis.edge.start = p1;// +shape.getPosition();
             axis.edge.end = p2;// +shape.getPosition();
-                    
+            axis.edge.off = shape.getOrigin();
             axes.push_back(axis);
         }
         return axes;
@@ -145,11 +149,18 @@ public:
 
     static Projection project(bali::CONVEXSHAPE & shape, const ContactInfo & axis)
     {
-        float min = vec::dot(axis.normal, shape.getPoint(0) + shape.getPosition() - shape.getOrigin());
+        float min = vec::dot(axis.normal, shape.getPoint(0) + (shape.getPosition() - shape.getOrigin()));
+        //float min = vec::dot(axis.normal, shape.getPoint(0));
         double max = min;
 
         for (int i = 1; i < shape.getPointCount(); i++) {
-            double p = vec::dot(axis.normal, shape.getPoint(i)+(shape.getPosition() - shape.getOrigin()));
+            vec::VECTOR2 pean = shape.getPoint(i) + (shape.getPosition() - shape.getOrigin());
+            //vec::VECTOR2 pean = shape.getPoint(i) - shape.getOrigin();
+//#include <SFML/System.hpp>
+            
+            //shape.getPosition()
+            double p = vec::dot(axis.normal, pean);
+            //double p = vec::dot(axis.normal, shape.getPoint(i));
             if (p <= min) {
                 min = p;
             }
@@ -170,6 +181,7 @@ public:
         // loop over the axes1
         //cout << ">>>>>>>>>" << std::endl;
         std::stringstream ss;
+        float minimumOverlap1 = 999999999.0f;
         for (int i = 0; i < axes1.size(); i++) 
         {
             ContactInfo axis = axes1[i];
@@ -187,13 +199,18 @@ public:
             {
                 // get the overlap, and store it
                 double o = p1.getOverlap(p2);
-                axis.overlap = o;
-                //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
-                hitInfo.push_back(ContactInfo(axis));
+                //if (o < minimumOverlap1)
+                {
+                    minimumOverlap1 = o;
+                    axis.overlap = o;
+                    hitInfo.push_back(ContactInfo(axis));
+                    //cout << " P[" << o << "],"<< (o < overlap ? "T" : "U")<<" <" << axis.x << ", " << axis.y << ">" << std::endl;
+                }
             }
         }
         //cout << "-------" << std::endl;
         // loop over the axes2
+        float minimumOverlap2 = 999999999.0f;
         for (int i = 0; i < axes2.size(); i++) 
         {
             ContactInfo axis = axes2[i];
@@ -211,15 +228,21 @@ public:
             {
                 // get the overlap, and store it
                 double o = p1.getOverlap(p2);
-                axis.overlap = o;
-                //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
-                hitInfo.push_back(ContactInfo(axis));
+                //if (o < minimumOverlap1)
+                {
+                    minimumOverlap1 = o;
+                    axis.overlap = o;
+                    hitInfo.push_back(ContactInfo(axis));
+                    //cout << " W[" << o << "]," << (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
+                }
+
             }
         }
         //cout << "<<<<<<<<<" << std::endl;
         // if we get here then we know that every axis had overlap on it
         // so we can guarantee an intersection
         std::cout << ss.str();
+
         return true;
     }
 };

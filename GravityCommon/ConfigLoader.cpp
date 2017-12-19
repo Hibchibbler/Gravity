@@ -25,6 +25,7 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
     c.VELOCITY_MAX = 700.0f;
     c.JUMP_VELOCITY_MAX = 100.0f;
     c.FREEFALL_MOVE_STRENGTH = 25.0f;
+    c.JUMP_COUNT = 2;
 
     std::ifstream configIn(filename);
     if (configIn.is_open())
@@ -66,6 +67,7 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
         c.JUMP_STRENGTH = std::stof(configValues["JUMP_STRENGTH"]);
         c.JUMP_VELOCITY_MAX = std::stof(configValues["JUMP_VELOCITY_MAX"]);
         c.FREEFALL_MOVE_STRENGTH = std::stof(configValues["FREEFALL_MOVE_STRENGTH"]);
+        c.JUMP_COUNT = std::stol(configValues["JUMP_COUNT"]);
     }
     else
     {

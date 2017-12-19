@@ -64,40 +64,8 @@ bool RayCast(float a, vec::VECTOR2 start, std::vector<Segment> & segments, physi
 void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::VertexArray & lineSegments);
 #undef PRINT_DIAGNOSTICS
 bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
-void update(Player & player, sf::Time elapsed, PhysicsConfig & pc, float & moveRightIntensity, float & moveLeftIntensity, float & jumpIntensity);
-//vec::VECTOR2 getContactPosition(vec::VECTOR2 pos, vec::VECTOR2 vel, SAT::Shape & shape, std::vector<SAT::Shape> & playerShapes, std::vector<SAT::ContactInfo> & hitInfo, PhysicsConfig & pc)
-//{
-//    //
-//    // It is assumed that a collision has currently been detected.
-//    //
-//    float step = 2.5f;
-//    bool hit = true;
-//    vec::VECTOR2 posAdjustment = vec::VECTOR2(0, 0);// = pos;
-//    vel = vel.norm();
-//    bool collision = false;
-//
-//    int c = 0;
-//    std::vector<SAT::ContactInfo> lastHitInfo;
-//    do //accumulate a constant delta, until we find we are not colliding
-//    {
-//        SAT::Shape pshape = playerShapes.back();
-//
-//        posAdjustment -= (vel * step);
-//        pshape.move(posAdjustment.x, posAdjustment.y);
-//        std::vector<SAT::ContactInfo> tempHitInfo;
-//        collision = playerShapes.back().collision(pshape, tempHitInfo);
-//
-//    std:cout << "? " << c++ << " ?" << posAdjustment.x << ", " << posAdjustment.y << "???" << std::endl;
-//    } while (collision);
-//
-//    //At this point, we are no longer colliding.
-//    //so undo one increment. 
-//    //it's assumed that we are one increment away from colliding again.
-//    posAdjustment += (vel * step)*3.0;
-//
-//    std::cout << "~~~" << posAdjustment.x << ", " << posAdjustment.y << "~~~" << std::endl;
-//    return posAdjustment;
-//}
+void update(Player & player, sf::Time elapsed, PhysicsConfig & pc);
+
 }
 }
 
