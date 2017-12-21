@@ -274,17 +274,40 @@ bool buildPolygon(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fals
         std::vector<std::string> pairs = split(obj->polygon->points, ' ');
         s.setPointCount(pairs.size());
         s.setPosition(vec::VECTOR2(obj->x, obj->y));
-        int i = 0;
-        for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+
+        if (obj->rotation == 0)
         {
-            std::vector<std::string> comp = split(*pair, ',');
-            float x1, y1;
-            x1 = atol(comp[0].c_str());// +(applyOffset ? obj->x : 0);
-            y1 = atol(comp[1].c_str());// +(applyOffset ? obj->y : 0);
-            s.setPoint(i, sf::Vector2f(x1, y1));
-            ++i;
+            int i = 0;
+            for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+            {
+                std::vector<std::string> comp = split(*pair, ',');
+                float x1, y1;
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
+                s.setPoint(i, sf::Vector2f(x1, y1));
+                ++i;
+            }
+            status = true;
         }
-        status = true;
+        else
+        {
+            int i = 0;
+            for (auto p = pairs.begin(); p != pairs.end(); p++)
+            {
+                std::vector<std::string> comp = split(*p, ',');
+                float x1, y1;
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
+                for (int u = 0; u < abs(obj->rotation); u += 90)
+                {
+                    float temp = x1;
+                    x1 = -y1;
+                    y1 = temp;
+                }
+                s.setPoint(i, sf::Vector2f(x1, y1));
+                i++;
+            }
+        }
     }
     return status;
 }
@@ -305,8 +328,6 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
 
         s.setPointCount(max);
         s.setPosition(vec::VECTOR2(obj->x, obj->y));
-        //s.offsetX = obj->x;
-        //s.offsetY = obj->y;
 
         if (obj->rotation == 0)
         {
@@ -317,8 +338,8 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
                     break;
                 std::vector<std::string> comp = split((*p), ',');
                 float x1, y1;
-                x1 = atol(comp[0].c_str());// +(applyOffset ? obj->x : 0);
-                y1 = atol(comp[1].c_str());// +(applyOffset ? obj->y : 0);
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
                 s.setPoint(i, sf::Vector2f(x1, y1));
                 i++;
             }
@@ -326,7 +347,7 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
         else
         {
             int i = 0;
-            for (auto p = pairs.rbegin(); p != pairs.rend(); p++)
+            for (auto p = pairs.begin(); p != pairs.end(); p++)
             {
                 if (i == max)
                     break;
@@ -337,11 +358,9 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
                 for (int u = 0; u < obj->rotation; u += 90)
                 {
                     float temp = x1;
-                    x1 = y1 * -1.0;
-                    y1 = temp * 1.0;
+                    x1 = -(y1);
+                    y1 = (temp);
                 }
-                //x1 += (applyOffset ? obj->x : 0);
-                //y1 += (applyOffset ? obj->y : 0);
                 s.setPoint(i, sf::Vector2f(x1, y1));
                 i++;
             }
@@ -461,6 +480,11 @@ uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Ptr &
             // TMX format is explicit about first and last point. even though they will always be the same.
             polygons.push_back(CONVEXSHAPE());
             buildPolyline(*obj, polygons.back(), true);
+        }
+        else if ((*obj)->polygon != nullptr)
+        {
+            polygons.push_back(CONVEXSHAPE());
+            buildPolygon(*obj, polygons.back(), false);
         }
     }
 

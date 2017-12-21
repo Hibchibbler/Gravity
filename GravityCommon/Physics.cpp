@@ -259,13 +259,13 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
 
         player.isCollided = true;
         if (newPos != vec::VECTOR2(0, 0))//TODO: don't think we need this check anymore (i.e. GetOverlap() is fixed?)
-        {
+        { 
             float newMag = 0.f;
             newPos = vec::norm(newPos);
 
             vec::VECTOR2 newVelocity;
 
-            vec::VECTOR2 posDelta = newPos * overlap * 1.00f;
+            vec::VECTOR2 posDelta = newPos * overlap * 1.10f;
             //player.pos += posDelta;
             player.addAddPosition(posDelta);
 
@@ -439,20 +439,6 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
         player.vel += (player.accel * pc.FIXED_DELTA);
         player.vel -= player.vel * pc.DRAG_CONSTANT;
         player.pos += player.vel * pc.FIXED_DELTA;
-
-        if (!player.isMovingRight && !player.isMovingLeft)
-        {
-            if (!player.isJumping &&
-                vec::dot(physics::downVector(player.angle), player.vel) > 0.25f &&
-                vec::mag(player.vel) > 30.0f)
-            {
-                player.state = Player::State::FALLING;
-            }
-            else if (!player.isJumping)
-            {
-                player.state = Player::State::IDLE;
-            }
-        }
     }
 }
 

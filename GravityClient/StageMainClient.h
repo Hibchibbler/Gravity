@@ -18,9 +18,7 @@ namespace bali
         ~StageMainClient();
 
         uint32_t initialize(Context::Ptr c);
-        uint32_t doRemoteEvent(Context::Ptr c);// (CommEvent & event);
         uint32_t doWindowEvent(Context::Ptr c, sf::Event & event);
-        uint32_t doLocalInputs(Context::Ptr c);
         uint32_t doUpdate(Context::Ptr c);
         uint32_t doDraw(Context::Ptr c);
         uint32_t cleanup(Context::Ptr c);

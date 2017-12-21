@@ -41,7 +41,6 @@ public:
     typedef void(*KeyPressedEvent)(Keypress & kp, void* ud);
     typedef void(*KeyHeldEvent)(Keypress & kp, void* ud);
     typedef void(*KeyReleasedEvent)(Keypress & kp, void* ud);
-
     void registerKeypress(sf::Keyboard::Key k, float duration);
     void updateKeypress(Keypress & glank, sf::Time elapsed, void* ud, KeyPressedEvent pressed, KeyHeldEvent held, KeyReleasedEvent released);
     void doKeyboard(sf::Time elapsed, void* ud, KeyPressedEvent pressed, KeyHeldEvent held, KeyReleasedEvent released);

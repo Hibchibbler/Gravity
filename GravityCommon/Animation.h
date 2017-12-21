@@ -7,7 +7,7 @@
 #include <map>
 #include "TMXLoader/TextureAtlasLoader.h"
 #include "Vector2.h"
-//#include "Player.h"
+
 
 namespace bali
 {
@@ -31,19 +31,7 @@ struct Frame
         r.top = y;
         r.width = w;
         r.height = h;
-        //if (flipY)
-        //{
-        //    uint32_t temp = r.left;
-        //    r.left = r.left + r.width;
-        //    r.width = -1.0f * r.width;
-        //}
-    
-        //if (flipX)
-        //{
-        //    uint32_t temp = r.top;
-        //    r.top = r.top + r.height;
-        //    r.height = -1.0f * r.height;
-        //}
+
         return r;
     }
     uint32_t x, y;
@@ -74,10 +62,16 @@ public:
 class AnimationManager
 {
 public:
-    //Frame getCurrentFrame(float angle, vec::VECTOR2 velocity);
-    //Player::State currentAnimation;
+    struct Layout {
+        uint32_t state;
+        uint32_t start;
+        uint32_t len;
+        uint32_t delay;
+        uint32_t flipY;
+    };
+
     std::map<uint32_t, Animation> animations;
-    
+    void addAllFrames(const bali::tilemap::TileMap & tm, const std::vector<struct Layout> & frameLayout);
 };
 
 }

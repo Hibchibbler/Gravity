@@ -34,14 +34,14 @@ void MouseKeyboard::doKeyboard(sf::Time elapsed, void* ud, KeyPressedEvent press
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
         {
             float ta = ctx->player.angle - 25.0f;
-            uint32_t g = 300;
+            uint32_t g = 100;
             ctx->player.addSetTargetAngle(ta, g);
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
             float ta = ctx->player.angle + 25.0f;
-            uint32_t g = 300;
+            uint32_t g = 100;
             ctx->player.addSetTargetAngle(ta, g);
         }
     }

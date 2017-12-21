@@ -35,23 +35,23 @@ void Player::doIdle(Player::State s)
         isMovingLeft = false;
         break;
     }
-    if (!isJumping && (!isMovingRight && !isMovingLeft) || (isMovingRight && isMovingLeft))
-    {
-        std::cout << "IDLE ";
-        state = Player::State::IDLE;
-    }
-    else if (!isJumping && isMovingRight && !isMovingLeft)
-    {
-        state = Player::State::RIGHTWARDS;
-    }
-    else if (!isJumping && !isMovingRight && isMovingLeft)
-    {
-        state = Player::State::LEFTWARDS;
-    }
-    else if (isJumping)
-    {
-        state = Player::State::JUMPING;
-    }
+    //if (!isJumping && (!isMovingRight && !isMovingLeft) || (isMovingRight && isMovingLeft))
+    //{
+    //    std::cout << "IDLE ";
+    //    state = Player::State::IDLE;
+    //}
+    //else if (!isJumping && isMovingRight && !isMovingLeft)
+    //{
+    //    state = Player::State::RIGHTWARDS;
+    //}
+    //else if (!isJumping && !isMovingRight && isMovingLeft)
+    //{
+    //    state = Player::State::LEFTWARDS;
+    //}
+    //else if (isJumping)
+    //{
+    //    state = Player::State::JUMPING;
+    //}
 }
 
 bool Player::isMoving()

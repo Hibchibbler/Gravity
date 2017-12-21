@@ -56,6 +56,8 @@ public:
     std::queue<Command> cmdSetQueue;
     std::list<Command>  cmdTimedMoves;
 
+    std::list<Command>  cmdHistory;
+
 
 };
 }

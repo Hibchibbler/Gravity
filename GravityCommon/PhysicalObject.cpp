@@ -21,8 +21,10 @@ void PhysicalObject::addAddVelocity(vec::VECTOR2 v)
 /*
     if (v.x == 0.f && v.y == 0.f)
         return;*/
+
     newCmd.av.delta = v;
     cmdAddQueue.push(newCmd);
+//    cmdHistory.push_back(newCmd);
 }
 
 void PhysicalObject::addSetVelocity(vec::VECTOR2 v)

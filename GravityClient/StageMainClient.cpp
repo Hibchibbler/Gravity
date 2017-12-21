@@ -31,55 +31,77 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
 
+    //
     // Load Configuration files for tweakable settings.
+    //
     ctx->physicsConfig = loadPhysicsConfig("physics.config.txt");
     ctx->keyboardConfig = loadKeyboardConfig("keyboard.config.txt");
 
+    //
     // Load TMX
+    //
     ctx->map = make_shared<bali::TMX::Map>();
     TMX::TMXReader::load("level_test1.tmx", ctx->map);
 
+    //
     // Create Player shape from TMX
+    //
     TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShapes");
         
+    //
     // Set initial player position from TMX player shape.
+    //
     ctx->player.pos.x = pObjG->objects.back()->x;
     ctx->player.pos.y = pObjG->objects.back()->y;
 
+    //
     // Center the camera on the player.
+    //
     ctx->size.x = 1000;
     ctx->size.y = 1000;
-    //ctx->mainView.setCenter(ctx->player.pos.x, ctx->player.pos.y);
-    //ctx->mainView.setSize(sf::Vector2f(ctx->size.x, ctx->size.y));
 
+    //
     // Create Foreground tileset from TMX
+    //
     TMX::Tileset::Ptr tilesetA = ctx->map->getTileset("tilesetFore");
     ctx->tilesetAImg.loadFromFile(tilesetA->images.back()->source);
     ctx->tilesetAImg.createMaskFromColor(sf::Color::Black);//transparent is black...
     ctx->tilesetATex.loadFromImage(ctx->tilesetAImg);
 
+    //
     // Create Background tileset from TMX
+    //
     TMX::Tileset::Ptr tilesetBkgnd = ctx->map->getTileset("tilesetBack");
     ctx->backgroundImg.loadFromFile(tilesetBkgnd->images.back()->source);
     ctx->backgroundTex.loadFromImage(ctx->backgroundImg);
 
+    //
     // Create internal representation of background geometry from TMX
+    //
     ctx->tileLayers.push_back(Tile::Vec());
     buildTileLayer(ctx->tileLayers.back(), tilesetBkgnd, ctx->map->getLayer("BackgroundLayer"));
 
+    //
     // Create renderable background geometry from internal representation
+    //
     ctx->quadLayers.push_back(bali::QuadArray());
-    buildQuadLayer(ctx->quadLayers.back(), ctx->tileLayers[0], 32, 32);
+    buildQuadLayer(ctx->quadLayers.back(), ctx->tileLayers[0], ctx->map->tilewidth, ctx->map->tileheight);
 
+    //
     // Create internal representation of foreground geometry from TMX
+    //
     ctx->tileLayers.push_back(Tile::Vec());
     buildTileLayer(ctx->tileLayers.back(), tilesetA, ctx->map->getLayer("ForegroundLayer"));
 
+    //
     // Create renderable foreground geometry from internal representation
+    //
     ctx->quadLayers.push_back(bali::QuadArray());
-    buildQuadLayer(ctx->quadLayers.back(), ctx->tileLayers[1], 32, 32);
-    
+    buildQuadLayer(ctx->quadLayers.back(), ctx->tileLayers[1], ctx->map->tilewidth, ctx->map->tileheight);
+
+    //
     // Create Collision Polygon geometry from TMX
+    //
     buildPolygonLayers(ctx->polygons,
         ctx->map->getObjectGroup("CollisionPolygons"));
 
@@ -87,12 +109,15 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     buildPolygonLayers(ctx->glowPolygons,
         ctx->map->getObjectGroup("GlowPolygons"));
 
+    //
     // Create player collision polygon geometry from TMX
+    //
     buildPlayerObjectLayers(ctx->playerpolygons,
         ctx->map->objectgroups);
 
-
+    //
     // Create Quadtree for Collision Polygons.
+    //
     int maxDepth = 15;
     qt::AABB aabb;
     aabb.min.x = -64;
@@ -104,7 +129,9 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     ctx->searchLayers.push_back(searchLayer);
 
 
-
+    //
+    // Load parallax background images
+    //
     ctx->parallaxBackgrounds[0].img.loadFromFile(ctx->map->imagelayers[0]->image->source);
     ctx->parallaxBackgrounds[0].img.createMaskFromColor(sf::Color::White);
     ctx->parallaxBackgrounds[0].tex.loadFromImage(ctx->parallaxBackgrounds[0].img);
@@ -135,7 +162,9 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     ctx->parallaxBackgrounds[4].sprite.setTexture(ctx->parallaxBackgrounds[4].tex);
     ctx->parallaxBackgrounds[4].sprite.scale(8.0f, 8.0f);
 
+    //
     // Initialize render texture, and shaders
+    //
     ctx->pRenderTexture0 = &ctx->renderTextures[0];
     ctx->pRenderTexture0->create(4096, 4096);
     //
@@ -143,7 +172,9 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     ctx->pRenderTexture1->create(4096, 4096);
     ctx->shader.loadFromFile("gravity_vert.vert", "gravity_frag.frag");
 
+    //
     // Register interesting Keyboard key presses
+    //
     ctx->mouseKeyboard.registerKeypress(MouseKeyboard::getKeyFromConfigCode(ctx->keyboardConfig.JUMP_KEY), 
                                         ctx->keyboardConfig.JUMP_TIME);
     ctx->mouseKeyboard.registerKeypress(MouseKeyboard::getKeyFromConfigCode(ctx->keyboardConfig.RIGHT_KEY), 
@@ -154,63 +185,27 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     //
     // Load Pyxel Edit texture atlas, and texture.
     //
-    bali::tilemap::TileMapLoader::load("MegaMan_v0.xml", ctx->playerAniTileMap);
-    ctx->textureAtlas1Image.loadFromFile("MegaMan_v0.png");
+    bali::tilemap::TileMapLoader::load("Bot_v0.xml", ctx->playerAniTileMap);
+    ctx->textureAtlas1Image.loadFromFile("Bot_v0.png");
     ctx->textureAtlas1Image.createMaskFromColor(sf::Color::White, 0);
     ctx->textureAtlas1Tex.loadFromImage(ctx->textureAtlas1Image);
 
     //
     // Prepare the animations for each of the different player states.
     //
-    {
-        struct gwetch {
-            Player::State state;
-            uint32_t start;
-            uint32_t len;
-            uint32_t delay;
-            uint32_t flipY;
-        };
-        std::vector<struct gwetch> names = { { Player::State::IDLE,        0,  3, 300, 0},
-                                             { Player::State::RIGHTWARDS,  4, 10,  75, 0},
-                                             { Player::State::LEFTWARDS,   4, 10,  75, 1},
-                                             { Player::State::JUMPING,    14,  6, 500, 0},
-                                             { Player::State::FALLING,    18,  1,  75, 0} };
+    std::vector<struct ani::AnimationManager::Layout> names = 
+              { { (uint32_t)Player::State::IDLE,        12, 7, 100, 0},
+                { (uint32_t)Player::State::RIGHTWARDS,  60, 6,  75, 0},
+                { (uint32_t)Player::State::LEFTWARDS,   60, 6,  75, 1},
+                { (uint32_t)Player::State::JUMPING,     24, 4,  45, 0},
+                { (uint32_t)Player::State::FALLING,      5, 1, 100, 0} };
+    ctx->player.aniMan.addAllFrames(ctx->playerAniTileMap, names);
 
-        for (auto n = names.begin(); n != names.end(); n++)
-        {
-            ctx->player.aniMan.animations[(uint32_t)n->state] = ani::Animation(n->len, n->delay);
-            for (auto d = 0; d < n->len; d++)
-            {
-                ani::Frame frame;
-                if (n->flipY)
-                {
-                    frame = ani::Frame(
-                        ctx->playerAniTileMap.layers.back().tiles[d + n->start].x * ctx->playerAniTileMap.tilewidth + ctx->playerAniTileMap.tilewidth,
-                        ctx->playerAniTileMap.layers.back().tiles[d + n->start].y * ctx->playerAniTileMap.tileheight,
-                        ctx->playerAniTileMap.tilewidth * -1.0f,
-                        ctx->playerAniTileMap.tileheight);
-                }
-                else
-                {
-                    frame = ani::Frame(
-                        ctx->playerAniTileMap.layers.back().tiles[d + n->start].x * ctx->playerAniTileMap.tilewidth,
-                        ctx->playerAniTileMap.layers.back().tiles[d + n->start].y * ctx->playerAniTileMap.tileheight,
-                        ctx->playerAniTileMap.tilewidth,
-                        ctx->playerAniTileMap.tileheight);
-                }
-                
-                ctx->player.aniMan.animations[(uint32_t)n->state].frames.push_back(frame);
-            }
-        }
-    }
-
-    // Last thing
+    //
+    // Last things
+    //
+    ctx->mainClock.restart();
     initialized();
-    return 0;
-}
-
-uint32_t StageMainClient::doRemoteEvent(Context::Ptr ctx)
-{
     return 0;
 }
 
@@ -249,20 +244,16 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
     return 0;
 }
 
-uint32_t StageMainClient::doLocalInputs(Context::Ptr context)
-{
-    GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-
-
-    return 0;
-}
-
 uint32_t StageMainClient::doUpdate(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
+    Player & player = ctx->player;
     ctx->currentElapsed = ctx->mainClock.restart();
     vec::VECTOR2 camPos;
 
+    //
+    // Update all animation sequences..
+    //
     for (auto a = ctx->player.aniMan.animations.begin(); a != ctx->player.aniMan.animations.end(); a++)
     {
         a->second.update();
@@ -278,7 +269,7 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     camPos /= (float)ctx->player.posHist.size();
 
     //
-    // Construct the visible collision polygons
+    // Construct all collision polygons that are visible to the player
     //
     qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.20f);
     std::vector<qt::XY> sr;
@@ -297,10 +288,10 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     //
     vec::VECTOR2 pos((ctx->player.pos.x), (ctx->player.pos.y));
     // TODO: SAT needs to take into account setRotation;
-    ctx->playerpolygons[0].setOrigin(8, 16);
+    ctx->playerpolygons[0].setOrigin(16, 32);
     ctx->playerpolygons[0].setPosition(pos);
     ctx->playerpolygons[0].setRotation(ctx->player.angle);
-    ctx->playerpolygons[0].setScale(1.45, 1.45);
+    ctx->playerpolygons[0].setScale(1.3f, 1.3f);
 
     CONVEXSHAPE rotatedPlayerShape;
     rotatedPlayerShape.setPointCount(8);
@@ -311,31 +302,25 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
             )
         );
     }
-
-    ctx->playerpolygons[0].setTexture(&ctx->textureAtlas1Tex, false);//TODO: only needs to be done once.
+    
+    ctx->playerpolygons[0].setTexture(&ctx->textureAtlas1Tex, true);//TODO: only needs to be done once.
     ani::Frame f = ctx->player.aniMan.animations[(uint32_t)ctx->player.state].getCurrentFrame(ctx->player.angle, ctx->player.vel);
     ctx->playerpolygons[0].setTextureRect(f.getIntRect(false, false));
 
     //
-    // Resolve collisions
-    // Integrate motion
-    // Create Line of Sight Triangle Fan
-    //
-    //physics::createLoSTriFan(ctx->polygonsVisible, ctx->player.pos, ctx->lineSegments);
-    
-    //
     // Collision Detection and Resolution
     //
     physics::ResolveCollisions(ctx->polygonsVisible, rotatedPlayerShape, ctx->player, ctx->physicsConfig, ctx->sharedEdges);
-
 
     //
     // Jump State Reset
     //
     if (ctx->player.isCollided)
     {
-        float d = vec::dot(physics::downVector(ctx->player.angle), ctx->player.surfaceNormal );
-        if (d < 0.01f)
+        //float d = vec::dot(physics::downVector(ctx->player.angle), ctx->player.surfaceNormal );
+        //if (d < 0.01f)
+        float d = vec::dot(physics::downVector(ctx->player.angle), vec::norm(ctx->player.vel));
+        if (d > 0.6f)
         {
             if (ctx->player.doubleJumpCnt != ctx->physicsConfig.JUMP_COUNT)
             {
@@ -345,8 +330,67 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
         }
     }
 
+
     //
-    // User Input
+    // Based on flags and velocity
+    // set player state, and reset
+    // animation.
+    //
+    //std::cout << vec::stringify(player.vel) << "\n";
+    if (vec::dot(physics::downVector(player.angle), vec::norm(player.vel)) > 0.0f &&
+        vec::dot(physics::rightVector(player.angle), vec::norm(player.vel)) < 0.8f &&
+        vec::dot(physics::leftVector(player.angle), vec::norm(player.vel)) < 0.8f &&
+        vec::mag(player.vel) > 30.0f)
+    {
+        if (player.state != Player::State::FALLING)
+        {
+            player.aniMan.animations[(uint32_t)player.state].stop();
+            player.state = Player::State::FALLING;
+            player.aniMan.animations[(uint32_t)player.state].start();
+        }
+    }
+    else if (vec::dot(physics::upVector(player.angle), vec::norm(player.vel)) > 0.2f &&
+        vec::mag(player.vel) > 40.0f)
+    {
+        if (player.state != Player::State::JUMPING)
+        {
+            player.aniMan.animations[(uint32_t)player.state].stop();
+            player.state = Player::State::JUMPING;
+            player.aniMan.animations[(uint32_t)player.state].start();
+        }
+    }
+    else if (vec::mag(player.vel) < 30.0f)
+    {
+        if (player.state != Player::State::IDLE)
+        {
+            std::cout << "IDLE ";
+            player.aniMan.animations[(uint32_t)player.state].stop();
+            player.state = Player::State::IDLE;
+            player.aniMan.animations[(uint32_t)player.state].start();
+        }
+    }
+    else if (vec::dot(physics::rightVector(player.angle), vec::norm(player.vel)) > 0.5f)
+    {
+        if (player.state != Player::State::RIGHTWARDS)
+        {
+            player.aniMan.animations[(uint32_t)player.state].stop();
+            player.state = Player::State::RIGHTWARDS;
+            player.aniMan.animations[(uint32_t)player.state].start();
+        }
+    }
+    else if (vec::dot(physics::leftVector(player.angle), vec::norm(player.vel)) > 0.5f)
+    {
+        if (player.state != Player::State::LEFTWARDS)
+        {
+            player.aniMan.animations[(uint32_t)player.state].stop();
+            player.state = Player::State::LEFTWARDS;
+            player.aniMan.animations[(uint32_t)player.state].start();
+        }
+    }
+
+
+    //
+    // Get User Input, and apply
     //
     ctx->mouseKeyboard.doMouse(ctx->currentElapsed);
 
@@ -354,6 +398,7 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
         StageMainClient::KeyPressedHandler,
         StageMainClient::KeyHeldHandler,
         StageMainClient::KeyReleasedHandler);
+    
     //
     // Motion Integration
     //
@@ -411,15 +456,15 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     auto fore = ctx->quadLayers[1];
     ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
-    //// Draw collision polygons - debug
-    //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-    //{
-    //    sf::RenderStates polyVisiRenderStates;
-    //    poly->setOutlineColor(sf::Color::Red);
-    //    poly->setFillColor(sf::Color::Transparent);
-    //    poly->setOutlineThickness(1);
-    //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-    //}
+    // Draw collision polygons - debug
+    for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+    {
+        sf::RenderStates polyVisiRenderStates;
+        poly->setOutlineColor(sf::Color::Red);
+        poly->setFillColor(sf::Color::Transparent);
+        poly->setOutlineThickness(1);
+        ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+    }
 
     // Draw player polygons
     for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
@@ -428,30 +473,30 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
         polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
         //poly->setOutlineColor(sf::Color::Yellow);
         //poly->setFillColor(sf::Color::Transparent);
-        poly->setOutlineThickness(1);
+        //poly->setOutlineThickness(1);
         ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
     }
 
-    //// Draw a small box at the player position - debug
-    //// this represents the players' center of mass
-    {
-    sf::RenderStates polyPlayerRenderStates;
-    polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
-    CONVEXSHAPE cs;
-    float px = ctx->player.pos.x;
-    float py = ctx->player.pos.y;
+    ////// Draw a small box at the player position - debug
+    ////// this represents the players' center of mass
+    //{
+    //    sf::RenderStates polyPlayerRenderStates;
+    //    polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
+    //    CONVEXSHAPE cs;
+    //    float px = ctx->player.pos.x;
+    //    float py = ctx->player.pos.y;
 
-    cs.setPointCount(4);
-    cs.setPoint(0, vec::VECTOR2(px - 1, py - 1));
-    cs.setPoint(1, vec::VECTOR2(px + 1, py - 1));
-    cs.setPoint(2, vec::VECTOR2(px + 1, py + 1));
-    cs.setPoint(3, vec::VECTOR2(px - 1, py + 1));
+    //    cs.setPointCount(4);
+    //    cs.setPoint(0, vec::VECTOR2(px - 1, py - 1));
+    //    cs.setPoint(1, vec::VECTOR2(px + 1, py - 1));
+    //    cs.setPoint(2, vec::VECTOR2(px + 1, py + 1));
+    //    cs.setPoint(3, vec::VECTOR2(px - 1, py + 1));
 
-    cs.setOutlineColor(sf::Color::Green);
-    //poly->setFillColor(sf::Color::Transparent);
-    cs.setOutlineThickness(1);
-    ctx->pRenderTexture0->draw(cs, polyPlayerRenderStates);
-    }
+    //    cs.setOutlineColor(sf::Color::Green);
+    //    //poly->setFillColor(sf::Color::Transparent);
+    //    cs.setOutlineThickness(1);
+    //    ctx->pRenderTexture0->draw(cs, polyPlayerRenderStates);
+    //}
 
     ctx->pRenderTexture0->display();
 
@@ -487,105 +532,77 @@ void StageMainClient::KeyPressedHandler(Keypress & kp, void* ud)
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
     if (kp.key == sf::Keyboard::Space)
     {
-        
-    //if (ctx->player.jumpNormal != vec::Zero())
-    {
-        //if (vec::dot(physics::upVector(ctx->player.angle), ctx->player.jumpNormal) > 0.10f)
+        if (ctx->player.doubleJumpCnt == ctx->physicsConfig.JUMP_COUNT)
         {
-            if (ctx->player.doubleJumpCnt == ctx->physicsConfig.JUMP_COUNT)
+            if (vec::dot(physics::upVector(ctx->player.angle), ctx->player.jumpNormal) > -0.001f)
             {
-                if (vec::dot(physics::upVector(ctx->player.angle), ctx->player.jumpNormal) > -0.001f)
-                {
-                    kp.nml = ctx->player.jumpNormal;
-                    std::cout << "FJ ";
-                    ctx->player.doubleJumpCnt--;
-                }
-            }
-            else if (ctx->player.doubleJumpCnt <= 0)
-            {
-                ctx->player.jumpNormal = vec::Zero();
-                std::cout << "LJ ";
-            }
-            else
-            {
-                std::cout << "SJ ";
-                kp.nml = physics::upVector(ctx->player.angle);
+                std::cout << "FJ ";
+                kp.nml = ctx->player.jumpNormal;
                 ctx->player.doubleJumpCnt--;
+                ctx->player.isJumping = true;
             }
         }
-    }
-        
-        
-        
-        ctx->player.doJumping();
+        else if (ctx->player.doubleJumpCnt > 0)
+        {
+            std::cout << "SJ ";
+            kp.nml = physics::upVector(ctx->player.angle);
+            ctx->player.doubleJumpCnt--;
+            ctx->player.isJumping = true;
+        }
+        else
+        {
+            std::cout << "LJ ";
+            ctx->player.jumpNormal = vec::Zero();
+        }
     }
     else if (kp.key == sf::Keyboard::D)
     {
-        ctx->player.doRightward();
+        ctx->player.isMovingRight = true;
     }
     else if (kp.key == sf::Keyboard::A)
     {
-        ctx->player.doLeftward();
+        ctx->player.isMovingLeft = true;
     }
-
-    ctx->player.aniMan.animations[(uint32_t)ctx->player.state].start();
 }
 
 
 void StageMainClient::KeyHeldHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
-
     if (kp.key == sf::Keyboard::Space)
     {
         float str = cos((kp.elp.asMilliseconds() * ((0.5f * PI) / kp.dur))) + 0.0f;
         ctx->player.addJump(str, kp.dur, kp.nml);
-        ctx->player.doJumping();
+        ctx->player.isJumping = true;
     }
     else if (kp.key == sf::Keyboard::D)
     {
         float str = 1.f;
         bool grounded = false;
-        
         if (ctx->player.latNormal == vec::Zero())
         {
             kp.nml = physics::rightVector(ctx->player.angle);
         }
-        //else if (ctx->player.latNormal == vec::VECTOR2(-1, 0) ||
-        //    ctx->player.latNormal == vec::VECTOR2(1, 0))
-        //{
-        //    kp.nml = physics::upVector(ctx->player.angle);
-        //    std::cout << "R";
-        //    grounded = true;
-        //}
         else
         {
             kp.nml = vec::normal(ctx->player.latNormal) * -1.0f;
             grounded = true;
         }
         ctx->player.addMove(str,
-            kp.nml,
-            grounded);
-            ctx->player.doRightward();
-            ctx->player.latNormal = vec::Zero();
+                            kp.nml,
+                            grounded);
+
+        ctx->player.isMovingRight = true;
+        ctx->player.latNormal = vec::Zero();
     }
     else if (kp.key == sf::Keyboard::A)
     {
-        //std::cout << vec::dot(physics::upVector(ctx->player.angle), ctx->player.latNormal) << "  ";
         float str = 1.f;
         bool grounded = false;
-        
         if (ctx->player.latNormal == vec::Zero())
         {
             kp.nml = physics::leftVector(ctx->player.angle);
         }
-        //else if (ctx->player.latNormal == vec::VECTOR2(-1, 0)  ||
-        //         ctx->player.latNormal == vec::VECTOR2(1, 0))
-        //{
-        //    kp.nml = physics::upVector(ctx->player.angle);
-        //    std::cout << "L";
-        //    grounded = true;
-        //}
         else
         {
             kp.nml = vec::normal(ctx->player.latNormal) * 1.0f;
@@ -595,7 +612,7 @@ void StageMainClient::KeyHeldHandler(Keypress & kp, void* ud)
                             kp.nml,
                             grounded);
 
-        ctx->player.doLeftward();
+        ctx->player.isMovingLeft = true;
         ctx->player.latNormal = vec::Zero();
     }
 }
@@ -606,20 +623,17 @@ void StageMainClient::KeyReleasedHandler(Keypress & kp, void* ud)
 
     if (kp.key == sf::Keyboard::Space)
     {
-        ctx->player.aniMan.animations[(uint32_t)Player::State::JUMPING].stop();
-        ctx->player.doIdle(Player::State::JUMPING);
+        ctx->player.isJumping = false;
         kp.nml = vec::Zero();
     }
     else if (kp.key == sf::Keyboard::D)
     {
-        ctx->player.aniMan.animations[(uint32_t)Player::State::RIGHTWARDS].stop();
-        ctx->player.doIdle(Player::State::RIGHTWARDS);
+        ctx->player.isMovingRight = false;
         kp.nml = vec::Zero();
     }
     else if (kp.key == sf::Keyboard::A)
     {
-        ctx->player.aniMan.animations[(uint32_t)Player::State::LEFTWARDS].stop();
-        ctx->player.doIdle(Player::State::LEFTWARDS);
+        ctx->player.isMovingLeft = false;
         kp.nml = vec::Zero();
     }
 }
