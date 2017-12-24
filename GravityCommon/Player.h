@@ -28,7 +28,7 @@ public:
         jumpNormal = vec::Zero();
         latNormal = vec::Zero();
         moving = 0;
-        state = State::IDLE;
+        state = State::IDLERIGHT;
         isMovingRight = isMovingLeft = isJumping = false;
         applyGravity = true;
         doubleJumpCnt = 3;
@@ -36,11 +36,14 @@ public:
 
     enum class State
     {
-        IDLE,
+        IDLERIGHT,
+        IDLELEFT,
         RIGHTWARDS,
         LEFTWARDS,
-        JUMPING,
-        FALLING,
+        JUMPINGRIGHT,
+        JUMPINGLEFT,
+        FALLINGRIGHT,
+        FALLINGLEFT,
         SLIDING,
         HANGING,
         CLIMBING,

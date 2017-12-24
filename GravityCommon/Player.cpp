@@ -5,7 +5,7 @@ namespace bali
 
 void Player::doJumping()
 {
-    state = Player::State::JUMPING;
+    state = Player::State::JUMPINGRIGHT;
     isJumping = true;
 }
 
@@ -25,7 +25,7 @@ void Player::doIdle(Player::State s)
 {
     switch (s)
     {
-    case Player::State::JUMPING:
+    case Player::State::JUMPINGRIGHT:
         isJumping = false;
         break;
     case Player::State::RIGHTWARDS:

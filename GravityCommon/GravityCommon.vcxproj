@@ -145,6 +145,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="MouseKeyboard.h" />
+    <ClInclude Include="Parallax.h" />
     <ClInclude Include="PhysicalObject.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />

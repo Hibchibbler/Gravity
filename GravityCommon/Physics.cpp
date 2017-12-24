@@ -179,7 +179,7 @@ float mindist(vec::VECTOR2 v, vec::VECTOR2 w, vec::VECTOR2 p) {
 
 bool ciGreater(SAT::ContactInfo a, SAT::ContactInfo b)
 {
-    return a.overlap > b.overlap;
+    return a.overlap < b.overlap;
 }
 
 #undef PRINT_DIAGNOSTICS
@@ -214,7 +214,7 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
             {
                 if (h->overlap <= minimumOverlap)
                 {
-                    if (vec::dot(original_velocity, h->normal) < 0)
+                    if (vec::dot(original_velocity, h->normal) <= 0)
                     {
                         minimumOverlap = h->overlap;
                         hitMin = *h;
@@ -265,7 +265,7 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
 
             vec::VECTOR2 newVelocity;
 
-            vec::VECTOR2 posDelta = newPos * overlap * 1.10f;
+            vec::VECTOR2 posDelta = newPos * overlap * 1.20f;
             //player.pos += posDelta;
             player.addAddPosition(posDelta);
 
@@ -346,16 +346,12 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
         player.accumulator -= sf::seconds(pc.FIXED_DELTA);
 
         player.posHist.push_back(player.pos);
-        if (player.posHist.size() > 150)
+        if (player.posHist.size() > 100)
         {
             player.posHist.erase(player.posHist.begin());
         }
 
-        if (player.targetangle != player.angle)
-        {
-            float delta = (player.targetangle - player.angle) / (float)player.granularity;
-            player.angle += delta;
-        }
+
 
         //
         // Integrate motion
@@ -398,20 +394,20 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
                     vec::VECTOR2 m;
                     m = dir * cmd.mv.str * pc.FREEFALL_MOVE_STRENGTH;
                     player.vel += player.impulse(m);
-                    std::cout << "V ";
+                    //std::cout << "V ";
                 }
                 else
                 {
                     vec::VECTOR2 dir = vec::norm(cmd.mv.dir);
                     vec::VECTOR2 m = dir * cmd.mv.str * pc.MOVE_STRENGTH;
                     player.vel += player.impulse(m);
-                    std::cout << "- ";
+                    //std::cout << "- ";
                 }
             }
             else if (cmd.code == Command::Code::JUMP)
             {
                 vec::VECTOR2 u;
-                vec::VECTOR2 up = upVector(player.angle);// *0.25f;
+                vec::VECTOR2 up = upVector(player.angle) * 0.0f;
                 if (cmd.jmp.dir != vec::Zero())
                 {
                     
@@ -428,7 +424,7 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
         //
         // semi-implicit euler
         //
-        if (player.applyGravity)//!player.isCollided)
+        if (player.applyGravity)
         {
             player.accel = downVector(player.angle) * (float)pc.GRAVITY_CONSTANT;
         }
@@ -437,8 +433,38 @@ void physics::update(Player & player, sf::Time elapsed, PhysicsConfig & pc)
             player.accel = vec::Zero();
         }
         player.vel += (player.accel * pc.FIXED_DELTA);
+
+        //
+        // Limit Velocity
+        //
+        if (player.vel.x > pc.VELOCITY_MAX)
+        {
+            player.vel.x = pc.VELOCITY_MAX;
+        }
+
+        if (player.vel.x < -pc.VELOCITY_MAX)
+        {
+            player.vel.x = -pc.VELOCITY_MAX;
+        }
+
+        if (player.vel.y > pc.VELOCITY_MAX)
+        {
+            player.vel.y = pc.VELOCITY_MAX;
+        }
+
+        if (player.vel.y < -pc.VELOCITY_MAX)
+        {
+            player.vel.y = -pc.VELOCITY_MAX;
+        }
+
         player.vel -= player.vel * pc.DRAG_CONSTANT;
         player.pos += player.vel * pc.FIXED_DELTA;
+
+        if (player.targetangle != player.angle)
+        {
+            float delta = (player.targetangle - player.angle) / (float)player.granularity;
+            player.angle += delta;
+        }
     }
 }
 

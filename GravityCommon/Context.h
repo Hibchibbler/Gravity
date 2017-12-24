@@ -32,9 +32,9 @@ public:
     MouseKeyboard               mouseKeyboard;
     PhysicsConfig               physicsConfig;
     KeyboardConfig              keyboardConfig;
-    //std::vector<Player>         players;
     Player                      player;
     sf::Time                    currentElapsed;
+    float                       mainZoomFactor;
 };
 
 

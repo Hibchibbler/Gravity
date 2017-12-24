@@ -23,7 +23,7 @@ void MouseKeyboard::doKeyboard(sf::Time elapsed, void* ud, KeyPressedEvent press
     updateElapsed(keyStates[sf::Keyboard::D], elapsed);
     updateElapsed(keyStates[sf::Keyboard::A], elapsed);
 
-    if (this->totalTime.asMilliseconds() > 45.f)
+    if (this->totalTime.asMilliseconds() > 32.f)
     {   // std::cout << totalTime.asMilliseconds() << " ";
         this->totalTime = sf::Time::Zero;
         //std::cout << elapsed.asSeconds() << std::endl;
@@ -44,10 +44,20 @@ void MouseKeyboard::doKeyboard(sf::Time elapsed, void* ud, KeyPressedEvent press
             uint32_t g = 100;
             ctx->player.addSetTargetAngle(ta, g);
         }
+
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
+        {
+            ctx->mainZoomFactor = 0.8f;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::B))
+        {
+            ctx->mainZoomFactor = 1.2f;
+        }
     }
 }
 
-void MouseKeyboard::doMouse(sf::Time elapsed)
+void MouseKeyboard::doMouse(sf::Time elapsed)//, Context::Ptr context)
 {
     //GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
     //if (sf::Mouse::isButtonPressed(sf::Mouse::Left))

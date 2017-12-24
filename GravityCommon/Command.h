@@ -90,7 +90,7 @@ public:
 
     Command();
 
-    Timestamp timestamp;
+    uint64_t timestamp;
     uint32_t code;
     uint32_t timed;
 

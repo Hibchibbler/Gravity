@@ -77,8 +77,8 @@ public:
     }
     bool overlap(const Projection & p)
     {
-        if (x > min(p.x, p.y) && x <= max(p.x, p.y) ||
-            y > min(p.x, p.y) && y <= max(p.x, p.y))
+        if (x > min(p.x, p.y) && x < max(p.x, p.y) ||
+            y > min(p.x, p.y) && y < max(p.x, p.y))
         {
             return true;
         }

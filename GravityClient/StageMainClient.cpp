@@ -38,6 +38,12 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     ctx->keyboardConfig = loadKeyboardConfig("keyboard.config.txt");
 
     //
+    // Load Fonts
+    //
+    ctx->font.loadFromFile("neuropol x rg.ttf");
+    ctx->fpsText.setFont(ctx->font);
+
+    //
     // Load TMX
     //
     ctx->map = make_shared<bali::TMX::Map>();
@@ -47,15 +53,11 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     // Create Player shape from TMX
     //
     TMX::Objectgroup::Ptr pObjG = ctx->map->getObjectGroup("PlayerShapes");
-        
-    //
-    // Set initial player position from TMX player shape.
-    //
     ctx->player.pos.x = pObjG->objects.back()->x;
     ctx->player.pos.y = pObjG->objects.back()->y;
 
     //
-    // Center the camera on the player.
+    // Set size of main view.
     //
     ctx->size.x = 1000;
     ctx->size.y = 1000;
@@ -185,26 +187,48 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     //
     // Load Pyxel Edit texture atlas, and texture.
     //
-    bali::tilemap::TileMapLoader::load("Bot_v0.xml", ctx->playerAniTileMap);
-    ctx->textureAtlas1Image.loadFromFile("Bot_v0.png");
+    //bali::tilemap::TileMapLoader::load("Bot_v0.xml", ctx->playerAniTileMap);
+    //ctx->textureAtlas1Image.loadFromFile("Bot_v0.png");
+    //ctx->textureAtlas1Image.createMaskFromColor(sf::Color::White, 0);
+    //ctx->textureAtlas1Tex.loadFromImage(ctx->textureAtlas1Image);
+    bali::tilemap::TileMapLoader::load("megaman_v0.xml", ctx->playerAniTileMap);
+    ctx->textureAtlas1Image.loadFromFile("megaman_v0.png");
     ctx->textureAtlas1Image.createMaskFromColor(sf::Color::White, 0);
     ctx->textureAtlas1Tex.loadFromImage(ctx->textureAtlas1Image);
 
     //
     // Prepare the animations for each of the different player states.
     //
-    std::vector<struct ani::AnimationManager::Layout> names = 
-              { { (uint32_t)Player::State::IDLE,        12, 7, 100, 0},
-                { (uint32_t)Player::State::RIGHTWARDS,  60, 6,  75, 0},
-                { (uint32_t)Player::State::LEFTWARDS,   60, 6,  75, 1},
-                { (uint32_t)Player::State::JUMPING,     24, 4,  45, 0},
-                { (uint32_t)Player::State::FALLING,      5, 1, 100, 0} };
+    //std::vector<struct ani::AnimationManager::Layout> names = 
+    //          { { (uint32_t)Player::State::IDLE,        12, 7, 100, 0},
+    //            { (uint32_t)Player::State::RIGHTWARDS,  60, 6,  75, 0},
+    //            { (uint32_t)Player::State::LEFTWARDS,   60, 6,  75, 1},
+    //            { (uint32_t)Player::State::JUMPING,     24, 4,  45, 0},
+    //            { (uint32_t)Player::State::FALLING,      5, 1, 100, 0} };
+    std::vector<struct ani::AnimationManager::Layout> names =
+    {
+      { (uint32_t)Player::State::IDLERIGHT,   0,  3, 200, 0 },
+      { (uint32_t)Player::State::IDLELEFT,    0,  3, 200, 1 },
+      { (uint32_t)Player::State::RIGHTWARDS,  4, 10,  75, 0 },
+      { (uint32_t)Player::State::LEFTWARDS,   4, 10,  75, 1 },
+      { (uint32_t)Player::State::JUMPINGRIGHT,    14,  3, 200, 0 },
+      { (uint32_t)Player::State::JUMPINGLEFT,    14,  3, 200, 1 },
+      { (uint32_t)Player::State::FALLINGRIGHT,    18,  1, 100, 0 },
+      { (uint32_t)Player::State::FALLINGLEFT,    18,  1, 100, 1 }
+    };
     ctx->player.aniMan.addAllFrames(ctx->playerAniTileMap, names);
 
     //
     // Last things
     //
+    //ctx->mainZoomFactor = 1.0f;
+    //ctx->fixedView = ctx->gameWindow.window.getView();
+    ctx->mainZoomFactor = 1.0f;
     ctx->mainClock.restart();
+    sf::FloatRect visibleArea(0, 0, 900, 900);
+    ctx->gameWindow.window.setSize(sf::Vector2u(900, 900));
+    ctx->gameWindow.window.setView(sf::View(visibleArea));
+
     initialized();
     return 0;
 }
@@ -215,22 +239,23 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
     static float zoom = 1.0;
     switch (event.type) {
     case sf::Event::LostFocus:
+        ctx->LostFocus = true;
         break;
     case sf::Event::GainedFocus:
+        ctx->LostFocus = false;
         break;
     case sf::Event::MouseWheelScrolled: {
-        ctx->mainView = ctx->gameWindow.window.getView();
-        zoom = (event.mouseWheelScroll.delta > 0 ? 1.2 : 0.8);
-        sf::Vector2f v = ctx->mainView.getSize();
-        v.x *= 1.01 * zoom;
-        v.y *= 1.01 * zoom;
-        ctx->mainView.setSize(v);
-        std::cout << "Wheel Scrolled: " << event.mouseWheelScroll.delta << std::endl;
+        ctx->mainZoomFactor += event.mouseWheelScroll.delta / 5.0f;
+        std::cout << "ZF " << ctx->mainZoomFactor << " ";
         break;
     }case sf::Event::Resized: {
         ctx->gameWindow.screenWidth = event.size.width;
         ctx->gameWindow.screenHeight = event.size.height;
-        ctx->mainView.setSize(vec::VECTOR2(event.size.width, event.size.height));
+
+        // update the view to the new size of the window
+        sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+        ctx->gameWindow.window.setView(sf::View(visibleArea));
+        std::cout << "[" << visibleArea.left << ", " <<visibleArea.top << ", " << visibleArea.width << ", " << visibleArea.height << "] ";
         break;
     }case sf::Event::MouseMoved: {
         break;
@@ -244,12 +269,13 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
     return 0;
 }
 
+
+#include <sstream>
 uint32_t StageMainClient::doUpdate(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
     Player & player = ctx->player;
     ctx->currentElapsed = ctx->mainClock.restart();
-    vec::VECTOR2 camPos;
 
     //
     // Update all animation sequences..
@@ -260,18 +286,9 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     }
 
     //
-    // Smooth out camera using average of past player positions
-    //
-    for (int d = 0; d < ctx->player.posHist.size(); d++)
-    {
-        camPos += ctx->player.posHist[d];
-    }
-    camPos /= (float)ctx->player.posHist.size();
-
-    //
     // Construct all collision polygons that are visible to the player
     //
-    qt::AABB searchRegion = getSearchRegion(ctx->mainView, 1.20f);
+    qt::AABB searchRegion = getSearchRegion(ctx->gameWindow.window.getView(), 0.80f);
     std::vector<qt::XY> sr;
     sr = ctx->searchLayers.at(0)->search(searchRegion);
     ctx->polygonsVisible.clear();
@@ -291,7 +308,7 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     ctx->playerpolygons[0].setOrigin(16, 32);
     ctx->playerpolygons[0].setPosition(pos);
     ctx->playerpolygons[0].setRotation(ctx->player.angle);
-    ctx->playerpolygons[0].setScale(1.3f, 1.3f);
+    ctx->playerpolygons[0].setScale(2.0f, 2.0f);
 
     CONVEXSHAPE rotatedPlayerShape;
     rotatedPlayerShape.setPointCount(8);
@@ -337,39 +354,61 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     // animation.
     //
     //std::cout << vec::stringify(player.vel) << "\n";
-    if (vec::dot(physics::downVector(player.angle), vec::norm(player.vel)) > 0.0f &&
-        vec::dot(physics::rightVector(player.angle), vec::norm(player.vel)) < 0.8f &&
-        vec::dot(physics::leftVector(player.angle), vec::norm(player.vel)) < 0.8f &&
-        vec::mag(player.vel) > 30.0f)
+    float right = vec::dot(physics::rightVector(player.angle), vec::norm(player.vel));
+    float left = vec::dot(physics::leftVector(player.angle), vec::norm(player.vel));
+    float up = vec::dot(physics::upVector(player.angle), vec::norm(player.vel));
+    float down = vec::dot(physics::downVector(player.angle), vec::norm(player.vel));
+    float mag = vec::mag(player.vel);
+
+    if (down  > 0.1f &&
+        right < 0.8f &&
+        left  < 0.8f &&
+        mag   > 35.0f)
     {
-        if (player.state != Player::State::FALLING)
+        if (player.state != Player::State::FALLINGRIGHT && player.state != Player::State::FALLINGLEFT)
         {
             player.aniMan.animations[(uint32_t)player.state].stop();
-            player.state = Player::State::FALLING;
+            if (right > left)
+                player.state = Player::State::FALLINGRIGHT;
+            else
+                player.state = Player::State::FALLINGLEFT;
             player.aniMan.animations[(uint32_t)player.state].start();
         }
     }
-    else if (vec::dot(physics::upVector(player.angle), vec::norm(player.vel)) > 0.2f &&
-        vec::mag(player.vel) > 40.0f)
+    //else if (vec::dot(physics::upVector(player.angle), vec::norm(player.vel)) > 0.2f &&
+    //    vec::mag(player.vel) > 40.0f)
+    else if (player.isJumping)
     {
-        if (player.state != Player::State::JUMPING)
+        if (player.state != Player::State::JUMPINGRIGHT &&
+            player.state != Player::State::JUMPINGLEFT)
         {
             player.aniMan.animations[(uint32_t)player.state].stop();
-            player.state = Player::State::JUMPING;
+            if (right > left)
+                player.state = Player::State::JUMPINGRIGHT;
+            else
+                player.state = Player::State::JUMPINGLEFT;
             player.aniMan.animations[(uint32_t)player.state].start();
         }
     }
-    else if (vec::mag(player.vel) < 30.0f)
+    else if (mag < 20.0f)
     {
-        if (player.state != Player::State::IDLE)
+        if (player.state != Player::State::IDLERIGHT &&
+            player.state != Player::State::IDLELEFT)
         {
             std::cout << "IDLE ";
             player.aniMan.animations[(uint32_t)player.state].stop();
-            player.state = Player::State::IDLE;
+            if (right > left)
+            {
+                player.state = Player::State::IDLERIGHT;
+            }
+            else
+            {
+                player.state = Player::State::IDLELEFT;
+            }
             player.aniMan.animations[(uint32_t)player.state].start();
         }
     }
-    else if (vec::dot(physics::rightVector(player.angle), vec::norm(player.vel)) > 0.5f)
+    else if (right > 0.5f)
     {
         if (player.state != Player::State::RIGHTWARDS)
         {
@@ -378,7 +417,7 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
             player.aniMan.animations[(uint32_t)player.state].start();
         }
     }
-    else if (vec::dot(physics::leftVector(player.angle), vec::norm(player.vel)) > 0.5f)
+    else if (left > 0.5f)
     {
         if (player.state != Player::State::LEFTWARDS)
         {
@@ -392,58 +431,81 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     //
     // Get User Input, and apply
     //
-    ctx->mouseKeyboard.doMouse(ctx->currentElapsed);
-
+    //ctx->mouseKeyboard.doMouse(ctx->currentElapsed);
+    if (!ctx->LostFocus)
+    {
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+        {
+            //this->done();
+            ctx->screenMousePos = sf::Mouse::getPosition(ctx->gameWindow.window);
+            ctx->worldMousePos = ctx->gameWindow.window.mapPixelToCoords(ctx->screenMousePos);
+            //ctx->player.vel = ctx->worldMousePos - ctx->player.pos;
+            vec::VECTOR2 dir = 1.0f * (ctx->worldMousePos - ctx->player.pos);
+            ctx->player.addMove(1, dir, false);//addJump(1, 300, dir);//
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            {
+                ctx->player.isMovingRight = true;
+            }
+        }
+    }
     ctx->mouseKeyboard.doKeyboard(ctx->currentElapsed, context,
         StageMainClient::KeyPressedHandler,
         StageMainClient::KeyHeldHandler,
         StageMainClient::KeyReleasedHandler);
-    
     //
     // Motion Integration
     //
     physics::update(ctx->player, 
                     ctx->currentElapsed,
                     ctx->physicsConfig);
-
-    ctx->mainView.setCenter(camPos);
-    ctx->mainView.setRotation(ctx->player.angle);
     return 0;
 }
 
 uint32_t StageMainClient::doDraw(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
+    vec::VECTOR2 camPos;
 
-    ctx->pRenderTexture0->clear(sf::Color::Black);//sf::Color(95,95,95));
-    ctx->pRenderTexture1->clear(sf::Color::Black);// sf::Color(95, 95, 95));
-    
-    ctx->gameWindow.window.setView(ctx->mainView);
-    ctx->gameWindow.window.clear();
+    ctx->pRenderTexture0->clear(sf::Color::Transparent);//(sf::Color(25, 75, 100, 0));
+    ctx->pRenderTexture1->clear(sf::Color(100, 75, 25, 0));//
+
+                                                           //
+                                                           // Smooth out camera using average of past player positions
+                                                           //
+    for (int d = 0; d < ctx->player.posHist.size(); d++)
+    {
+        camPos += ctx->player.posHist[d];
+    }
+    camPos /= (float)ctx->player.posHist.size();
+    sf::View mainView(camPos, vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight));
+    //mainView.setRotation(ctx->player.angle);
+    float angle;
+    Player & player = ctx->player;
+    mainView.setRotation(player.angle);
+    //mainView.setSize(mainView.getSize() * ctx->mainZoomFactor);
+    mainView.zoom(ctx->mainZoomFactor);
 
 
+    {
+        //// Draw background tiles
+        //sf::RenderStates bkgndRenderStates;
+        //bkgndRenderStates.texture = &ctx->backgroundTex;
+        //bali::QuadArray back = ctx->quadLayers[0];
+        //ctx->pRenderTexture0->draw(back, bkgndRenderStates);
+    }
 
-    //// Draw background tiles
-    //sf::RenderStates bkgndRenderStates;
-    //bkgndRenderStates.texture = &ctx->backgroundTex;
-    //bali::QuadArray back = ctx->quadLayers[0];
-    //ctx->pRenderTexture0->draw(back, bkgndRenderStates);
+    //ctx->pRenderTexture0->setView(mainView);
 
     ctx->parallaxBackgrounds[0].sprite.setPosition(ctx->player.pos / 1.5f);
-    ctx->parallaxBackgrounds[0].sprite.move(-100, -100);
-    
+    ctx->parallaxBackgrounds[0].sprite.move(-100, -100);    
     ctx->parallaxBackgrounds[1].sprite.setPosition(ctx->player.pos / 2.5f);
-    ctx->parallaxBackgrounds[1].sprite.move(-50, -50);
-    
+    ctx->parallaxBackgrounds[1].sprite.move(-50, -50);    
     ctx->parallaxBackgrounds[2].sprite.setPosition(ctx->player.pos / 3.0f);
     ctx->parallaxBackgrounds[2].sprite.move(-25, -25);
-
     ctx->parallaxBackgrounds[3].sprite.setPosition(ctx->player.pos / 3.5f);
     ctx->parallaxBackgrounds[3].sprite.move(-15, -15);
-
     ctx->parallaxBackgrounds[4].sprite.setPosition(ctx->player.pos / 4.0f);
-    ctx->parallaxBackgrounds[4].sprite.move(-10, -10);
-    
+    ctx->parallaxBackgrounds[4].sprite.move(-10, -10);    
     ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[0].sprite);
     ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[1].sprite);
     ctx->pRenderTexture0->draw(ctx->parallaxBackgrounds[2].sprite);
@@ -457,14 +519,14 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     ctx->pRenderTexture0->draw(fore, foreRenderstates);
 
     // Draw collision polygons - debug
-    for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
-    {
-        sf::RenderStates polyVisiRenderStates;
-        poly->setOutlineColor(sf::Color::Red);
-        poly->setFillColor(sf::Color::Transparent);
-        poly->setOutlineThickness(1);
-        ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
-    }
+    //for (auto poly = ctx->polygonsVisible.begin(); poly != ctx->polygonsVisible.end(); ++poly)
+    //{
+    //    sf::RenderStates polyVisiRenderStates;
+    //    poly->setOutlineColor(sf::Color::Red);
+    //    poly->setFillColor(sf::Color::Transparent);
+    //    poly->setOutlineThickness(1);
+    //    ctx->pRenderTexture0->draw(*poly, polyVisiRenderStates);
+    //}
 
     // Draw player polygons
     for (auto poly = ctx->playerpolygons.begin(); poly != ctx->playerpolygons.end(); ++poly)
@@ -473,13 +535,13 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
         polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
         //poly->setOutlineColor(sf::Color::Yellow);
         //poly->setFillColor(sf::Color::Transparent);
-        //poly->setOutlineThickness(1);
+        poly->setOutlineThickness(1);
         ctx->pRenderTexture0->draw(*poly, polyPlayerRenderStates);
     }
 
-    ////// Draw a small box at the player position - debug
-    ////// this represents the players' center of mass
-    //{
+    // Draw a small box at the player position - debug
+    // this represents the players' center of mass
+    {
     //    sf::RenderStates polyPlayerRenderStates;
     //    polyPlayerRenderStates.texture = &ctx->textureAtlas1Tex;
     //    CONVEXSHAPE cs;
@@ -496,24 +558,48 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     //    //poly->setFillColor(sf::Color::Transparent);
     //    cs.setOutlineThickness(1);
     //    ctx->pRenderTexture0->draw(cs, polyPlayerRenderStates);
-    //}
-
-    ctx->pRenderTexture0->display();
-
+    }
+    
+{
+        //sf::RenderStates rs;
+        std::stringstream ss;
+        ss << "FPS: " << (uint32_t)(1.0f / ctx->currentElapsed.asSeconds()) << std::endl;
+        ss << "POS: " << (uint32_t)ctx->player.pos.x << ", " << (uint32_t)ctx->player.pos.y << std::endl;
+        ss << "VEL: " << (int32_t)ctx->player.vel.x << ", " << (int32_t)ctx->player.vel.y << std::endl;
+        ctx->fpsText.setString(ss.str());
+        ctx->fpsText.setCharacterSize(30* ctx->mainZoomFactor);
+        ctx->fpsText.setColor(sf::Color::Red);
+        ctx->fpsText.setRotation(ctx->player.angle);
+        ctx->fpsText.setPosition(camPos + physics::upVector(ctx->player.angle)*ctx->mainZoomFactor*(ctx->gameWindow.window.getSize().y / 2.0f) + physics::leftVector(ctx->player.angle)*ctx->mainZoomFactor*(ctx->gameWindow.window.getSize().x/2.0f));//(hudView.getCenter() + vec::VECTOR2(-0.5f * hudView.getSize().x, -0.5f * hudView.getSize().y));
+        
+       // ctx->pRenderTexture0->setView(hudView);
+        ctx->pRenderTexture0->draw(ctx->fpsText);
+        ctx->pRenderTexture0->display();
+    }
     //sf::RenderStates lineSegRenderState;
     //ctx->pRenderTexture1->draw(ctx->glowPolygons.back(), lineSegRenderState);
     //ctx->pRenderTexture1->display();
 
+    //sf::RenderStates totalRenderStates;
+    //totalRenderStates.shader = &ctx->shader;
+    //ctx->shader.setUniform("view", ctx->mainView.getSize());
+    //ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
+    //ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->gameWindow.window.mapCoordsToPixel(ctx->player.pos)));
+    //ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
+    //ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());
+
+
+    ctx->gameWindow.window.clear();
+
+
+
     sf::RenderStates totalRenderStates;
-    totalRenderStates.shader = &ctx->shader;
-    ctx->shader.setUniform("view", ctx->mainView.getSize());
-    ctx->shader.setUniform("texture", sf::Shader::CurrentTexture);
-    ctx->shader.setUniform("position", sf::Glsl::Vec2(ctx->gameWindow.window.mapCoordsToPixel(ctx->player.pos)));
-    ctx->shader.setUniform("resolution", sf::Glsl::Vec2(2048, 2048));
-    ctx->shader.setUniform("losMask", ctx->pRenderTexture1->getTexture());
-
-
+    
     sf::Sprite sprite(ctx->pRenderTexture0->getTexture());
+    //sf::Sprite sprite2(ctx->pRenderTexture1->getTexture());
+    ctx->gameWindow.window.setView(mainView);
+    //totalRenderStates.blendMode = sf::BlendAlpha;
+    //ctx->gameWindow.window.setView(ctx->gameWindow.window.getView());
     ctx->gameWindow.window.draw(sprite, totalRenderStates);
 
     // Finalize it
@@ -546,6 +632,7 @@ void StageMainClient::KeyPressedHandler(Keypress & kp, void* ud)
         {
             std::cout << "SJ ";
             kp.nml = physics::upVector(ctx->player.angle);
+            kp.elp = sf::Time::Zero;// So subsequent jumps have full duration too
             ctx->player.doubleJumpCnt--;
             ctx->player.isJumping = true;
         }
@@ -571,9 +658,12 @@ void StageMainClient::KeyHeldHandler(Keypress & kp, void* ud)
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
     if (kp.key == sf::Keyboard::Space)
     {
-        float str = cos((kp.elp.asMilliseconds() * ((0.5f * PI) / kp.dur))) + 0.0f;
-        ctx->player.addJump(str, kp.dur, kp.nml);
-        ctx->player.isJumping = true;
+        if (ctx->player.isJumping == true)
+        {
+            float str = 1;// cos((kp.elp.asMilliseconds() * ((0.5f * PI) / kp.dur))) + 0.0f;
+            ctx->player.addJump(str, kp.dur, kp.nml);
+            //ctx->player.isJumping = true;
+        }
     }
     else if (kp.key == sf::Keyboard::D)
     {
@@ -652,6 +742,16 @@ float logisticsFunction(float t, float L, float K, float t0)
     float exp_denom = -K * (t - t0);
     float denom = 1 + pow(2.71828, (exp_denom));
     return L / denom;
+}
+
+
+void StageMainClient::loadLevelData()
+{
+}
+
+void StageMainClient::buildLevel()
+{
+
 }
 
 }//end namespace bali

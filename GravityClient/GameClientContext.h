@@ -44,7 +44,6 @@ public:
 
     SingleSprite                parallaxBackgrounds[5];
 
-    sf::View                    mainView;
     sf::Uint32                  centerx;
     sf::Uint32                  centery;
     sf::Vector2f                size;
@@ -73,6 +72,11 @@ public:
     bali::tilemap::TileMap      playerAniTileMap;
     sf::Image                   textureAtlas1Image;
     sf::Texture                 textureAtlas1Tex;
+
+    sf::Text                    fpsText;
+    sf::Font                    font;
+
+    bool LostFocus;
 };
 
 
