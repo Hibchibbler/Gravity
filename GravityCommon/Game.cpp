@@ -23,7 +23,6 @@ namespace bali
     uint32_t Game::initialize()
     {
         Context* ctx = (Context*)context;
-
         initialized();
         return 0;
     }
@@ -66,9 +65,7 @@ namespace bali
                     return 0;
                 }
             }
-            getCurrentStage()->doRemoteEvent(ctx);
-            // Process local keyboard/mouse inputs
-            getCurrentStage()->doLocalInputs(ctx);
+
             // Update and Draw game frame
             getCurrentStage()->doUpdate(ctx);
             getCurrentStage()->doDraw(ctx);

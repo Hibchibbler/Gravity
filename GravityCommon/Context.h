@@ -28,12 +28,17 @@ public:
         FRONT = 0,
         BACK = 0,
     };
+
     GameWindow                  gameWindow;
     MouseKeyboard               mouseKeyboard;
     PhysicsConfig               physicsConfig;
     KeyboardConfig              keyboardConfig;
     Player                      player;
+    std::list<Player>           players;
     sf::Time                    currentElapsed;
+    float                       mainZoomFactor;
+
+
 };
 
 

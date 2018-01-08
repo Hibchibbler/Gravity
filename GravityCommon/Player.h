@@ -11,36 +11,23 @@
 
 namespace bali
 {
-
-class Player : public PhysicalObject
+class Level;
+class Player
 {
 public:
-    //std::list<Impulse> impulses;
-
-
-
-    Player()
-        : PhysicalObject(),
-        accumulator()
-    {
-        angle = targetangle = 0.0;
-        isCollided = isCollidedLast = false;
-        jumpNormal = vec::Zero();
-        latNormal = vec::Zero();
-        moving = 0;
-        state = State::IDLE;
-        isMovingRight = isMovingLeft = isJumping = false;
-        applyGravity = true;
-        doubleJumpCnt = 3;
-    }
 
     enum class State
     {
-        IDLE,
+        IDLERIGHT,
+        IDLELEFT,
         RIGHTWARDS,
         LEFTWARDS,
-        JUMPING,
-        FALLING,
+        JUMPINGRIGHT,
+        JUMPINGLEFT,
+        FALLINGRIGHT,
+        FALLINGLEFT,
+        CHARGINGRIGHT,
+        CHARGINGLEFT,
         SLIDING,
         HANGING,
         CLIMBING,
@@ -51,20 +38,29 @@ public:
         TEETERING
     };
 
+    Player()
+        : accumulator()
+    {
+        isCollided = isCollidedLast = false;
+        jumpNormal = vec::Zero();
+        latNormal = vec::Zero();
+        moving = 0;
+        state = State::IDLERIGHT;
+        isMovingRight = isMovingLeft = isJumping = isCharging = false;
+        applyGravity = true;
+        doubleJumpCnt = 3;
+    }
+
+    void initialize();
+    void updatePolygon(Level* l);
+    uint32_t updateState();
+    void cleanup();
+
+    
 
     vec::VECTOR2 lastPosition;
     std::vector<vec::VECTOR2> velHist;
     std::vector<vec::VECTOR2> posHist;
-
-    //angle - starts at 
-    //   3 O'  Clock = 0   degree
-    //   6 O'  Clock = 90  degree
-    //   9 O'  Clock = 180 degree
-    //   12 O' Clock = 240 degree
-    //   3 O'  Clock = 360 degree
-    float angle;
-    float targetangle;
-    uint32_t granularity;
 
     vec::VECTOR2 surfaceNormal; // This is always set
     vec::VECTOR2 jumpNormal;    // This is set when a jump is performed, and cleared when jump is done done.
@@ -76,6 +72,7 @@ public:
     bool isMovingRight;
     bool isMovingLeft;
     bool isJumping;
+    bool isCharging;
 
     bool isCollided;
     bool isCollidedLast;
@@ -90,11 +87,16 @@ public:
 
     uint32_t doubleJumpCnt;
     bool isMoving();
+    Physical physical;
 
 private:
 
     sf::Time updateTime;
 };
+
+
+
+
 }
 
 #endif

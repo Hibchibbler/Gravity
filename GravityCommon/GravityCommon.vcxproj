@@ -134,6 +134,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="CommonNotes.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +145,7 @@
     <ClInclude Include="Context.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
+    <ClInclude Include="Level.h" />
     <ClInclude Include="MouseKeyboard.h" />
     <ClInclude Include="PhysicalObject.h" />
     <ClInclude Include="Physics.h" />
@@ -151,7 +153,6 @@
     <ClInclude Include="Polygons.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Vector2.h" />
-    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Level.cpp" />
     <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="PhysicalObject.cpp" />
     <ClCompile Include="Physics.cpp" />

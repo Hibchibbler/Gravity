@@ -77,8 +77,8 @@ public:
     }
     bool overlap(const Projection & p)
     {
-        if (x > min(p.x, p.y) && x <= max(p.x, p.y) ||
-            y > min(p.x, p.y) && y <= max(p.x, p.y))
+        if (x > min(p.x, p.y) && x < max(p.x, p.y) ||
+            y > min(p.x, p.y) && y < max(p.x, p.y))
         {
             return true;
         }
@@ -155,10 +155,7 @@ public:
 
         for (int i = 1; i < shape.getPointCount(); i++) {
             vec::VECTOR2 pean = shape.getPoint(i) + (shape.getPosition() - shape.getOrigin());
-            //vec::VECTOR2 pean = shape.getPoint(i) - shape.getOrigin();
-//#include <SFML/System.hpp>
-            
-            //shape.getPosition()
+
             double p = vec::dot(axis.normal, pean);
             //double p = vec::dot(axis.normal, shape.getPoint(i));
             if (p <= min) {
@@ -176,8 +173,31 @@ public:
     static bool collision(bali::CONVEXSHAPE & shape, bali::CONVEXSHAPE & other, std::vector<ContactInfo> & hitInfo)
     {
         hitInfo.clear();
-        Axes axes1 = getContactInfo(shape);
-        Axes axes2 = getContactInfo(other);
+        CONVEXSHAPE s1, s2;
+        s1 = shape;
+        s2 = other;
+
+        //for (int w = 0; w < s1.getPointCount(); w++) 
+        //{
+        //    s1.setPoint(w,
+        //        shape.getTransform().transformPoint(
+        //            shape.getPoint(w)
+        //        )
+        //    );
+        //}
+
+        //for (int w = 0; w < s2.getPointCount(); w++)
+        //{
+        //    s2.setPoint(w,
+        //        other.getTransform().transformPoint(
+        //            other.getPoint(w)
+        //        )
+        //    );
+        //}
+
+
+        Axes axes1 = getContactInfo(s1);
+        Axes axes2 = getContactInfo(s2);
         // loop over the axes1
         //cout << ">>>>>>>>>" << std::endl;
         std::stringstream ss;
@@ -186,8 +206,8 @@ public:
         {
             ContactInfo axis = axes1[i];
             // project both shapes onto the axis
-            Projection p1 = project(shape, axis);
-            Projection p2 = project(other, axis);
+            Projection p1 = project(s1, axis);
+            Projection p2 = project(s2, axis);
             //cout << p1.x << ", " << p1.y << " | " << p2.x << ", " << p2.y;// std::endl;
             // do the projections overlap?
             if (!p1.overlap(p2)) 
@@ -215,8 +235,8 @@ public:
         {
             ContactInfo axis = axes2[i];
             // project both shapes onto the axis
-            Projection p1 = project(shape, axis);
-            Projection p2 = project(other, axis);
+            Projection p1 = project(s1, axis);
+            Projection p2 = project(s2, axis);
             //cout << p1.x << ", " << p1.y << " | " << p2.x << ", " << p2.y;//std::endl;
             // do the projections overlap?
             if (!p1.overlap(p2)) 

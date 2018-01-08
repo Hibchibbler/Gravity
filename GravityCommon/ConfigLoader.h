@@ -37,6 +37,14 @@ struct KeyboardConfig
     uint32_t RIGHT_TIME;//=0 ms
     uint32_t LEFT_KEY;//='A'
     uint32_t LEFT_TIME;//=0 ms
+    uint32_t ROTATE_RIGHT_KEY;//='E'
+    uint32_t ROTATE_RIGHT_TIME;//=0 ms
+    uint32_t ROTATE_LEFT_KEY;//='Q'
+    uint32_t ROTATE_LEFT_TIME;//=0 ms
+    uint32_t ATTACK_BUTTON;
+    uint32_t ATTACK_TIME;
+    uint32_t HARPOON_BUTTON;
+    uint32_t HARPOON_TIME;
 };
 
 struct AnimationConfig

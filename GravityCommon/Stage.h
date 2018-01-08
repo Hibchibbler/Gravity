@@ -24,9 +24,7 @@ namespace bali
 
         virtual ~Stage();
         virtual uint32_t initialize(Context::Ptr c) = 0;
-        virtual uint32_t doRemoteEvent(Context::Ptr c) = 0;
         virtual uint32_t doWindowEvent(Context::Ptr c, sf::Event & event) = 0;
-        virtual uint32_t doLocalInputs(Context::Ptr c) = 0;
         virtual uint32_t doUpdate(Context::Ptr c) = 0;
         virtual uint32_t doDraw(Context::Ptr c) = 0;
         virtual uint32_t cleanup(Context::Ptr c) = 0;

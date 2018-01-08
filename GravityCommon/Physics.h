@@ -63,8 +63,26 @@ bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<Segment> & segmen
 bool RayCast(float a, vec::VECTOR2 start, std::vector<Segment> & segments, physics::Intersection & intersect);
 void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::VertexArray & lineSegments);
 #undef PRINT_DIAGNOSTICS
-bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
-void update(Player & player, sf::Time elapsed, PhysicsConfig & pc);
+typedef void(*OnCollisionEvent) (Player & p, vec::VECTOR2 collisionNormal, PhysicsConfig & pc);
+typedef void(*OnNonCollisionEvent) (Player &p, PhysicsConfig & pc);
+//bool ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges);
+bool ResolveCollisions(std::stringstream & ss,
+                       bali::CONVEXSHAPE::Vec & shapes,
+                       bali::CONVEXSHAPE & playerShape,
+                       Player & player,
+                       PhysicsConfig & pc,
+                       std::vector<Segment> & sharedEdges,
+                       OnCollisionEvent onCollision,
+                       OnNonCollisionEvent onNonCollision
+                       );
+
+void updatePlayerMotion(Player & player, sf::Time elapsed, PhysicsConfig & pc);
+
+
+void initialize();
+void update();
+void cleanup();
+
 
 }
 }

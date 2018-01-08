@@ -18,9 +18,7 @@ namespace bali
         ~StageMainClient();
 
         uint32_t initialize(Context::Ptr c);
-        uint32_t doRemoteEvent(Context::Ptr c);// (CommEvent & event);
         uint32_t doWindowEvent(Context::Ptr c, sf::Event & event);
-        uint32_t doLocalInputs(Context::Ptr c);
         uint32_t doUpdate(Context::Ptr c);
         uint32_t doDraw(Context::Ptr c);
         uint32_t cleanup(Context::Ptr c);
@@ -29,11 +27,11 @@ namespace bali
         sf::Clock localInputClock;
         uint32_t mouseInView = true;
         std::vector<sf::VertexArray> layers;
+    private:
+        void MouseButtonPressHandler(void* ud);
+        void MouseButtonReleaseHandler(void* ud);
 
-        static void KeyPressedHandler(Keypress & kp, void* ud);
-        static void KeyHeldHandler(Keypress & kp, void* ud);
-        static void KeyReleasedHandler(Keypress & kp, void* ud);
-        //static void KeyExpiredHandler(Keypress & kp, void* ud);
+        //sf::View updateView(Context::Ptr context);
     };
 }//end namespace bali
 #endif // StageMainClient_h_

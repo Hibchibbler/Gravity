@@ -169,14 +169,14 @@ uint32_t addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float a
     return 0;
 }
 
-qt::AABB getSearchRegion(const sf::View & view, float zoom)
+qt::AABB getSearchRegion(vec::VECTOR2 center, vec::VECTOR2 size, float zoom)
 {
     qt::AABB searchRegion;
-    sf::Vector2f c = view.getCenter();
+    sf::Vector2f c = center;
     c.x = floor(c.x);
     c.y = floor(c.y);
 
-    sf::Vector2f s = view.getSize();
+    sf::Vector2f s = size;
     s.x *= zoom;
     s.y *= zoom;
 
@@ -274,17 +274,40 @@ bool buildPolygon(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fals
         std::vector<std::string> pairs = split(obj->polygon->points, ' ');
         s.setPointCount(pairs.size());
         s.setPosition(vec::VECTOR2(obj->x, obj->y));
-        int i = 0;
-        for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+
+        if (obj->rotation == 0)
         {
-            std::vector<std::string> comp = split(*pair, ',');
-            float x1, y1;
-            x1 = atol(comp[0].c_str());// +(applyOffset ? obj->x : 0);
-            y1 = atol(comp[1].c_str());// +(applyOffset ? obj->y : 0);
-            s.setPoint(i, sf::Vector2f(x1, y1));
-            ++i;
+            int i = 0;
+            for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
+            {
+                std::vector<std::string> comp = split(*pair, ',');
+                float x1, y1;
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
+                s.setPoint(i, sf::Vector2f(x1, y1));
+                ++i;
+            }
+            status = true;
         }
-        status = true;
+        else
+        {
+            int i = 0;
+            for (auto p = pairs.begin(); p != pairs.end(); p++)
+            {
+                std::vector<std::string> comp = split(*p, ',');
+                float x1, y1;
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
+                for (int u = 0; u < abs(obj->rotation); u += 90)
+                {
+                    float temp = x1;
+                    x1 = -y1;
+                    y1 = temp;
+                }
+                s.setPoint(i, sf::Vector2f(x1, y1));
+                i++;
+            }
+        }
     }
     return status;
 }
@@ -305,8 +328,6 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
 
         s.setPointCount(max);
         s.setPosition(vec::VECTOR2(obj->x, obj->y));
-        //s.offsetX = obj->x;
-        //s.offsetY = obj->y;
 
         if (obj->rotation == 0)
         {
@@ -317,8 +338,8 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
                     break;
                 std::vector<std::string> comp = split((*p), ',');
                 float x1, y1;
-                x1 = atol(comp[0].c_str());// +(applyOffset ? obj->x : 0);
-                y1 = atol(comp[1].c_str());// +(applyOffset ? obj->y : 0);
+                x1 = atol(comp[0].c_str());
+                y1 = atol(comp[1].c_str());
                 s.setPoint(i, sf::Vector2f(x1, y1));
                 i++;
             }
@@ -326,7 +347,7 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
         else
         {
             int i = 0;
-            for (auto p = pairs.rbegin(); p != pairs.rend(); p++)
+            for (auto p = pairs.begin(); p != pairs.end(); p++)
             {
                 if (i == max)
                     break;
@@ -337,11 +358,9 @@ bool buildPolyline(TMX::Object::Ptr obj, CONVEXSHAPE & s, bool applyOffset = fal
                 for (int u = 0; u < obj->rotation; u += 90)
                 {
                     float temp = x1;
-                    x1 = y1 * -1.0;
-                    y1 = temp * 1.0;
+                    x1 = -(y1);
+                    y1 = (temp);
                 }
-                //x1 += (applyOffset ? obj->x : 0);
-                //y1 += (applyOffset ? obj->y : 0);
                 s.setPoint(i, sf::Vector2f(x1, y1));
                 i++;
             }
@@ -462,6 +481,11 @@ uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Ptr &
             polygons.push_back(CONVEXSHAPE());
             buildPolyline(*obj, polygons.back(), true);
         }
+        else if ((*obj)->polygon != nullptr)
+        {
+            polygons.push_back(CONVEXSHAPE());
+            buildPolygon(*obj, polygons.back(), false);
+        }
     }
 
     return 0;
@@ -482,6 +506,24 @@ uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXS
     return 0;
 }
 
+uint32_t buildPlayerCollisionPolygon(vec::VECTOR2 pos, float angle, CONVEXSHAPE::Vec & pp, CONVEXSHAPE::Vec & pcp)
+{
+    pp[0].setOrigin(8, 16);
+    pp[0].setPosition(pos);
+    pp[0].setRotation(angle);
+    pp[0].setScale(1.0f, 1.0f);
+
+    pcp.push_back(CONVEXSHAPE());
+    pcp[0].setPointCount(8);
+    for (int w = 0; w < 8; w++) {
+        pcp[0].setPoint(w,
+            pp[0].getTransform().transformPoint(
+                pp[0].getPoint(w)
+            )
+        );
+    }
+    return 0;
+}
 
 //
 // This creates an array of layers. where each layer is 

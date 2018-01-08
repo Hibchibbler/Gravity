@@ -5,17 +5,18 @@ namespace bali
 {
 namespace ani
 {
-Animation::Animation(uint32_t maxFrameIndex, uint32_t frameDelay)
+Animation::Animation(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat)
 {
-    initialize(maxFrameIndex, frameDelay);
+    initialize(maxFrameIndex, frameDelay, repeat);
 }
 
-void Animation::initialize(uint32_t maxFrameIndex, uint32_t frameDelay)
+void Animation::initialize(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat)
 {
     this->i = 0;
     this->i_max = maxFrameIndex;
     this->fdelay = frameDelay;
     this->running = false;
+    this->repeat = repeat;
 }
 
 void Animation::start()
@@ -31,7 +32,15 @@ void Animation::update()
     {
         if (clock.getElapsedTime().asMilliseconds() > fdelay)
         {
-            i = (i + 1) % i_max;
+            if (!repeat)
+            {
+                if (i < i_max-1)
+                    i = i + 1;
+            }
+            else
+            {
+                i = (i + 1) % i_max;
+            }
             clock.restart();
         }
     }
@@ -44,14 +53,42 @@ void Animation::stop()
 }
 
 
-Frame Animation::getCurrentFrame(float angle, vec::VECTOR2 velocity)
+Frame Animation::getCurrentFrame()
 {
     Frame f = frames[this->i];
     return f;
 }
-//
-//Frame AnimationManager::getCurrentFrame(float angle, vec::VECTOR2 velocity)
-//
+
+void AnimationManager::addFrames(const bali::tilemap::TileMap & tm, const std::vector<struct Layout> & frameLayouts)
+{
+    for (auto n = frameLayouts.begin(); n != frameLayouts.end(); n++)
+    {
+        animations[n->state] = ani::Animation(n->len, n->delay, n->repeat);
+        for (auto d = 0; d < n->len; d++)
+        {
+            ani::Frame frame;
+            if (n->flipY)
+            {
+                frame = ani::Frame(
+                    tm.layers.back().tiles[d + n->start].x * tm.tilewidth + tm.tilewidth,
+                    tm.layers.back().tiles[d + n->start].y * tm.tileheight,
+                    tm.tilewidth * -1.0f,
+                    tm.tileheight);
+            }
+            else
+            {
+                frame = ani::Frame(
+                    tm.layers.back().tiles[d + n->start].x * tm.tilewidth,
+                    tm.layers.back().tiles[d + n->start].y * tm.tileheight,
+                    tm.tilewidth,
+                    tm.tileheight);
+            }
+
+            animations[n->state].frames.push_back(frame);
+        }
+    }
+}
+
 
 }
 }

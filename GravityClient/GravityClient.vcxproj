@@ -150,12 +150,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Collision.h" />
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="GameClientContext.h" />
+    <ClInclude Include="Hud.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="StageMainClient.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="Hud.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="StageMainClient.cpp" />
   </ItemGroup>

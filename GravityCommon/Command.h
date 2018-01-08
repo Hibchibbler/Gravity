@@ -1,6 +1,7 @@
 #ifndef Command_h_
 #define Command_h_
 #include <stdint.h>
+#include <Windows.h>
 #include "Vector2.h"
 namespace bali
 {
@@ -10,6 +11,19 @@ class Impulse
 public:
     vec::VECTOR2 force;
     float duration;
+};
+
+class Timestamp
+{
+public:
+    void start();
+    void end();
+    void update();
+    LARGE_INTEGER getTime();
+
+    LARGE_INTEGER f;
+    LARGE_INTEGER s;
+    LARGE_INTEGER e;
 };
 
 class Command
@@ -76,6 +90,7 @@ public:
 
     Command();
 
+    uint64_t timestamp;
     uint32_t code;
     uint32_t timed;
 

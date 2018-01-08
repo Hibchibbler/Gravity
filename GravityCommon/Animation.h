@@ -7,7 +7,7 @@
 #include <map>
 #include "TMXLoader/TextureAtlasLoader.h"
 #include "Vector2.h"
-//#include "Player.h"
+
 
 namespace bali
 {
@@ -31,19 +31,7 @@ struct Frame
         r.top = y;
         r.width = w;
         r.height = h;
-        //if (flipY)
-        //{
-        //    uint32_t temp = r.left;
-        //    r.left = r.left + r.width;
-        //    r.width = -1.0f * r.width;
-        //}
-    
-        //if (flipX)
-        //{
-        //    uint32_t temp = r.top;
-        //    r.top = r.top + r.height;
-        //    r.height = -1.0f * r.height;
-        //}
+
         return r;
     }
     uint32_t x, y;
@@ -54,18 +42,19 @@ class Animation
 {
 public:
     Animation() = default;
-    Animation(uint32_t maxFrameIndex, uint32_t frameDelay);
-    void initialize(uint32_t maxFrameIndex, uint32_t frameDelay);
+    Animation(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat);
+    void initialize(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat);
     void start();
     void update();
     void stop();
 
-    Frame getCurrentFrame(float angle, vec::VECTOR2 velocity);
+    Frame getCurrentFrame();
 
     uint32_t i;
     uint32_t i_max;
     uint32_t fdelay;
     uint32_t running;
+    uint32_t repeat;
     sf::Clock clock;
     sf::Time totalTime;
     std::vector<Frame> frames;
@@ -74,10 +63,45 @@ public:
 class AnimationManager
 {
 public:
-    //Frame getCurrentFrame(float angle, vec::VECTOR2 velocity);
-    //Player::State currentAnimation;
+    struct Layout {
+        uint32_t state;
+        uint32_t start;
+        uint32_t len;
+        uint32_t delay;
+        uint32_t flipY;
+        uint32_t repeat;
+    };
+
     std::map<uint32_t, Animation> animations;
-    
+    void updateTimers() {
+        for (auto a = animations.begin(); a != animations.end(); a++)
+        {
+            a->second.update();
+        }
+    }
+
+    void updateFrames(uint32_t oldState, uint32_t newState)
+    {
+        //
+        // Based on flags and velocity
+        // set player state, and reset
+        // animation.
+        //
+        if (oldState != newState)
+        {
+            animations[(uint32_t)oldState].stop();
+            animations[(uint32_t)newState].start();
+        }
+        else
+        {
+            //
+            // Update all animation sequences..
+            //
+            updateTimers();
+        }
+    }
+
+    void addFrames(const bali::tilemap::TileMap & tm, const std::vector<struct Layout> & frameLayout);
 };
 
 }

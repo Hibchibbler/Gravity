@@ -49,6 +49,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityClient", "GravityCli
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkTest", "NetworkTest\NetworkTest.vcxproj", "{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLoader", "GameLoader\GameLoader.csproj", "{1BF929CF-73B6-4DB4-8265-7FB331791B1F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -151,6 +153,14 @@ Global
 		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x64.Build.0 = Release|x64
 		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x86.ActiveCfg = Release|Win32
 		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x86.Build.0 = Release|Win32
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x64.Build.0 = Debug|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x86.Build.0 = Debug|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Release|x64.ActiveCfg = Release|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Release|x64.Build.0 = Release|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Release|x86.ActiveCfg = Release|Any CPU
+		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,7 +2,7 @@
 // Daniel J Ferguson
 // 2017
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef PHYSICALOBJECT_H_
+#ifndef PHYSICAL_OBJECT_H_
 #define PHYSICAL_OBJECT_H_
 
 #include <stdint.h>
@@ -12,18 +12,15 @@
 #include "Command.h"
 
 namespace bali {
-class GameObject
-{
-public:
-    uint32_t id;
-};
 
-class PhysicalObject
+
+class Physical
 {
 public:
-    PhysicalObject()
+    Physical()
     {
         mass = 1.0;
+        angle = 0.0f;
     }
 
     vec::VECTOR2 impulse(vec::VECTOR2 force);
@@ -45,16 +42,31 @@ public:
     vec::VECTOR2 pos;
     vec::VECTOR2 vel;
     vec::VECTOR2 accel;
-    uint32_t mass;
+    uint32_t     mass;
+
+    //angle - starts at 
+    //   3 O'  Clock = 0   degree
+    //   6 O'  Clock = 90  degree
+    //   9 O'  Clock = 180 degree
+    //   12 O' Clock = 240 degree
+    //   3 O'  Clock = 360 degree
+
+    //
+    // 12 O' Clock => 0 degrees     (up)
+    //  3 O' Clock => 90 degrees    (right)
+    //  6 O' Clock => 180 degrees   (down)
+    //  9 O' Clock => 240 degrees   (left)
+    //
+    float        angle;
 
     vec::VECTOR2 nextPos;
     vec::VECTOR2 velAccu;
-
 
 public:
     std::queue<Command> cmdAddQueue;
     std::queue<Command> cmdSetQueue;
     std::list<Command>  cmdTimedMoves;
+    std::list<Command>  cmdHistory;
 
 
 };

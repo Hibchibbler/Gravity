@@ -86,6 +86,10 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
     c.RIGHT_TIME = 0;
     c.LEFT_KEY = 'A';
     c.LEFT_TIME = 0;
+    c.ROTATE_RIGHT_KEY = 'E';
+    c.ROTATE_RIGHT_TIME = 0;
+    c.ROTATE_LEFT_KEY = 'Q';
+    c.ROTATE_LEFT_TIME = 0;
 
     std::ifstream configIn(filename);
     if (configIn.is_open())
@@ -121,6 +125,15 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
         c.RIGHT_TIME = std::stoi(configValues["RIGHT_TIME"]);
         c.LEFT_KEY = std::strtoul(configValues["LEFT_KEY"].c_str(), NULL, 0);
         c.LEFT_TIME = std::stoi(configValues["LEFT_TIME"]);
+        c.ROTATE_RIGHT_KEY= std::strtoul(configValues["ROTATE_RIGHT_KEY"].c_str(), NULL, 0);
+        c.ROTATE_RIGHT_TIME = std::stoi(configValues["ROTATE_RIGHT_TIME"]);
+        c.ROTATE_LEFT_KEY = std::strtoul(configValues["ROTATE_LEFT_KEY"].c_str(), NULL, 0);
+        c.ROTATE_LEFT_TIME = std::stoi(configValues["ROTATE_LEFT_TIME"]);
+        c.ATTACK_BUTTON = std::strtoul(configValues["ATTACK_BUTTON"].c_str(), NULL, 0);
+        c.ATTACK_TIME = std::stoi(configValues["ATTACK_TIME"]);
+        c.HARPOON_BUTTON = std::strtoul(configValues["HARPOON_BUTTON"].c_str(), NULL, 0);
+        c.HARPOON_TIME = std::stoi(configValues["HARPOON_TIME"]);
+
     }
     else
     {
