@@ -11,10 +11,6 @@ void Hud::initialize(sf::Font* font)
 }
 
 void Hud::update(
-    vec::VECTOR2 up,
-    vec::VECTOR2 left,
-    vec::VECTOR2 center,
-    vec::VECTOR2 size,
     sf::Time elapsed, 
     vec::VECTOR2 pos,
     vec::VECTOR2 vel,
@@ -25,10 +21,35 @@ void Hud::update(
     //
     // Update HUD text
     //
+    fpsHistory.push_front((1.0f / elapsed.asSeconds()));
+    if (fpsHistory.size() > 300)
+    {
+        fpsHistory.pop_back();
+    }
+    float fps = 0.f;
+    for (auto k = fpsHistory.begin(); k != fpsHistory.end(); k++)
+    {
+        fps += *k;
+    }
+    fps /= fpsHistory.size();
+
+
+    velHistory.push_front(vec::mag(vel));
+    if (velHistory.size() > 100)
+    {
+        velHistory.pop_back();
+    }
+    float velp = 0.f;
+    for (auto k = velHistory.begin(); k != velHistory.end(); k++)
+    {
+        velp += *k;
+    }
+    velp /= velHistory.size();
+
     std::stringstream ss;
-    ss << "FPS: " << (uint32_t)(1.0f / elapsed.asSeconds()) << std::endl;
+    ss << "FPS: " << (uint32_t)fps << std::endl;
     ss << "POS: " << (uint32_t)pos.x << ", " << (uint32_t)pos.y << std::endl;
-    ss << "VEL: " << (int32_t)vel.x << ", " << (int32_t)vel.y << std::endl;
+    ss << "VEL: " << (int32_t)velp << std::endl;
     //std::cout << ss.str() << std::endl;
     TextInfo1 = sf::Text();
     TextInfo1.setFont(*pFont);

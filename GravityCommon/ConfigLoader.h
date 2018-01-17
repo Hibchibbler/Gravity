@@ -27,6 +27,8 @@ struct PhysicsConfig
     float VELOCITY_MAX;//=650
     float JUMP_VELOCITY_MAX;//=100
     uint32_t JUMP_COUNT;//=1
+    float MOVE_VELOCITY_MAX;
+    float CHARGE_VELOCITY_MAX;
 };
 
 struct KeyboardConfig
@@ -41,9 +43,9 @@ struct KeyboardConfig
     uint32_t ROTATE_RIGHT_TIME;//=0 ms
     uint32_t ROTATE_LEFT_KEY;//='Q'
     uint32_t ROTATE_LEFT_TIME;//=0 ms
-    uint32_t ATTACK_BUTTON;
+    uint32_t ATTACK_KEY;
     uint32_t ATTACK_TIME;
-    uint32_t HARPOON_BUTTON;
+    uint32_t HARPOON_KEY;
     uint32_t HARPOON_TIME;
 };
 

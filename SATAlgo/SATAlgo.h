@@ -55,7 +55,7 @@ typedef std::vector<ContactInfo> Axes;
 class Projection : public vec::VECTOR2
 {
 public:
-    Projection(double min, double max)
+    Projection(float min, float max)
     {
         this->x = min;
         this->y = max;
@@ -66,12 +66,12 @@ public:
         this->x = proj.x;// min
         this->y = proj.y;// max
     }
-    double max(double a, double b)
+    float max(float a, float b)
     {
         return (a >= b ? a : b);
     }
 
-    double min(double a, double b)
+    float min(float a, float b)
     {
         return (a <= b ? a : b);
     }
@@ -88,9 +88,9 @@ public:
         //             ((x <= p.y) && (p.y <= y)) ) : 
         //             (((y <= p.x) && (p.x <= x)) || ((y <= p.y) && (p.y <= x)));
     }
-    double getOverlap(const Projection & p)
+    float getOverlap(const Projection & p)
     {
-        double M, m;
+        float M, m;
         m = max(x, p.x);
         M = min(y, p.y);
         return abs(M-m);
@@ -151,12 +151,12 @@ public:
     {
         float min = vec::dot(axis.normal, shape.getPoint(0) + (shape.getPosition() - shape.getOrigin()));
         //float min = vec::dot(axis.normal, shape.getPoint(0));
-        double max = min;
+        float max = min;
 
         for (int i = 1; i < shape.getPointCount(); i++) {
             vec::VECTOR2 pean = shape.getPoint(i) + (shape.getPosition() - shape.getOrigin());
 
-            double p = vec::dot(axis.normal, pean);
+            float p = vec::dot(axis.normal, pean);
             //double p = vec::dot(axis.normal, shape.getPoint(i));
             if (p <= min) {
                 min = p;
@@ -218,7 +218,7 @@ public:
             else 
             {
                 // get the overlap, and store it
-                double o = p1.getOverlap(p2);
+                float o = p1.getOverlap(p2);
                 //if (o < minimumOverlap1)
                 {
                     minimumOverlap1 = o;
@@ -247,7 +247,7 @@ public:
             else 
             {
                 // get the overlap, and store it
-                double o = p1.getOverlap(p2);
+                float o = p1.getOverlap(p2);
                 //if (o < minimumOverlap1)
                 {
                     minimumOverlap1 = o;

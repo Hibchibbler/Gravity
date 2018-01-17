@@ -64,7 +64,7 @@ void AnimationManager::addFrames(const bali::tilemap::TileMap & tm, const std::v
     for (auto n = frameLayouts.begin(); n != frameLayouts.end(); n++)
     {
         animations[n->state] = ani::Animation(n->len, n->delay, n->repeat);
-        for (auto d = 0; d < n->len; d++)
+        for (uint32_t d = 0; d < n->len; d++)
         {
             ani::Frame frame;
             if (n->flipY)

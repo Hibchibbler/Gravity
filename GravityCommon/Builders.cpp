@@ -499,8 +499,8 @@ uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXS
         pt.ti = tdi;
 
         sf::FloatRect gb = polygons[tdi].getGlobalBounds();
-        pt.x = gb.left + gb.width / 2.0;
-        pt.y = gb.top + gb.height / 2.0;
+        pt.x = gb.left + gb.width / 2.0f;
+        pt.y = gb.top + gb.height / 2.0f;
         searchLayer->insert(pt);
     }
     return 0;

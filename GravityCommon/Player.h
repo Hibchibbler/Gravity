@@ -56,12 +56,6 @@ public:
     uint32_t updateState();
     void cleanup();
 
-    
-
-    vec::VECTOR2 lastPosition;
-    std::vector<vec::VECTOR2> velHist;
-    std::vector<vec::VECTOR2> posHist;
-
     vec::VECTOR2 surfaceNormal; // This is always set
     vec::VECTOR2 jumpNormal;    // This is set when a jump is performed, and cleared when jump is done done.
     vec::VECTOR2 latNormal;     // This is set when lateral move is performed.
@@ -80,10 +74,6 @@ public:
     State state;
     bali::ani::AnimationManager aniMan;
     bool applyGravity;
-    void doJumping();
-    void doRightward();
-    void doLeftward();
-    void doIdle(Player::State s);
 
     uint32_t doubleJumpCnt;
     bool isMoving();

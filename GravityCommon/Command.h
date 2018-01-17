@@ -6,13 +6,6 @@
 namespace bali
 {
 
-class Impulse
-{
-public:
-    vec::VECTOR2 force;
-    float duration;
-};
-
 class Timestamp
 {
 public:
@@ -31,46 +24,42 @@ class Command
 public:
     enum Code
     {
-        SETPOSITION,
-        ADDPOSITION,
-        SETVELOCITY,
-        ADDVELOCITY,
-        SETTARGETANGLE,
-        ADDIMPULSE,
+        POSITION,
+        VELOCITY,
+        ACCELERATION,
+        ANGLE,
         MOVE,
-        JUMP
+        JUMP,
+        CHARGE,
+        GRAVITY,
     };
 
-    class AddPosition {
-    public:
-        vec::VECTOR2 delta;
+    enum Priority
+    {
+        LOW,
+        MEDIUM,
+        HIGH,
+        ULTRA
     };
 
-    class SetPosition {
+    class Position {
     public:
         vec::VECTOR2 pos;
     };
 
-    class SetVelocity {
+    class Velocity {
     public:
         vec::VECTOR2 vel;
     };
 
-    class AddVelocity {
+    class Acceleration {
     public:
-        vec::VECTOR2 delta;
+        vec::VECTOR2 accel;
     };
 
-    class SetTargetAngle{
+    class Angle{
     public:
-        float targetangle;
-        uint32_t granularity;
-    };
-
-    class AddImpulse {
-    public:
-        vec::VECTOR2 force;
-        float duration;
+        float angle;
     };
 
     class Move {
@@ -82,28 +71,42 @@ public:
 
     class Jump{
     public:
-        float str;//TODO: maybe a function
-        float dur;
-        float cur;
-        vec::VECTOR2 dir;//initial jump vector
+        float str;
+        vec::VECTOR2 dir;
+    };
+
+    class Charge
+    {
+    public:
+        float        str;
+        bool         gnd;
+        vec::VECTOR2 dir;
+    };
+
+    class Gravity
+    {
+    public:                         
+        float        str;
+        vec::VECTOR2 dir;
     };
 
     Command();
 
     uint64_t timestamp;
     uint32_t code;
-    uint32_t timed;
+    uint32_t priority;
+    uint32_t set;//or add
 
     union
     {
-        SetPosition     sp;
-        AddPosition     ap;
-        SetVelocity     sv;
-        AddVelocity     av;
-        SetTargetAngle  sta;
-        AddImpulse      ai;
-        Move            mv;
-        Jump            jmp;
+        Position     pos;
+        Velocity     vel;
+        Acceleration accel;
+        Angle        ang;
+        Move         mov;
+        Jump         jmp;
+        Gravity      grv;
+        Charge       chg;
     };
 };
 

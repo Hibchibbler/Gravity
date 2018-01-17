@@ -5,6 +5,8 @@
 //
 #include <sstream>
 #include <cmath>
+#include <assert.h>
+
 using namespace bali;
 using namespace bali::vec;
 
@@ -19,7 +21,9 @@ float vec::mag(const VECTOR2 a)
 
 VECTOR2 vec::norm(const VECTOR2 a)
 {
-    return a / bali::vec::mag(a);
+    float m = bali::vec::mag(a);
+    assert(m != 0.f);
+    return a / m;
 }
 
 VECTOR2 vec::normal(const VECTOR2 a)

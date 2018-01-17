@@ -29,60 +29,10 @@ void Player::cleanup()
 
 }
 
-void Player::doJumping()
-{
-    state = Player::State::JUMPINGRIGHT;
-    isJumping = true;
-}
-
-void Player::doRightward()
-{
-    state = Player::State::RIGHTWARDS;
-    isMovingRight = true;
-}
-
-void Player::doLeftward()
-{
-    state = Player::State::LEFTWARDS;
-    isMovingLeft = true;
-}
-
-void Player::doIdle(Player::State s)
-{
-    switch (s)
-    {
-    case Player::State::JUMPINGRIGHT:
-        isJumping = false;
-        break;
-    case Player::State::RIGHTWARDS:
-        isMovingRight = false;
-        break;
-    case Player::State::LEFTWARDS:
-        isMovingLeft = false;
-        break;
-    }
-    //if (!isJumping && (!isMovingRight && !isMovingLeft) || (isMovingRight && isMovingLeft))
-    //{
-    //    std::cout << "IDLE ";
-    //    state = Player::State::IDLE;
-    //}
-    //else if (!isJumping && isMovingRight && !isMovingLeft)
-    //{
-    //    state = Player::State::RIGHTWARDS;
-    //}
-    //else if (!isJumping && !isMovingRight && isMovingLeft)
-    //{
-    //    state = Player::State::LEFTWARDS;
-    //}
-    //else if (isJumping)
-    //{
-    //    state = Player::State::JUMPING;
-    //}
-}
-
 bool Player::isMoving()
 {
-    return (isJumping || isMovingRight || isMovingLeft || isCharging ? true : false);
+    //return (isJumping || isMovingRight || isMovingLeft || isCharging ? true : false);
+    return (isMovingRight || isMovingLeft || isCharging);
 }
 
 
@@ -109,8 +59,8 @@ uint32_t Player::updateState()
                 state = Player::State::FALLINGLEFT;
         }
     }
-    //else if (vec::dot(physics::upVector(player.angle), vec::norm(player.vel)) > 0.2f &&
-    //    vec::mag(player.vel) > 40.0f)
+    //else if (vec::dot(physics::upVector(physical.angle), vec::norm(physical.vel)) > 0.2f &&
+    //    vec::mag(physical.vel) > 40.0f)
     else if (isJumping)
     {
         if (state != Player::State::JUMPINGRIGHT &&
@@ -138,7 +88,7 @@ uint32_t Player::updateState()
         if (state != Player::State::IDLERIGHT &&
             state != Player::State::IDLELEFT)
         {
-            std::cout << "IDLE ";
+            //std::cout << "IDLE ";
             if (right > left)
             {
                 state = Player::State::IDLERIGHT;

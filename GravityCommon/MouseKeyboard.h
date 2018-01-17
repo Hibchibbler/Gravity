@@ -159,9 +159,9 @@ public:
         case MOUSE_BASE + 0:
             return sf::Mouse::Button::Left;
         case MOUSE_BASE + 1:
-            return sf::Mouse::Button::Middle;
-        case MOUSE_BASE + 2:
             return sf::Mouse::Button::Right;
+        case MOUSE_BASE + 2:
+            return sf::Mouse::Button::Middle;
         case MOUSE_BASE + 3:
             return sf::Mouse::Button::XButton1;
         case MOUSE_BASE + 4:

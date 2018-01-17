@@ -6,7 +6,7 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/System/Time.hpp>
 #include "GravityCommon/Vector2.h"
-
+#include <list>
 namespace bali
 {
 
@@ -15,10 +15,6 @@ class Hud
 public:
     void initialize(sf::Font* font);
     void update(
-        vec::VECTOR2    up,
-        vec::VECTOR2    left,
-        vec::VECTOR2    center,
-        vec::VECTOR2    size,
         sf::Time        elapsed,
         vec::VECTOR2    pos,
         vec::VECTOR2    vel,
@@ -32,6 +28,8 @@ public:
     sf::Text            TextInfo1;
     sf::RectangleShape  backDrop;
     sf::RenderTexture   HudRenderTexture;
+    std::list<float>  fpsHistory;
+    std::list<float>  velHistory;
 };
 
 }

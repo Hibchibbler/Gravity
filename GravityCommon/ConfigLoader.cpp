@@ -23,9 +23,11 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
     c.SLOW_THRESHOLD = 2.0f;
     c.JUMP_STRENGTH = 700.0f;
     c.VELOCITY_MAX = 700.0f;
-    c.JUMP_VELOCITY_MAX = 100.0f;
+    c.JUMP_VELOCITY_MAX = 700.0f;
     c.FREEFALL_MOVE_STRENGTH = 25.0f;
     c.JUMP_COUNT = 2;
+    c.MOVE_VELOCITY_MAX = 800.0f;
+    c.CHARGE_VELOCITY_MAX = 600.0f;
 
     std::ifstream configIn(filename);
     if (configIn.is_open())
@@ -68,6 +70,8 @@ PhysicsConfig bali::loadPhysicsConfig(std::string filename)
         c.JUMP_VELOCITY_MAX = std::stof(configValues["JUMP_VELOCITY_MAX"]);
         c.FREEFALL_MOVE_STRENGTH = std::stof(configValues["FREEFALL_MOVE_STRENGTH"]);
         c.JUMP_COUNT = std::stol(configValues["JUMP_COUNT"]);
+        c.MOVE_VELOCITY_MAX = std::stof(configValues["MOVE_VELOCITY_MAX"]);
+        c.CHARGE_VELOCITY_MAX = std::stof(configValues["CHARGE_VELOCITY_MAX"]);
     }
     else
     {
@@ -129,9 +133,9 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
         c.ROTATE_RIGHT_TIME = std::stoi(configValues["ROTATE_RIGHT_TIME"]);
         c.ROTATE_LEFT_KEY = std::strtoul(configValues["ROTATE_LEFT_KEY"].c_str(), NULL, 0);
         c.ROTATE_LEFT_TIME = std::stoi(configValues["ROTATE_LEFT_TIME"]);
-        c.ATTACK_BUTTON = std::strtoul(configValues["ATTACK_BUTTON"].c_str(), NULL, 0);
+        c.ATTACK_KEY = std::strtoul(configValues["ATTACK_KEY"].c_str(), NULL, 0);
         c.ATTACK_TIME = std::stoi(configValues["ATTACK_TIME"]);
-        c.HARPOON_BUTTON = std::strtoul(configValues["HARPOON_BUTTON"].c_str(), NULL, 0);
+        c.HARPOON_KEY= std::strtoul(configValues["HARPOON_KEY"].c_str(), NULL, 0);
         c.HARPOON_TIME = std::stoi(configValues["HARPOON_TIME"]);
 
     }

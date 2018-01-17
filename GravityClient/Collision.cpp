@@ -7,7 +7,7 @@ namespace bali
 
 void onNonCollisionHandler(Player & p, PhysicsConfig & pc)
 {
-    //p.jumpNormal = vec::Zero();
+    p.surfaceNormal = vec::Zero();
 }
 
 void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
@@ -40,7 +40,7 @@ void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
     //          want to walk when colliding 
     //          with vertical walls.
     //
-    if (vec::dot(physics::upVector(phys.angle), cn) > -0.25f)
+    if (vec::dot(physics::upVector(phys.angle), cn) > 0.1f)// -0.25f)
     {
         p.latNormal = cn;
     }
@@ -62,7 +62,10 @@ void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
     //          when colliding with vertical
     //          wall.
     //
-    if (vec::dot(physics::upVector(phys.angle), cn) > 0.01f)
+    //if (vec::dot(physics::upVector(phys.angle), cn) > 0.01f &&
+    //    vec::dot(physics::downVector(phys.angle), p.physical.vel) > 0.01f)
+    if (vec::dot(physics::upVector(phys.angle), cn) > 0.01f &&
+        vec::dot(physics::downVector(phys.angle), p.physical.vel) > 0.01f)
     {
         if (p.doubleJumpCnt != pc.JUMP_COUNT)
         {

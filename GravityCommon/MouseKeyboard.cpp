@@ -23,7 +23,7 @@ void MouseKeyboard::update(sf::Time elapsed)
         updateElapsed(i->second, elapsed);
     }
 
-    if (this->totalTime.asMilliseconds() > 32.f)
+    if (this->totalTime.asMilliseconds() > 40.f)
     {   // std::cout << totalTime.asMilliseconds() << " ";
         this->totalTime = sf::Time::Zero;
         //std::cout << elapsed.asSeconds() << std::endl;
@@ -116,7 +116,7 @@ void MouseKeyboard::updateKeypress(Keypress & kp)
         // Pressed
         kp.elp = sf::Time::Zero;
         kp.exp = false;
-        if (kp.dblpressed != nullptr && (clock - kp.tor).asMilliseconds() < 120)
+        if (kp.dblpressed != nullptr && (clock - kp.tor).asMilliseconds() < 180)
         {
             kp.dblpressed(kp, ud);
         }

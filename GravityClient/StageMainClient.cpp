@@ -101,13 +101,13 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
                                         nullptr,
                                         input::KeyHeldHandler,
                                         input::KeyReleasedHandler);
-    ctx->mouseKeyboard.registerKeypress(ctx->keyboardConfig.ATTACK_BUTTON,
+    ctx->mouseKeyboard.registerKeypress(ctx->keyboardConfig.ATTACK_KEY,
                                         ctx->keyboardConfig.ATTACK_TIME,
                                         input::KeyPressedHandler,
                                         nullptr,
                                         input::KeyHeldHandler,
                                         input::KeyReleasedHandler);
-    ctx->mouseKeyboard.registerKeypress(ctx->keyboardConfig.HARPOON_BUTTON,
+    ctx->mouseKeyboard.registerKeypress(ctx->keyboardConfig.HARPOON_KEY,
                                         ctx->keyboardConfig.HARPOON_TIME,
                                         input::KeyPressedHandler,
                                         nullptr,
@@ -197,79 +197,70 @@ uint32_t StageMainClient::doUpdate(Context::Ptr context)
     ctx->currentElapsed = ctx->mainClock.restart();
 
     //
-    // Smooth out camera using average of past player positions
+    // Smooth out camera 
     //
-    for (int d = 0; d < ctx->player.posHist.size(); d++) { ctx->cameraPos += ctx->player.posHist[d]; }
-    if (ctx->player.posHist.size() > 0)
-    {
-        ctx->cameraPos /= (float)ctx->player.posHist.size();
-    }
+    ctx->cameraPos += (ctx->player.physical.pos - ctx->cameraPos) / 125.f;
 
     //
     // Update Level
     //
-    sf::View wView = ctx->gameWindow.window.getView();
-    ctx->level.update(vec::VECTOR2(4096, 4096),//ctx->gameWindow.window.getView().getSize(),
-                      ctx->currentElapsed,
-                      ctx->player.physical.pos,//ctx->worldMousePos,
-                      ctx->player.physical.vel,
-                      ctx->player.physical.angle,
-                      ctx->mainZoomFactor
-                     );
+    ctx->level.update(vec::VECTOR2(4096, 4096),
+                      ctx->player.physical.pos,
+                      ctx->player.physical.angle);
 
     //
     // Update HUD text
     //
-    ctx->hud.update(physics::upVector(ctx->player.physical.angle),
-        physics::leftVector(ctx->player.physical.angle),
-        ctx->gameWindow.window.getView().getCenter(),
-        ctx->gameWindow.window.getView().getSize(),//vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenWidth),
-        ctx->currentElapsed,
-        ctx->cameraPos,//ctx->player.physical.pos,
-        ctx->player.physical.vel,
-        ctx->player.physical.angle,
-        ctx->mainZoomFactor
-    );
+    ctx->hud.update(ctx->currentElapsed,
+                    ctx->cameraPos,
+                    ctx->player.physical.vel,
+                    ctx->player.physical.angle,
+                    ctx->mainZoomFactor
+                   );
 
+
+    //
+    // Update player render polygon
+    //
+    ctx->player.updatePolygon(&ctx->level);
+
+
+
+    //
+    // Collision Detection and Resolution
+    //
+    physics::ResolveCollisions(ctx->level.polygonsVisible, 
+                               ctx->level.playerCollisionPolygons[0], 
+                               ctx->player, 
+                               ctx->physicsConfig, 
+                               ctx->level.sharedEdges, 
+                               onCollisionHandler, 
+                               onNonCollisionHandler);
+
+    //
     //
     // Get User Input, and apply
     //
     ctx->mouseKeyboard.update(ctx->currentElapsed);
 
 
-    ctx->player.updatePolygon(&ctx->level);
+    //
+    // Motion Integration
+    //
+    physics::UpdateMotion(ctx->player.physical,
+                          ctx->currentElapsed,
+                          ctx->player.isCollided,
+                          ctx->physicsConfig,
+                          ctx->player.accumulator);
+
 
 
     //
-    // Collision Detection and Resolution
-    //
-    std::stringstream ss1;
-    physics::ResolveCollisions(ss1, ctx->level.polygonsVisible, ctx->level.playerCollisionPolygons[0], ctx->player, ctx->physicsConfig, ctx->level.sharedEdges, onCollisionHandler, onNonCollisionHandler);
-    //std::cout << ss.str();
-
-
-    //TODO
     // Update player state, and animation
     //
     uint32_t oldState = player.updateState();
     player.aniMan.updateFrames(oldState, (uint32_t)player.state);
 
-    //
-    // Motion Integration
-    //
-    physics::updatePlayerMotion(ctx->player,
-                                ctx->currentElapsed,
-                                ctx->physicsConfig);
-
-
-
-
-
-    //
-    // TODO: ?maybe? Slightly resposition the render polygon, based 
-    // on the changes that may have occured during
-    // collision resolution.
-    //
 
     return 0;
 }
@@ -283,22 +274,26 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     //
     // Draw Level Texture
     //
-    sf::View defView = sf::View(vec::VECTOR2(0, 0), vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight));//ctx->gameWindow.window.getView();
-    defView.setCenter(ctx->cameraPos);//defView.setCenter(vec::VECTOR2(ctx->player.physical.pos.x, -(ctx->player.physical.pos.y) + 4096));
-    defView.setRotation(ctx->player.physical.angle);
+    sf::View defView = sf::View(vec::VECTOR2(0, 0), 
+                                vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight));
+    defView.setCenter(ctx->cameraPos);
+    defView.setRotation(ctx->level.TargetCameraAngle);
     defView.zoom(ctx->mainZoomFactor);
 
-    ctx->level.LevelRenderTexture.clear(sf::Color::Green);
+    ctx->level.LevelRenderTexture.clear(sf::Color::Black);
     ctx->level.draw(ctx->level.LevelRenderTexture, levelRS);
     ctx->level.LevelRenderTexture.display();
     ctx->gameWindow.window.setView(defView);
-    ctx->gameWindow.window.draw(sf::Sprite(ctx->level.LevelRenderTexture.getTexture()), levelRS);
+    sf::Sprite levelSprite(ctx->level.LevelRenderTexture.getTexture());
+    //levelSprite.setPosition(-2048, -2048);
+    ctx->gameWindow.window.draw( levelSprite, levelRS);
 
 
     //
     // Draw HUD Texture 
     //
-    sf::View hudView = sf::View(vec::VECTOR2(0, 0), vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight));
+    sf::View hudView = sf::View(vec::VECTOR2(0, 0), 
+                                vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight));
     hudView.setCenter(ctx->cameraPos);
 
     ctx->hud.HudRenderTexture.clear(sf::Color::Transparent);
@@ -306,7 +301,8 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
     ctx->hud.HudRenderTexture.display();
     ctx->gameWindow.window.setView(hudView);
     sf::Sprite sprite(ctx->hud.HudRenderTexture.getTexture());
-    sprite.setPosition(ctx->cameraPos - (vec::VECTOR2(ctx->gameWindow.screenWidth, ctx->gameWindow.screenHeight) / 2.0f));
+    sprite.setPosition(ctx->cameraPos - (vec::VECTOR2(ctx->gameWindow.screenWidth, 
+                       ctx->gameWindow.screenHeight) / 2.0f));
     ctx->gameWindow.window.draw(sprite, levelRS);
 
 
