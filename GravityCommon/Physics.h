@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include "SATAlgo/SATAlgo.h"
+#include "Context.h"
 #include "ConfigLoader.h"
 #include "Player.h"
 #include "MouseKeyboard.h"
@@ -55,6 +57,7 @@ public:
 // Frame of References
 //
 vec::VECTOR2 rotVector(float angle);
+vec::VECTOR2 rotVector(float angle, vec::VECTOR2 v);
 vec::VECTOR2 upVector(float angle);
 vec::VECTOR2 leftVector(float angle);
 vec::VECTOR2 downVector(float angle);
@@ -68,15 +71,30 @@ bool RayCast(vec::VECTOR2 dir, vec::VECTOR2 start, std::vector<Segment> & segmen
 bool RayCast(float a, vec::VECTOR2 start, std::vector<Segment> & segments, physics::Intersection & intersect);
 void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, vec::VECTOR2 pos, sf::VertexArray & lineSegments);
 
-typedef void(*OnCollisionEvent) (Player & p, vec::VECTOR2 collisionNormal, PhysicsConfig & pc);
-typedef void(*OnNonCollisionEvent) (Player &p, PhysicsConfig & pc);
+typedef void(*OnCollisionEvent) (Context::Ptr context, vec::VECTOR2 collisionNormal);
+typedef void(*OnNonCollisionEvent) (Context::Ptr context);
 
+
+
+bool CollisionResponse(
+    Physical & phy,
+    vec::VECTOR2 collision_normal,
+    float overlap,
+    PhysicsConfig & pc,
+    bool playerMoving
+);
+
+bool GetMinimumTranslationVector(
+    bali::CONVEXSHAPES & shapes,
+    bali::CONVEXSHAPE & playerShape,
+    vec::VECTOR2 vel,
+    std::list<SAT::ContactInfo> & cinfos
+);
 
 bool ResolveCollisions (
-    bali::CONVEXSHAPE::Vec & shapes,
+    Context::Ptr context,
+    bali::CONVEXSHAPES & shapes,
     bali::CONVEXSHAPE & playerShape,
-    Player & player,
-    PhysicsConfig & pc,
     std::vector<Segment> & sharedEdges,
     OnCollisionEvent onCollision,
     OnNonCollisionEvent onNonCollision

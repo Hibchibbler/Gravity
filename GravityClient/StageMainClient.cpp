@@ -32,7 +32,7 @@ StageMainClient::~StageMainClient()
 uint32_t StageMainClient::initialize(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-    Player & p = ctx->player;
+    Player & p = context->entitymanager.player;
     Physical & phys = p.physical;
 
     //
@@ -58,6 +58,7 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     // Starting Position of Player is specified in the level data
     //
     phys.pos = ctx->level.playerPolygons[0].getPosition();
+    ctx->level.playerPolygons[0].setPosition(0, 0);
 
     //
     // Initialize render texture, and shaders
@@ -70,6 +71,7 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     //
     // Register interesting Keyboard key presses
     //
+    ctx->mouseKeyboard.Initialize();
     ctx->mouseKeyboard.setUserData(context);
     ctx->mouseKeyboard.registerKeypress(ctx->keyboardConfig.JUMP_KEY, 
                                         ctx->keyboardConfig.JUMP_TIME, 
@@ -131,7 +133,7 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
       { (uint32_t)Player::State::CHARGINGRIGHT, 22,  2, 50, 0, 0 },
       { (uint32_t)Player::State::CHARGINGLEFT,  22,  2, 50, 1, 0 }
     };
-    ctx->player.aniMan.addFrames(ctx->level.playerAniTileMap, names);
+    context->entitymanager.player.aniMan.addFrames(ctx->level.playerAniTileMap, names);
 
     //
     // Last things
@@ -144,9 +146,9 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
     sf::FloatRect visibleArea(0, 0, 900, 900);
     ctx->gameWindow.window.setView(sf::View(visibleArea));
     ctx->level.TargetCameraAngle = 0.f;
-    ctx->player.physical.angle = 0.0f;
-    ctx->cameraPos = ctx->player.physical.pos;
-    
+    context->entitymanager.player.physical.angle = 0.0f;
+    ctx->cameraPos = context->entitymanager.player.physical.pos;
+    ctx->frames_since_jump = 0;
     
     initialized();
     return 0;
@@ -193,74 +195,86 @@ uint32_t StageMainClient::doWindowEvent(Context::Ptr context, sf::Event & event)
 uint32_t StageMainClient::doUpdate(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
-    Player & player = ctx->player;
+    context->frames_since_jump++;
+    Player & player = context->entitymanager.player;
     ctx->currentElapsed = ctx->mainClock.restart();
 
     //
     // Smooth out camera 
     //
-    ctx->cameraPos += (ctx->player.physical.pos - ctx->cameraPos) / 125.f;
+    ctx->cameraPos += (context->entitymanager.player.physical.pos - ctx->cameraPos) / 125.f;
 
     //
     // Update Level
     //
     ctx->level.update(vec::VECTOR2(4096, 4096),
-                      ctx->player.physical.pos,
-                      ctx->player.physical.angle);
+                      context->entitymanager.player.physical.pos,
+                      context->entitymanager.player.physical.angle);
 
     //
     // Update HUD text
     //
     ctx->hud.update(ctx->currentElapsed,
                     ctx->cameraPos,
-                    ctx->player.physical.vel,
-                    ctx->player.physical.angle,
+                    context->entitymanager.player.physical.vel,
+                    context->entitymanager.player.physical.angle,
                     ctx->mainZoomFactor
                    );
 
+    //
+    // Update render and collision polygons for player
+    //
+    CONVEXSHAPE & ppoly = ctx->level.playerPolygons[0];
+    CONVEXSHAPE & cpoly = ctx->level.playerCollisionPolygon;
+
+    // Update render polygon
+    ppoly.setPosition(0, 0);
+    ppoly.setOrigin(0, 0);
+    ppoly.setRotation(player.physical.angle);
+
+    // Get the collision polygon
+    // N.B The collision polygon needs to have it's transformations
+    //     applied before being used with SAT algorithm.
+    cpoly = GetTransformedShape(ppoly);
+
+    // Update position
+    cpoly.setPosition(player.physical.pos);
+    ppoly.setPosition(player.physical.pos);
 
     //
-    // Update player render polygon
+    // Update player state, and animation frame
     //
-    ctx->player.updatePolygon(&ctx->level);
-
-
-
-    //
-    // Collision Detection and Resolution
-    //
-    physics::ResolveCollisions(ctx->level.polygonsVisible, 
-                               ctx->level.playerCollisionPolygons[0], 
-                               ctx->player, 
-                               ctx->physicsConfig, 
-                               ctx->level.sharedEdges, 
-                               onCollisionHandler, 
-                               onNonCollisionHandler);
+    uint32_t oldState = player.updateState();
+    player.aniMan.updateFrames(oldState, (uint32_t)player.state);
+    ctx->level.playerPolygons[0].setTexture(&ctx->level.textureAtlas1Tex, true);//TODO: only needs to be done once.
+    ani::Frame f = ctx->entitymanager.player.aniMan.animations[(uint32_t)ctx->entitymanager.player.state].getCurrentFrame();
+    ctx->level.playerPolygons[0].setTextureRect(f.getIntRect(false, false));
 
     //
     //
     // Get User Input, and apply
     //
-    ctx->mouseKeyboard.update(ctx->currentElapsed);
+    ctx->mouseKeyboard.Update(ctx->currentElapsed);
 
+
+    //
+    // Collision Detection and Resolution
+    //
+    physics::ResolveCollisions(context,
+                               ctx->level.polygonsVisible, 
+                               cpoly,// Collision Polygon
+                               ctx->level.sharedEdges, 
+                               onCollisionHandler, 
+                               onNonCollisionHandler);
 
     //
     // Motion Integration
     //
-    physics::UpdateMotion(ctx->player.physical,
+    physics::UpdateMotion(context->entitymanager.player.physical,
                           ctx->currentElapsed,
-                          ctx->player.isCollided,
+                          context->entitymanager.player.isCollided,
                           ctx->physicsConfig,
-                          ctx->player.accumulator);
-
-
-
-    //
-    // Update player state, and animation
-    //
-    uint32_t oldState = player.updateState();
-    player.aniMan.updateFrames(oldState, (uint32_t)player.state);
-
+                          context->entitymanager.player.accumulator);
 
     return 0;
 }
@@ -317,6 +331,8 @@ uint32_t StageMainClient::doDraw(Context::Ptr context)
 uint32_t StageMainClient::cleanup(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context; 
+
+    ctx->mouseKeyboard.Cleanup();
     return 0;
 }
 

@@ -14,14 +14,6 @@ void Player::initialize()
 
 void Player::updatePolygon(Level* l)
 {
-    //
-    // Construct the Player Polygons
-    //
-    buildPlayerCollisionPolygon(this->physical.pos, this->physical.angle, l->playerPolygons, l->playerCollisionPolygons);
-
-    l->playerPolygons[0].setTexture(&l->textureAtlas1Tex, true);//TODO: only needs to be done once.
-    ani::Frame f = aniMan.animations[(uint32_t)state].getCurrentFrame();
-    l->playerPolygons[0].setTextureRect(f.getIntRect(false, false));
 }
 
 void Player::cleanup()
@@ -39,6 +31,10 @@ bool Player::isMoving()
 uint32_t Player::updateState()
 {
     Player::State oldState = state;
+
+    if (physical.vel == vec::Zero())
+        return 0;
+
     vec::VECTOR2 velN = vec::norm(physical.vel);
     float right = vec::dot(physics::rightVector(physical.angle), velN);
     float left = vec::dot(physics::leftVector(physical.angle), velN);

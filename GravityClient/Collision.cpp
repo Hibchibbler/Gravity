@@ -1,3 +1,7 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2018
+///////////////////////////////////////////////////////////////////////////////
 #include "Collision.h"
 #include "GravityCommon/Physics.h"
 
@@ -5,14 +9,16 @@ namespace bali
 {
 
 
-void onNonCollisionHandler(Player & p, PhysicsConfig & pc)
+void onNonCollisionHandler(Context::Ptr context)
 {
-    p.surfaceNormal = vec::Zero();
+    Player & player = context->entitymanager.player;
+    player.surfaceNormal = vec::Zero();
 }
 
-void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
+void onCollisionHandler(Context::Ptr context, vec::VECTOR2 cn)
 {
-    Physical & phys = p.physical;
+    Physical & phys = context->entitymanager.player.physical;
+    Player & player = context->entitymanager.player;
     //
     // If not moving too fast, and
     // surface is not too steep
@@ -23,13 +29,12 @@ void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
     //          when colliding with vertical
     //          wall.
     //
-    if (vec::mag(phys.vel) < pc.JUMP_VELOCITY_MAX)
+    //if (vec::mag(phys.vel) < context->physicsConfig.JUMP_VELOCITY_MAX)
     {
         if (vec::dot(physics::upVector(phys.angle), cn) > -0.01f)
         {
-            p.jumpNormal = cn;
+            player.jumpNormal = cn;
         }
-
     }
 
     //
@@ -40,40 +45,42 @@ void onCollisionHandler(Player & p, vec::VECTOR2 cn, PhysicsConfig & pc)
     //          want to walk when colliding 
     //          with vertical walls.
     //
-    if (vec::dot(physics::upVector(phys.angle), cn) > 0.1f)// -0.25f)
+    if (vec::dot(physics::upVector(phys.angle), cn) > 0.01)// -0.25f)
     {
-        p.latNormal = cn;
+        player.latNormal = cn;
     }
-
 
     //
     // Get contact surface, regardless
     // of other things
     //
-    p.surfaceNormal = cn;
-
+    player.surfaceNormal = cn;
 
     //
     // If the surface is not too steep
-    // then reset double jump count
-    //
+    // then reset double jump count.
+    // And, ignore collision if we jumped recently.
     // N.B.     >0.01 because, we don't
     //          want double jump to reset
     //          when colliding with vertical
     //          wall.
     //
-    //if (vec::dot(physics::upVector(phys.angle), cn) > 0.01f &&
-    //    vec::dot(physics::downVector(phys.angle), p.physical.vel) > 0.01f)
     if (vec::dot(physics::upVector(phys.angle), cn) > 0.01f &&
-        vec::dot(physics::downVector(phys.angle), p.physical.vel) > 0.01f)
+        context->frames_since_jump > 5)
     {
-        if (p.doubleJumpCnt != pc.JUMP_COUNT)
+        if (player.doubleJumpCnt != context->physicsConfig.JUMP_COUNT)
         {
             std::cout << "CJ ";
         }
-        p.doubleJumpCnt = pc.JUMP_COUNT;
+        player.doubleJumpCnt = context->physicsConfig.JUMP_COUNT;
     }
-
+    else
+    {
+        if (context->frames_since_jump <= 5)
+        {
+            std::cout << "*";
+        }
+    }
 }
 
 

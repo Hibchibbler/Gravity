@@ -179,11 +179,11 @@ void Level::draw(sf::RenderTarget & target, sf::RenderStates states)
         target.draw(quadLayers[1], states);
     }
 
-    // Draw player polygons
+    // Draw renderable player polygons
     for (auto poly = playerPolygons.begin(); poly != playerPolygons.end(); ++poly)
     {
         states.texture = &textureAtlas1Tex;
-        //poly->setOutlineThickness(1);
+        poly->setOutlineThickness(1);
         target.draw(*poly, states);
     }
 }

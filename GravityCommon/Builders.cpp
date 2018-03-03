@@ -384,7 +384,7 @@ bool buildRectangle(TMX::Object::Ptr obj, CONVEXSHAPE & s)
     return status;
 }
 
-uint32_t buildPlayerObjectLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
+uint32_t buildPlayerObjectLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Vec & objectGroups)//std::string strPoints, int x, int y)
 {
     for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
     {
@@ -470,7 +470,7 @@ uint32_t buildPlayerObjectLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::
 //    return 0;
 //}
 
-uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Ptr & objectGroup)
+uint32_t buildPolygonLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Ptr & objectGroup)
 {
 
     for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
@@ -506,11 +506,11 @@ uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXS
     return 0;
 }
 
-uint32_t buildPlayerCollisionPolygon(vec::VECTOR2 pos, float angle, CONVEXSHAPE::Vec & pp, CONVEXSHAPE::Vec & pcp)
+uint32_t buildPlayerTransformedPolygon(Physical & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp)
 {
     pp[0].setOrigin(8, 16);
-    pp[0].setPosition(pos);
-    pp[0].setRotation(angle);
+    pp[0].setPosition(phy.pos);
+    pp[0].setRotation(phy.angle);
     pp[0].setScale(1.0f, 1.0f);
 
     pcp.push_back(CONVEXSHAPE());

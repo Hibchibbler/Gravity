@@ -10,6 +10,7 @@
 #include "ConfigLoader.h"
 #include "MouseKeyboard.h"
 #include "GameWindow.h"
+#include "EntityManager.h"
 
 namespace bali 
 {
@@ -33,11 +34,10 @@ public:
     MouseKeyboard               mouseKeyboard;
     PhysicsConfig               physicsConfig;
     KeyboardConfig              keyboardConfig;
-    Player                      player;
-    std::list<Player>           players;
+    entity::EntityManager       entitymanager;
     sf::Time                    currentElapsed;
     float                       mainZoomFactor;
-
+    uint32_t                    frames_since_jump;
 
 };
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2018
 ///////////////////////////////////////////////////////////////////////////////
 #include "Physics.h"
 
@@ -17,7 +17,7 @@
 #include <fstream>
 #include "ConfigLoader.h"
 #include "Player.h"
-#include "SATAlgo/SATAlgo.h"
+
 
 #include <assert.h>
 
@@ -208,15 +208,15 @@ vec::VECTOR2 physics::ReflectUnitVector(vec::VECTOR2 d, vec::VECTOR2 n)
     return v;
 }
 
-bool GetContactInfo (
-    bali::CONVEXSHAPE::Vec & shapes, 
+bool physics::GetMinimumTranslationVector(
+    bali::CONVEXSHAPES & shapes, 
     bali::CONVEXSHAPE & playerShape,
     vec::VECTOR2 vel,
     std::list<SAT::ContactInfo> & cinfos
 )
 {
     bool collision = false;
-    SAT::ContactInfo hitMin;
+    SAT::ContactInfo hitMin;    
     for (auto shape = shapes.begin(); shape != shapes.end(); ++shape)
     {
         bool found = false;
@@ -265,23 +265,30 @@ bool GetContactInfo (
     return collision;
 }
 
-bool CollisionResponse(Physical & phys, vec::VECTOR2 collision_normal, float overlap, PhysicsConfig & pc, bool playerMoving)
+bool physics::CollisionResponse (
+    Physical & phy,
+    vec::VECTOR2 collision_normal,
+    float overlap,
+    PhysicsConfig & pc,
+    bool playerMoving
+)
 {
     float newMag = 0.f;
-    vec::VECTOR2 original_velocity = phys.vel;
+    vec::VECTOR2 original_velocity = phy.vel;
     collision_normal = vec::norm(collision_normal);
     vec::VECTOR2 newVelocity;
     vec::VECTOR2 posDelta = collision_normal * overlap * 1.25f;
     
-    physics::SubmitModifyPosition(phys, posDelta, false);
+    physics::SubmitModifyPosition(phy, posDelta, false);
     newVelocity = collision_normal*(vec::dot(original_velocity, collision_normal)) * -1.f * (1 + pc.RESTITUTION) + original_velocity;
 
     assert(newVelocity != vec::Zero());
     assert(overlap != 0.0f);
 
     newMag = vec::mag(newVelocity);
-    physics::SubmitModifyVelocity(phys, newVelocity, true);
+    physics::SubmitModifyVelocity(phy, newVelocity, true);
 
+    // https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-friction-scene-and-jump-table--gamedev-7756
     vec::VECTOR2 tangent = newVelocity - (collision_normal * vec::dot(newVelocity, collision_normal));
     tangent = vec::norm(tangent);
     float jt = vec::dot(newVelocity, tangent) * -1.0f;
@@ -291,38 +298,46 @@ bool CollisionResponse(Physical & phys, vec::VECTOR2 collision_normal, float ove
     // use static friction
     // otherwise, use dynamic
     // friction.
-    if (newMag < pc.STATIC_FRICTION_VELOCITY_MAX && !playerMoving)
+    if (playerMoving)
     {
-        physics::SubmitModifyVelocity(phys, tangent * pc.STATIC_FRICTION * jt, false);
+
     }
     else
     {
-        physics::SubmitModifyVelocity(phys, tangent * pc.DYNAMIC_FRICTION * jt, false);
-    }
+        //if (newMag < pc.STATIC_FRICTION_VELOCITY_MAX)
+        //{
+        vec::VECTOR2 rotated_collision_normal = rotVector(phy.angle, collision_normal);
+        vec::VECTOR2 frictionvector = tangent * jt * pc.STATIC_FRICTION *( (vec::dot(rotated_collision_normal, rightVector(phy.angle))) /vec::mag(phy.vel));
 
+        //vec::VECTOR2 frictionvector = tangent * jt * pc.STATIC_FRICTION;
+
+        physics::SubmitModifyVelocity(phy, frictionvector, false);
+
+    }
     //physics::ModifyAcceleration(phys, vec::Zero(), true);
     return true;
 }
 
 #undef PRINT_DIAGNOSTICS
-bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHAPE & playerShape, Player & player, PhysicsConfig & pc, std::vector<Segment> & sharedEdges, OnCollisionEvent onCollision, OnNonCollisionEvent onNonCollision)
+bool physics::ResolveCollisions(Context::Ptr context, bali::CONVEXSHAPES & shapes, bali::CONVEXSHAPE & playerShape, std::vector<Segment> & sharedEdges, OnCollisionEvent onCollision, OnNonCollisionEvent onNonCollision)
 {
+    Player & player = context->entitymanager.player;
     Physical & phys = player.physical;
     bool collision = false;
     player.isCollidedLast = player.isCollided;
     player.isCollided = false;
     vec::VECTOR2 original_velocity = phys.vel;
     std::list<SAT::ContactInfo> cinfos;
-    collision = GetContactInfo(shapes, playerShape, original_velocity, cinfos);
+    collision = GetMinimumTranslationVector(shapes, playerShape, original_velocity, cinfos);
     if (collision == false)
     {
-        onNonCollision(player, pc);
+        onNonCollision(context);
     }
     else
     {
         SAT::ContactInfo biggest;
-        vec::VECTOR2  newPos(0, 0);
-        float overlap = 0.0;
+        vec::VECTOR2  newPos(0.f, 0.f);
+        float overlap = 0.0f;
         if (cinfos.size() > 0)
         {
             // Sort the hit list by overlap.
@@ -347,93 +362,12 @@ bool physics::ResolveCollisions(bali::CONVEXSHAPE::Vec & shapes, bali::CONVEXSHA
             player.isCollided = true;
             if (newPos != vec::VECTOR2(0, 0))
             {
-                CollisionResponse(phys, newPos, overlap, pc, player.isMoving());
-                onCollision(player, newPos, pc);
+                CollisionResponse(phys, newPos, overlap, context->physicsConfig, player.isMoving());
+                onCollision(context, newPos);
             }
         }
     }
     return false;
-}
-
-void ApplyDrag(Physical & phy, bool is_collided, float drag_coefficient)
-{
-    if (!is_collided)
-    {
-        float rightStrength = vec::dot(rightVector(phy.angle), vec::norm(phy.vel));
-        float leftStrength = vec::dot(leftVector(phy.angle), vec::norm(phy.vel));
-        float upStrength = vec::dot(upVector(phy.angle), vec::norm(phy.vel));
-        float downStrength = vec::dot(downVector(phy.angle), vec::norm(phy.vel));
-
-        if (downStrength > upStrength)
-        {
-            float gate = 0.f;
-            if (rightStrength > leftStrength)
-                gate = rightStrength;
-            else
-                gate = leftStrength;
-
-            vec::VECTOR2 drag = phy.vel * drag_coefficient* gate;
-            phy.vel -= drag;
-            //std::cout << "D " << vec::mag(drag) << " G "  <<gate << "\r\n";
-        }
-    }
-}
-
-void ApplyJump(Command::Jump & j, Physical & phy, float jump_strength, float jump_velocity_max)
-{
-    vec::VECTOR2 u;
-    vec::VECTOR2 up = upVector(phy.angle) * 0.90f;
-    if (j.dir != vec::Zero())
-    {
-        if (vec::dot(j.dir, downVector(phy.angle)) < 0.01f)
-        {
-            u = vec::norm(j.dir + up)  * j.str * jump_strength;
-            u = phy.impulse(u);
-            if (vec::mag(phy.vel + u) > jump_velocity_max)
-            {
-                u = vec::Zero();
-            }
-            phy.vel += u;
-        }
-    }
-}
-
-void ApplyCharge(Command::Charge & chg, Physical & phy, float charge_strength, float charge_velocity_max)
-{
-    vec::VECTOR2 dir = vec::norm(chg.dir);
-    vec::VECTOR2 m = dir * chg.str * charge_strength;
-    m = phy.impulse(m);
-    if (vec::mag(phy.vel + m) > charge_velocity_max)
-    {
-        m = vec::Zero();
-    }
-    phy.vel += m;
-}
-
-void ApplyMove(Command::Move & mov, Physical & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
-{
-    vec::VECTOR2 m;
-    if (!mov.gnd)
-    {
-        if (mov.dir != vec::Zero())
-        {
-            vec::VECTOR2 dir = vec::norm(mov.dir);
-            m = dir * mov.str * freefall_move_strength;
-            m = phy.impulse(m);
-        }
-    }
-    else
-    {
-        vec::VECTOR2 dir = vec::norm(mov.dir);
-        m = dir * mov.str * move_strength;
-        m = phy.impulse(m);
-    }
-
-    if (vec::mag(phy.vel + m) > move_velocity_max)
-    {
-        m = vec::Zero();
-    }
-    phy.vel += m;
 }
 
 void physics::UpdateMotion(Physical & phy, sf::Time elapsed, uint32_t is_collided, PhysicsConfig & pc, sf::Time & accumulator)
@@ -564,7 +498,18 @@ physics::Intersection::Intersection()
 vec::VECTOR2 physics::rotVector(float angle)
 {
     float a = DEG_TO_RAD(angle);
-    vec::VECTOR2 v(0, 1);
+    vec::VECTOR2 v(0.f, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+vec::VECTOR2 rotVector(float angle, vec::VECTOR2 v)
+{
+    float a = DEG_TO_RAD(angle);
     float m = vec::mag(v);
     v.x = m * cos(a);
     v.y = m * sin(a);
@@ -575,8 +520,8 @@ vec::VECTOR2 physics::rotVector(float angle)
 
 vec::VECTOR2 physics::upVector(float angle)
 {
-    float a = DEG_TO_RAD(angle - 90);
-    vec::VECTOR2 v(0, 1);
+    float a = DEG_TO_RAD(angle - 90.f);
+    vec::VECTOR2 v(0, 1.f);
     float m = vec::mag(v);
     v.x = m * cos(a);
     v.y = m * sin(a);
@@ -588,8 +533,8 @@ vec::VECTOR2 physics::upVector(float angle)
 vec::VECTOR2 physics::leftVector(float angle)
 {
     //float a = DEG_TO_RAD(angle - 180 - LEFTUP);
-    float a = DEG_TO_RAD(angle - 180);
-    vec::VECTOR2 v(0, 1);
+    float a = DEG_TO_RAD(angle - 180.f);
+    vec::VECTOR2 v(0.f, 1.f);
     float m = vec::mag(v);
     v.x = m * cos(a);
     v.y = m * sin(a);
@@ -600,8 +545,8 @@ vec::VECTOR2 physics::leftVector(float angle)
 
 vec::VECTOR2 physics::downVector(float angle)
 {
-    float a = DEG_TO_RAD(angle - 270);
-    vec::VECTOR2 v(0, 1);
+    float a = DEG_TO_RAD(angle - 270.f);
+    vec::VECTOR2 v(0.f, 1.f);
     float m = vec::mag(v);
     v.x = m * cos(a);
     v.y = m * sin(a);
@@ -613,8 +558,8 @@ vec::VECTOR2 physics::downVector(float angle)
 vec::VECTOR2 physics::rightVector(float angle)
 {
     //float a = DEG_TO_RAD(angle - 360 + LEFTUP);
-    float a = DEG_TO_RAD(angle - 360);
-    vec::VECTOR2 v(0, 1);
+    float a = DEG_TO_RAD(angle - 360.f);
+    vec::VECTOR2 v(0.f, 1.f);
     float m = vec::mag(v);
     v.x = m * cos(a);
     v.y = m * sin(a);
@@ -629,7 +574,7 @@ double getTimestamp()
     GetSystemTimePreciseAsFileTime(&t);
     //uint64_t timestamp = ((t.dwHighDateTime << 32) | t.dwLowDateTime) / 10000000.0f;
     uint64_t timestamp = ((uint64_t)t.dwHighDateTime << 32) | (uint64_t)t.dwLowDateTime;
-    timestamp = (uint64_t)((double)timestamp / 10000.0);
+    timestamp = (uint64_t)((double)timestamp / 10000.0f);
     //std::cout << timestamp << std::endl;
     return timestamp;
 }
@@ -731,6 +676,88 @@ void physics::SubmitModifyGravity(Physical & ph, float str, vec::VECTOR2 dir)
     newCmd.grv.dir = dir;
 
     ph.cmdQ.push(newCmd);
+}
+
+void physics::ApplyDrag(Physical & phy, bool is_collided, float drag_coefficient)
+{
+    if (!is_collided)
+    {
+        vec::VECTOR2 lv = leftVector(phy.angle);
+        vec::VECTOR2 uv = upVector(phy.angle);
+        vec::VECTOR2 dv = downVector(phy.angle);
+        vec::VECTOR2 velnorm = vec::norm(phy.vel);
+        float upStrength = vec::dot(uv, velnorm);
+        float downStrength = vec::dot(dv, velnorm);
+
+        //
+        // Apply drag when in the air, and falling.
+        // And, only apply to the lateral component 
+        // of the velocity.
+        //
+        if (downStrength > upStrength)
+        {
+            vec::VECTOR2 drag = drag_coefficient * phy.vel;
+            vec::VECTOR2 draglateral = vec::dot(drag, lv)* lv;
+            phy.vel -= draglateral;
+        }
+    }
+}
+
+void physics::ApplyJump(Command::Jump & j, Physical & phy, float jump_strength, float jump_velocity_max)
+{
+    vec::VECTOR2 u;
+    vec::VECTOR2 up = upVector(phy.angle) * 0.90f;
+    if (j.dir != vec::Zero())
+    {
+        if (vec::dot(j.dir, downVector(phy.angle)) < 0.01f)
+        {
+            u = vec::norm(j.dir + up)  * j.str * jump_strength;
+            u = phy.impulse(u);
+            if (vec::mag(phy.vel + u) > jump_velocity_max)
+            {
+                u = vec::Zero();
+            }
+            phy.vel += u;
+        }
+    }
+}
+
+void physics::ApplyCharge(Command::Charge & chg, Physical & phy, float charge_strength, float charge_velocity_max)
+{
+    vec::VECTOR2 dir = vec::norm(chg.dir);
+    vec::VECTOR2 m = dir * chg.str * charge_strength;
+    m = phy.impulse(m);
+    if (vec::mag(phy.vel + m) > charge_velocity_max)
+    {
+        m = vec::Zero();
+    }
+    phy.vel += m;
+}
+
+void physics::ApplyMove(Command::Move & mov, Physical & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
+{
+    vec::VECTOR2 m;
+    if (!mov.gnd)
+    {
+        if (mov.dir != vec::Zero())
+        {
+            vec::VECTOR2 dir = vec::norm(mov.dir);
+            m = dir * mov.str * freefall_move_strength;
+            m = phy.impulse(m);
+        }
+    }
+    else
+    {
+        vec::VECTOR2 dir = vec::norm(mov.dir);
+        m = dir * mov.str * move_strength;
+        m = phy.impulse(m);
+    }
+
+    if (vec::mag(phy.vel + m) > move_velocity_max)
+    {
+        m = vec::Zero();
+    }
+    phy.vel += m;
 }
 
 bool physics::getNextCommand(Physical & ph, Command & c)

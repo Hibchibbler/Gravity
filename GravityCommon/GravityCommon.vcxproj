@@ -144,6 +144,7 @@
     <ClInclude Include="Command.h" />
     <ClInclude Include="ConfigLoader.h" />
     <ClInclude Include="Context.h" />
+    <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="Level.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="Builders.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
+    <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MouseKeyboard.cpp" />

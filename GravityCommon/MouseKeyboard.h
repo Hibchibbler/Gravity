@@ -105,8 +105,10 @@ public:
                          );
 
     void updateKeypress(Keypress & glank);
-    void update(sf::Time elapsed);
 
+    void Initialize();
+    void Update(sf::Time elapsed);
+    void Cleanup();
     void* ud;
 
     void MouseKeyboard::updateElapsed(Keypress & kp, sf::Time elapsed);

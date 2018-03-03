@@ -1,3 +1,7 @@
+///////////////////////////////////////////////////////////////////////////////
+// Daniel J Ferguson
+// 2017
+///////////////////////////////////////////////////////////////////////////////
 #ifndef Level_H_
 #define Level_H_
 
@@ -55,13 +59,13 @@ public:
     qt::QuadTree::Vec           searchLayers;
     QuadArray::Vec              quadLayers;       // Full time
     QuadArray                   visibleQuads;
-    CONVEXSHAPE::Vec            glowPolygons;
+    CONVEXSHAPES            	glowPolygons;
     Tile::VecVec                tileLayers;       // All the ones with a gid
-    CONVEXSHAPE::Vec            polygons;         // All of them
-    CONVEXSHAPE::Vec            polygonsVisible;  // Updated each iteration
+    CONVEXSHAPES            	polygons;         // All of them
+    CONVEXSHAPES            	polygonsVisible;  // Updated each iteration
     Segment::Vec                sharedEdges;      // 
-    CONVEXSHAPE::Vec            playerPolygons;   // For Rendering (transformed SFML style)
-    CONVEXSHAPE::Vec            playerCollisionPolygons;  // For collision (transformed Gravity Style)
+    CONVEXSHAPES            	playerPolygons;   // For Rendering (transformed SFML style)
+    CONVEXSHAPE            	playerCollisionPolygon;  // For collision (transformed Gravity Style)
     sf::Shader                  shader;
     sf::VertexArray             lineSegments;
     bali::tilemap::TileMap      playerAniTileMap;

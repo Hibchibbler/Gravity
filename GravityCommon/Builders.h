@@ -9,6 +9,7 @@
 #include "tmxloader\TMX.h"
 #include "quadtree\quadtree.h"
 #include "Polygons.h"
+#include "PhysicalObject.h"
 #include <stdint.h>
 
 namespace bali
@@ -27,10 +28,10 @@ qt::AABB getSearchRegion(vec::VECTOR2 center, vec::VECTOR2 size, float zoom = 1.
 uint32_t buildTileLayer(Tile::Vec & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer);
 uint32_t buildTileLayers(Tile::VecVec & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layer);
 uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint32_t tileWidth, uint32_t tileHeight);
-uint32_t buildPolygonLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Ptr & objectGroups);
-uint32_t buildPlayerObjectLayers(CONVEXSHAPE::Vec & polygons, TMX::Objectgroup::Vec & objectGroups);
+uint32_t buildPolygonLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Ptr & objectGroups);
+uint32_t buildPlayerObjectLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Vec & objectGroups);
 uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXSHAPE> polygons);
-uint32_t buildPlayerCollisionPolygon(vec::VECTOR2 pos, float angle, CONVEXSHAPE::Vec & pp, CONVEXSHAPE::Vec & pcp);
+uint32_t buildPlayerTransformedPolygon(Physical & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp);
 }
 
 #endif

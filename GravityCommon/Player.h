@@ -44,7 +44,6 @@ public:
         isCollided = isCollidedLast = false;
         jumpNormal = vec::Zero();
         latNormal = vec::Zero();
-        moving = 0;
         state = State::IDLERIGHT;
         isMovingRight = isMovingLeft = isJumping = isCharging = false;
         applyGravity = true;
@@ -62,7 +61,6 @@ public:
 
     sf::Time accumulator;
 
-    uint32_t moving;
     bool isMovingRight;
     bool isMovingLeft;
     bool isJumping;

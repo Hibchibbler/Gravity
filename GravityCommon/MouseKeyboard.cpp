@@ -14,20 +14,29 @@ Keypress & MouseKeyboard::getKeypress(sf::Keyboard::Key k)
 {
     return keyStates[k];
 }
-void MouseKeyboard::update(sf::Time elapsed)
+void MouseKeyboard::Initialize()
+{
+
+}
+void MouseKeyboard::Cleanup()
+{
+
+}
+void MouseKeyboard::Update(sf::Time elapsed)
 {
     this->totalTime += elapsed;
     this->clock += elapsed;
+
+    // We want to update elapsed regardless whether we
+    // poll input or not.
     for (auto i = keyStates.begin(); i != keyStates.end(); i++)
     {
         updateElapsed(i->second, elapsed);
     }
 
     if (this->totalTime.asMilliseconds() > 40.f)
-    {   // std::cout << totalTime.asMilliseconds() << " ";
+    {
         this->totalTime = sf::Time::Zero;
-        //std::cout << elapsed.asSeconds() << std::endl;
-
         for (auto i = keyStates.begin(); i != keyStates.end(); i++)
         {
             updateKeypress(i->second);
@@ -105,7 +114,7 @@ void MouseKeyboard::updateKeypress(Keypress & kp)
         if (!kp.exp)
         {
             // We do not want to call release, if we already expired
-            kp.tor = clock;
+            kp.tor = clock;// Time of Release
             kp.elp = sf::Time::Zero;
             kp.exp = false;
             kp.released(kp, ud);
@@ -116,7 +125,11 @@ void MouseKeyboard::updateKeypress(Keypress & kp)
         // Pressed
         kp.elp = sf::Time::Zero;
         kp.exp = false;
-        if (kp.dblpressed != nullptr && (clock - kp.tor).asMilliseconds() < 180)
+
+        // If dblpressed available, and it has been less 180 ms since
+        // this key was last released, then we have a double press.
+        if (kp.dblpressed != nullptr && 
+            (clock - kp.tor).asMilliseconds() < 180)
         {
             kp.dblpressed(kp, ud);
         }

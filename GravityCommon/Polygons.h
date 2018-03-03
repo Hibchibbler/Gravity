@@ -6,12 +6,10 @@
 #include "Vector2.h"
 namespace bali
 {
-//typedef sf::ConvexShape CONVEXSHAPE;
-class CONVEXSHAPE : public sf::ConvexShape
-{
-public:
-    typedef std::vector<CONVEXSHAPE> Vec;
-};
+typedef sf::ConvexShape CONVEXSHAPE;
+typedef std::vector<CONVEXSHAPE> CONVEXSHAPES;
+
+CONVEXSHAPE GetTransformedShape(CONVEXSHAPE & shape);
 
 class QuadArray : public sf::VertexArray
 {
