@@ -77,7 +77,7 @@ typedef void(*OnNonCollisionEvent) (Context::Ptr context);
 
 
 bool CollisionResponse(
-    Physical & phy,
+    RigidBody & phy,
     vec::VECTOR2 collision_normal,
     float overlap,
     PhysicsConfig & pc,
@@ -101,7 +101,7 @@ bool ResolveCollisions (
 );
 
 void UpdateMotion (
-    Physical & phy, 
+    RigidBody & phy,
     sf::Time elapsed, 
     uint32_t is_collided,
     PhysicsConfig & pc, 
@@ -114,27 +114,27 @@ vec::VECTOR2 ReflectUnitVector(vec::VECTOR2 d, vec::VECTOR2 n);
 //
 // Enqueue Commands
 //
-void SubmitModifyAcceleration(Physical & ph, vec::VECTOR2 a, uint32_t set);
-void SubmitModifyVelocity(Physical & ph, vec::VECTOR2 v, uint32_t set);
-void SubmitModifyPosition(Physical & ph, vec::VECTOR2 p, uint32_t set);
-void SubmitModifyAngle(Physical & ph, float ta, uint32_t set);
-void SubmitModifyGravity(Physical & ph, float str, vec::VECTOR2 dir);
-void SubmitMove(Physical & ph, float str, vec::VECTOR2 dir, bool grounded);
-void SubmitCharge(Physical & ph, float str, vec::VECTOR2 dir, bool grounded);
-void SubmitJump(Physical & ph, float str, vec::VECTOR2 dir);
+void SubmitModifyAcceleration(RigidBody & ph, vec::VECTOR2 a, uint32_t set);
+void SubmitModifyVelocity(RigidBody & ph, vec::VECTOR2 v, uint32_t set);
+void SubmitModifyPosition(RigidBody & ph, vec::VECTOR2 p, uint32_t set);
+void SubmitModifyAngle(RigidBody & ph, float ta, uint32_t set);
+void SubmitModifyGravity(RigidBody & ph, float str, vec::VECTOR2 dir);
+void SubmitMove(RigidBody & ph, float str, vec::VECTOR2 dir, bool grounded);
+void SubmitCharge(RigidBody & ph, float str, vec::VECTOR2 dir, bool grounded);
+void SubmitJump(RigidBody & ph, float str, vec::VECTOR2 dir);
 
 //
 // Dequeue Commands
 //
-bool getNextCommand(Physical & ph, Command & c);
+bool getNextCommand(RigidBody & ph, Command & c);
 
 //
 // Apply commands
 //
-void ApplyMove(Command::Move & mov, Physical & phy, float move_strength, float freefall_move_strength, float move_velocity_max);
-void ApplyCharge(Command::Charge & chg, Physical & phy, float charge_strength, float charge_velocity_max);
-void ApplyJump(Command::Jump & j, Physical & phy, float jump_strength, float jump_velocity_max);
-void ApplyDrag(Physical & phy, bool is_collided, float drag_coefficient);
+void ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max);
+void ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max);
+void ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max);
+void ApplyDrag(RigidBody & phy, bool is_collided, float drag_coefficient);
 
 //
 // Save Commands to File

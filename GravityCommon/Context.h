@@ -34,7 +34,7 @@ public:
     MouseKeyboard               mouseKeyboard;
     PhysicsConfig               physicsConfig;
     KeyboardConfig              keyboardConfig;
-    entity::EntityManager       entitymanager;
+    EntityManager               entitymanager;
     sf::Time                    currentElapsed;
     float                       mainZoomFactor;
     uint32_t                    frames_since_jump;

@@ -17,7 +17,7 @@ void onNonCollisionHandler(Context::Ptr context)
 
 void onCollisionHandler(Context::Ptr context, vec::VECTOR2 cn)
 {
-    Physical & phys = context->entitymanager.player.physical;
+    RigidBody & phys = context->entitymanager.player.physical;
     Player & player = context->entitymanager.player;
     //
     // If not moving too fast, and

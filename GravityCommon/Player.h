@@ -6,7 +6,7 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include "PhysicalObject.h"
+#include "RigidBody.h"
 #include "Animation.h"
 
 namespace bali
@@ -75,7 +75,7 @@ public:
 
     uint32_t doubleJumpCnt;
     bool isMoving();
-    Physical physical;
+    RigidBody physical;
 
 private:
 

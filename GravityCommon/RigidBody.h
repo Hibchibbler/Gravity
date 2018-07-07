@@ -2,8 +2,8 @@
 // Daniel J Ferguson
 // 2017
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef PHYSICAL_OBJECT_H_
-#define PHYSICAL_OBJECT_H_
+#ifndef RigidBody_H_
+#define RigidBody_H_
 
 #include <stdint.h>
 #include <queue>
@@ -13,10 +13,10 @@
 
 namespace bali {
 
-class Physical
+class RigidBody
 {
 public:
-    Physical()
+    RigidBody()
     {
         mass = 1.0;
         angle = 0.0f;

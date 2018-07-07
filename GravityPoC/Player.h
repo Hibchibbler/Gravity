@@ -1,10 +1,10 @@
 #pragma once
 
-#include "PhysicalObject.h"
+#include "RigidBody.h"
 
 namespace bali
 {
-    class Player : public PhysicalObject
+    class Player : public RigidBody
     {
     public:
         //std::list<Impulse> impulses;
@@ -12,7 +12,7 @@ namespace bali
 
 
         Player()
-            : PhysicalObject(),
+            : RigidBody(),
             edgeContact(0,0),
               accumulator()
         {

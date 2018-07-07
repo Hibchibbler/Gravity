@@ -506,7 +506,7 @@ uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXS
     return 0;
 }
 
-uint32_t buildPlayerTransformedPolygon(Physical & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp)
+uint32_t buildPlayerTransformedPolygon(RigidBody & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp)
 {
     pp[0].setOrigin(8, 16);
     pp[0].setPosition(phy.pos);

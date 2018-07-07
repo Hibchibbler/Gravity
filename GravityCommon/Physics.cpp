@@ -266,7 +266,7 @@ bool physics::GetMinimumTranslationVector(
 }
 
 bool physics::CollisionResponse (
-    Physical & phy,
+    RigidBody & phy,
     vec::VECTOR2 collision_normal,
     float overlap,
     PhysicsConfig & pc,
@@ -322,7 +322,7 @@ bool physics::CollisionResponse (
 bool physics::ResolveCollisions(Context::Ptr context, bali::CONVEXSHAPES & shapes, bali::CONVEXSHAPE & playerShape, std::vector<Segment> & sharedEdges, OnCollisionEvent onCollision, OnNonCollisionEvent onNonCollision)
 {
     Player & player = context->entitymanager.player;
-    Physical & phys = player.physical;
+    RigidBody & phys = player.physical;
     bool collision = false;
     player.isCollidedLast = player.isCollided;
     player.isCollided = false;
@@ -370,7 +370,7 @@ bool physics::ResolveCollisions(Context::Ptr context, bali::CONVEXSHAPES & shape
     return false;
 }
 
-void physics::UpdateMotion(Physical & phy, sf::Time elapsed, uint32_t is_collided, PhysicsConfig & pc, sf::Time & accumulator)
+void physics::UpdateMotion(RigidBody & phy, sf::Time elapsed, uint32_t is_collided, PhysicsConfig & pc, sf::Time & accumulator)
 /*
     The main idea here is we increment the physics at fixed time deltas.
     Mostly, we should only be performing 1 fixed delta per update.
@@ -579,7 +579,7 @@ double getTimestamp()
     return timestamp;
 }
 
-void physics::SubmitModifyAcceleration(Physical & ph, vec::VECTOR2 a, uint32_t set)
+void physics::SubmitModifyAcceleration(RigidBody & ph, vec::VECTOR2 a, uint32_t set)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -591,7 +591,7 @@ void physics::SubmitModifyAcceleration(Physical & ph, vec::VECTOR2 a, uint32_t s
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitModifyVelocity(Physical & ph, vec::VECTOR2 v, uint32_t set)
+void physics::SubmitModifyVelocity(RigidBody & ph, vec::VECTOR2 v, uint32_t set)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -603,7 +603,7 @@ void physics::SubmitModifyVelocity(Physical & ph, vec::VECTOR2 v, uint32_t set)
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitModifyPosition(Physical & ph, vec::VECTOR2 p, uint32_t set)
+void physics::SubmitModifyPosition(RigidBody & ph, vec::VECTOR2 p, uint32_t set)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -615,7 +615,7 @@ void physics::SubmitModifyPosition(Physical & ph, vec::VECTOR2 p, uint32_t set)
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitModifyAngle(Physical & ph, float ta, uint32_t set)
+void physics::SubmitModifyAngle(RigidBody & ph, float ta, uint32_t set)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -627,7 +627,7 @@ void physics::SubmitModifyAngle(Physical & ph, float ta, uint32_t set)
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitMove(Physical & ph, float str, vec::VECTOR2 dir, bool grounded)
+void physics::SubmitMove(RigidBody & ph, float str, vec::VECTOR2 dir, bool grounded)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -640,7 +640,7 @@ void physics::SubmitMove(Physical & ph, float str, vec::VECTOR2 dir, bool ground
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitCharge(Physical & ph, float str, vec::VECTOR2 dir, bool grounded)
+void physics::SubmitCharge(RigidBody & ph, float str, vec::VECTOR2 dir, bool grounded)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -653,7 +653,7 @@ void physics::SubmitCharge(Physical & ph, float str, vec::VECTOR2 dir, bool grou
     ph.cmdQ.push(newCmd);
 }
 
-void physics::SubmitJump(Physical & ph, float str, vec::VECTOR2 dir)
+void physics::SubmitJump(RigidBody & ph, float str, vec::VECTOR2 dir)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -666,7 +666,7 @@ void physics::SubmitJump(Physical & ph, float str, vec::VECTOR2 dir)
 }
 
 
-void physics::SubmitModifyGravity(Physical & ph, float str, vec::VECTOR2 dir)
+void physics::SubmitModifyGravity(RigidBody & ph, float str, vec::VECTOR2 dir)
 {
     Command newCmd;
     newCmd.timestamp = getTimestamp();
@@ -678,7 +678,7 @@ void physics::SubmitModifyGravity(Physical & ph, float str, vec::VECTOR2 dir)
     ph.cmdQ.push(newCmd);
 }
 
-void physics::ApplyDrag(Physical & phy, bool is_collided, float drag_coefficient)
+void physics::ApplyDrag(RigidBody & phy, bool is_collided, float drag_coefficient)
 {
     if (!is_collided)
     {
@@ -703,7 +703,7 @@ void physics::ApplyDrag(Physical & phy, bool is_collided, float drag_coefficient
     }
 }
 
-void physics::ApplyJump(Command::Jump & j, Physical & phy, float jump_strength, float jump_velocity_max)
+void physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
 {
     vec::VECTOR2 u;
     vec::VECTOR2 up = upVector(phy.angle) * 0.90f;
@@ -722,7 +722,7 @@ void physics::ApplyJump(Command::Jump & j, Physical & phy, float jump_strength, 
     }
 }
 
-void physics::ApplyCharge(Command::Charge & chg, Physical & phy, float charge_strength, float charge_velocity_max)
+void physics::ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max)
 {
     vec::VECTOR2 dir = vec::norm(chg.dir);
     vec::VECTOR2 m = dir * chg.str * charge_strength;
@@ -734,7 +734,7 @@ void physics::ApplyCharge(Command::Charge & chg, Physical & phy, float charge_st
     phy.vel += m;
 }
 
-void physics::ApplyMove(Command::Move & mov, Physical & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
+void physics::ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
 {
     vec::VECTOR2 m;
     if (!mov.gnd)
@@ -760,7 +760,7 @@ void physics::ApplyMove(Command::Move & mov, Physical & phy, float move_strength
     phy.vel += m;
 }
 
-bool physics::getNextCommand(Physical & ph, Command & c)
+bool physics::getNextCommand(RigidBody & ph, Command & c)
 {
     bool status = false;
     if (!ph.cmdQ.empty())

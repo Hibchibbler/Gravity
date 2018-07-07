@@ -20,7 +20,7 @@ void KeyPressedHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
     Player & player = ctx->entitymanager.player;
-    Physical & phys = player.physical;
+    RigidBody & phys = player.physical;
 
     if (kp.cc == ctx->keyboardConfig.JUMP_KEY)
     {
@@ -84,7 +84,7 @@ void KeyPressedHandler(Keypress & kp, void* ud)
 void KeyDblPressedHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
-    Physical & phys = ctx->entitymanager.player.physical;
+    RigidBody & phys = ctx->entitymanager.player.physical;
     Player & player = ctx->entitymanager.player;
 
     if (kp.cc == ctx->keyboardConfig.RIGHT_KEY)
@@ -101,7 +101,7 @@ void KeyDblPressedHandler(Keypress & kp, void* ud)
 void KeyHeldHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
-    Physical & phys = ctx->entitymanager.player.physical;
+    RigidBody & phys = ctx->entitymanager.player.physical;
     Player & player = ctx->entitymanager.player;
 
     if (kp.cc == ctx->keyboardConfig.ATTACK_KEY)
@@ -216,7 +216,7 @@ void KeyHeldHandler(Keypress & kp, void* ud)
 void KeyReleasedHandler(Keypress & kp, void* ud)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)ud;
-    Physical & phys = ctx->entitymanager.player.physical;
+    RigidBody & phys = ctx->entitymanager.player.physical;
     Player & player = ctx->entitymanager.player;
 
     if (kp.cc == ctx->keyboardConfig.JUMP_KEY)

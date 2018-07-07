@@ -406,8 +406,6 @@ namespace bali {
                 hexsidelength   = 0;
                 nextobjectid    = 0;
             }
-            Layer::Ptr getLayer() { return layers.back(); }
-            Layer::Ptr getLayer(int i) { return layers[i]; }
 
             TMX::Objectgroup::Ptr getObjectGroup(std::string name)
             {

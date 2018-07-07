@@ -33,7 +33,7 @@ uint32_t StageMainClient::initialize(Context::Ptr context)
 {
     GameClientContext::Ptr ctx = (GameClientContext::Ptr)context;
     Player & p = context->entitymanager.player;
-    Physical & phys = p.physical;
+    RigidBody & phys = p.physical;
 
     //
     // Load Configuration files for tweakable settings.

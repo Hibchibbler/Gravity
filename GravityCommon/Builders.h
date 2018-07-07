@@ -9,7 +9,7 @@
 #include "tmxloader\TMX.h"
 #include "quadtree\quadtree.h"
 #include "Polygons.h"
-#include "PhysicalObject.h"
+#include "RigidBody.h"
 #include <stdint.h>
 
 namespace bali
@@ -31,7 +31,7 @@ uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint
 uint32_t buildPolygonLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Ptr & objectGroups);
 uint32_t buildPlayerObjectLayers(CONVEXSHAPES & polygons, TMX::Objectgroup::Vec & objectGroups);
 uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, std::vector<CONVEXSHAPE> polygons);
-uint32_t buildPlayerTransformedPolygon(Physical & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp);
+uint32_t buildPlayerTransformedPolygon(RigidBody & phy, CONVEXSHAPES & pp, CONVEXSHAPES & pcp);
 }
 
 #endif
