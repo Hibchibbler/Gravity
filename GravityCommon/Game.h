@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2018
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef Game_h_
@@ -15,29 +15,26 @@ namespace bali
     class Game
     {
     public:
-        Game(Context::Ptr c);
+        Game(std::unique_ptr<Context> c);
         virtual uint32_t  initialize();
         virtual uint32_t  doProcessing();
         virtual uint32_t  cleanup();
     public:
-        Context::Ptr getContext();
-        bool        isInitialized();
+        Context* getContext();
         bool        isDone();
     protected:
-        Context::Ptr context;
+        std::unique_ptr<Context> context;
     private:
         bool        mIsDone;
         bool        mIsInit;
         uint32_t    mCurStageIndex;
         uint32_t    getCurrentStageIndex();
-        Stage::ShPtr  getCurrentStage();
+        Stage*      getCurrentStage();
         bool        nextStage();
-        void        initialized();
         void        done();
-    private:
-        std::vector<Stage::ShPtr> gameStages;
-    public:
-        void        addStage(Stage::ShPtr stage);
+    protected:
+        std::vector<std::unique_ptr<Stage>> gameStages;
+
     };
 }
 

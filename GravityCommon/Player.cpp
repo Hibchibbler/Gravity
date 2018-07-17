@@ -1,7 +1,6 @@
 #include "GravityCommon/Builders.h"
 #include "Player.h"
 #include "Physics.h"
-#include "Level.h"
 #include <iostream>
 
 namespace bali
@@ -12,9 +11,6 @@ void Player::initialize()
 
 }
 
-void Player::updatePolygon(Level* l)
-{
-}
 
 void Player::cleanup()
 {

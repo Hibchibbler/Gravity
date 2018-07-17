@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
-#include "TMXLoader/TextureAtlasLoader.h"
+#include "XMLLoaders/TextureAtlasLoader.h"
 #include "Vector2.h"
 
 

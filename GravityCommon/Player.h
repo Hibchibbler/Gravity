@@ -11,7 +11,7 @@
 
 namespace bali
 {
-class Level;
+
 class Player
 {
 public:
@@ -51,7 +51,7 @@ public:
     }
 
     void initialize();
-    void updatePolygon(Level* l);
+
     uint32_t updateState();
     void cleanup();
 

@@ -5,7 +5,7 @@
 
 #include "StageMainClient.h"
 #include <math.h>
-#include "TMXloader/TMXReader.h"
+#include "XMLLoaders/TMXReader.h"
 #include "SATAlgo/SATAlgo.h"
 #include "GravityCommon/Physics.h"
 #include "GravityCommon/ConfigLoader.h"

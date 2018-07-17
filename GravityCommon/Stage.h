@@ -13,30 +13,28 @@
 
 namespace bali
 {
-    //class Game;
+//class Game;
 
-    class Stage
-    {
-    public:
-        typedef std::shared_ptr<Stage> ShPtr;
-    public:
-        Stage();
+class Stage
+{
 
-        virtual ~Stage();
-        virtual uint32_t initialize(Context::Ptr c) = 0;
-        virtual uint32_t doWindowEvent(Context::Ptr c, sf::Event & event) = 0;
-        virtual uint32_t doUpdate(Context::Ptr c) = 0;
-        virtual uint32_t doDraw(Context::Ptr c) = 0;
-        virtual uint32_t cleanup(Context::Ptr c) = 0;
-    public:
-        bool isInitialized() { return mIsInit; }
-        bool isDone() { return mIsDone; }
-    protected:
-        void initialized() { mIsInit = true; }
-        void done() { mIsDone = true; }
-        bool mIsDone;
-        bool mIsInit;
-    };
+public:
+    typedef Stage* Ptr;
+    Stage(Context::Ptr context);
+
+    virtual ~Stage();
+    virtual uint32_t initialize() = 0;
+    virtual uint32_t doWindowEvent(sf::Event & event) = 0;
+    virtual uint32_t doUpdate() = 0;
+    virtual uint32_t doDraw() = 0;
+    virtual uint32_t cleanup() = 0;
+public:
+    bool isDone() { return mIsDone; }
+protected:
+    void done() { mIsDone = true; }
+    bool mIsDone;
+    Context* context;
+};
 
 };
 

@@ -2,11 +2,11 @@
 #define Entity_h_
 
 #include <stdint.h>
-#include "Physical.h"
-#include "Collider.h"
-#include "EntityIntent.h"
-#include "EntityState.h"
-#include "Renderable.h"
+#include "RigidBody.h"
+//#include "Collider.h"
+//#include "EntityIntent.h"
+//#include "EntityState.h"
+#include "Geometry.h"
 
 namespace bali
 {
@@ -14,20 +14,20 @@ namespace bali
 class Entity
 {
 public:
-    enum class EntityType {
+    enum class Type {
         PLAYER,
         CONSUMABLE,
         MONSTER
     };
 
-    EntityType          type;
+    Type                type;
     uint32_t            id;
 
-    Physical            physical;
-    Collider            collider;
-    EntityIntent        intent;
-    EntityState         state;
-    Renderable          geometry;
+    Shape               shape;
+    RigidBody           body; // This is a template value
+                              // We load these values as defaults
+
+    //Collider            collider;
 
     //sf::Time            stepaccum;
     //AnimationManager    animan;

@@ -7,14 +7,14 @@
 #define GameClientContext_h_
 
 #include "GravityCommon/Context.h"
-#include "TMXLoader/TMX.h"
+#include "XMLLoaders/TMX.h"
 #include "QuadTree/quadtree.h"
 #include "SATAlgo/SATAlgo.h"
 #include "GravityCommon/ConfigLoader.h"
 #include "GravityCommon/Player.h"
 #include "GravityCommon/MouseKeyboard.h"
 #include "GravityCommon/Level.h"
-#include "TMXLoader/TextureAtlasLoader.h"
+#include "XMLLoaders/TextureAtlasLoader.h"
 #include "Hud.h"
 
 namespace bali 
@@ -30,8 +30,6 @@ namespace bali
 class GameClientContext : public Context
 {
 public:
-    typedef GameClientContext*  Ptr;
-
     //TMX::Map::Ptr               map;
 
     sf::RenderTexture           renderTexture;
@@ -53,8 +51,8 @@ public:
     bool                        RightMousButtonPressed;
     bool                        LeftMousButtonPressed;
 
-    Level                       level;
-    Hud                         hud;
+    //Level                       level;
+    //Hud                         hud;
 };
 
 

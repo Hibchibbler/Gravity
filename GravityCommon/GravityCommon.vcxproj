@@ -151,6 +151,7 @@
     <ClInclude Include="EntityState.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="MouseKeyboard.h" />
     <ClInclude Include="RigidBody.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Polygons.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="Stage.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +169,7 @@
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="RigidBody.cpp" />

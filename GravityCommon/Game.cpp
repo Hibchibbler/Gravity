@@ -8,67 +8,86 @@
 
 namespace bali
 {
-    Game::Game(Context::Ptr c)
+    Game::Game(std::unique_ptr<Context> c)
+        : context(std::move(c))
     {
         mIsDone = false;
         mCurStageIndex = 0;
-        context = c;
     }
 
-    Context::Ptr Game::getContext()
+    Context* Game::getContext()
     {
-        return context;
+        return context.get();
     }
 
     uint32_t Game::initialize()
     {
-        Context* ctx = (Context*)context;
-        initialized();
+        mIsDone = false; 
+        mCurStageIndex = 0;
+        getCurrentStage()->initialize();
+        std::cout << "Game - doProcessing(); Stage #" << getCurrentStageIndex() << " is initialized" << std::endl;
         return 0;
     }
 
     uint32_t Game::doProcessing()
     {
-        Context* ctx = context;
         // Is the current stage done?
         if (getCurrentStage()->isDone())
         {// Yes
-            std::cout << "GameClient - doProcessing(); Stage #" << getCurrentStageIndex() << " is done." << std::endl;
-            getCurrentStage()->cleanup(ctx);
-            nextStage();
+            std::cout << "Game - doProcessing(); Stage #" << getCurrentStageIndex() << " is done." << std::endl;
+            getCurrentStage()->cleanup();
+            if (nextStage())
+            {
+                getCurrentStage()->initialize();
+                std::cout << "Game - doProcessing(); Stage #" << getCurrentStageIndex() << " is initialized" << std::endl;
+            }
         }
         else
         {// No
-         // Initialize gameStage if it has not already been initialized.
-            if (!getCurrentStage()->isInitialized())
-            {
-                getCurrentStage()->initialize(ctx);
-                std::cout << "GameClient - doProcessing(); Stage #" << getCurrentStageIndex() << " is initialized" << std::endl;
-            }
-
             // Process window events, if there are any.
             sf::Event wevent;
-            while (ctx->gameWindow.window.pollEvent(wevent))
+            while (context->gameWindow.window.pollEvent(wevent))
             {
-                getCurrentStage()->doWindowEvent(ctx, wevent);
-                if (wevent.type == sf::Event::Resized)
+                getCurrentStage()->doWindowEvent(wevent);
+                switch (wevent.type)
                 {
-                    ctx->gameWindow.screenWidth = wevent.size.width;
-                    ctx->gameWindow.screenHeight = wevent.size.height;
-                    std::cout << "GameClient - Window Resized; " << ctx->gameWindow.screenWidth << ", " << ctx->gameWindow.screenHeight << std::endl;
+                case sf::Event::Resized:
+                {
+                    context->gameWindow.screenWidth = wevent.size.width;
+                    context->gameWindow.screenHeight = wevent.size.height;
+
+                    // update the view to the new size of the window
+                    sf::FloatRect visibleArea(0, 0, wevent.size.width, wevent.size.height);
+                    context->gameWindow.window.setView(sf::View(visibleArea));
+                    std::cout << "Game - Window Resized; " << context->gameWindow.screenWidth << ", " << context->gameWindow.screenHeight << std::endl;
+                    break;
                 }
-                else if (wevent.type == sf::Event::Closed)
+                case sf::Event::Closed:
                 {
-                    ctx->gameWindow.window.close();
-                    std::cout << "GameClient - Window Closed " << std::endl;
+                    context->gameWindow.window.close();
+                    std::cout << "Game - Window Closed " << std::endl;
                     done();
                     return 0;
+                    break;
+                }
+                case sf::Event::LostFocus:
+                    context->lostfocus = true;
+                    break;
+                case sf::Event::GainedFocus:
+                    context->lostfocus = false;
+                    break;
+                case sf::Event::MouseWheelScrolled: {
+                    context->mainZoomFactor += wevent.mouseWheelScroll.delta / 5.0f;
+                    std::cout << "ZF " << context->mainZoomFactor << " ";
+                    break;
+                }
                 }
             }
 
             // Update and Draw game frame
-            getCurrentStage()->doUpdate(ctx);
-            getCurrentStage()->doDraw(ctx);
+            context->frametime = context->clock.restart();
+            getCurrentStage()->doUpdate();
+            getCurrentStage()->doDraw();
         }
 
         return 0;
@@ -76,7 +95,6 @@ namespace bali
 
     uint32_t Game::cleanup()
     {
-        Context* ctx = context;
         mCurStageIndex = 0;
         gameStages.clear();
         return 0;
@@ -88,9 +106,9 @@ namespace bali
         return mCurStageIndex; 
     }
 
-    Stage::ShPtr Game::getCurrentStage() 
+    Stage* Game::getCurrentStage() 
     { 
-        return gameStages[mCurStageIndex]; 
+        return gameStages[mCurStageIndex].get(); 
     }
     bool Game::nextStage() 
     {
@@ -103,25 +121,15 @@ namespace bali
         done();
         return false;
     }
-    void Game::initialized() 
-    { 
-        mIsDone = false; mIsInit = false; 
-    }
+
     void Game::done() 
     { 
-        mIsDone = true; std::cout << "GameClient - GameClient is done." << std::endl; 
+        mIsDone = true; 
+        std::cout << "Game - Game is done." << std::endl; 
     }
 
-    bool Game::isInitialized() 
-    { 
-        return mIsInit; 
-    }
     bool Game::isDone() 
     {
         return mIsDone; 
-    }
-    void Game::addStage(Stage::ShPtr stage) 
-    {
-        gameStages.push_back(stage); 
     }
 }

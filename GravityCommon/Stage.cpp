@@ -3,10 +3,10 @@
 namespace bali
 {
 
-    Stage::Stage()
+    Stage::Stage(Context* c)
     {
         mIsDone = false;
-        mIsInit = false;
+        context = c;
     }
     Stage::~Stage()
     {
