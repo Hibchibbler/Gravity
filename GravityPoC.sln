@@ -40,8 +40,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityClient", "GravityCli
 		{1DDF4579-2A4A-4D2E-AFB2-E7257ABDA130} = {1DDF4579-2A4A-4D2E-AFB2-E7257ABDA130}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkTest", "NetworkTest\NetworkTest.vcxproj", "{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLoader", "GameLoader\GameLoader.csproj", "{1BF929CF-73B6-4DB4-8265-7FB331791B1F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XMLLoaders", "XMLLoaders\XMLLoaders.vcxproj", "{E38E509D-1E2E-47B4-A5FE-37F32E22FE7B}"
@@ -49,6 +47,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XMLLoadersTest", "XMLLoadersTest\XMLLoadersTest.vcxproj", "{B2DC3057-AFA5-4E73-9680-BD9FC6AB8EEF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityClient2", "GravityClient2\GravityClient2.vcxproj", "{9AAD578B-780A-4A83-A619-9A23087F9C48}"
+	ProjectSection(ProjectDependencies) = postProject
+		{34F09527-AAB1-4E66-8D90-4390FFB77759} = {34F09527-AAB1-4E66-8D90-4390FFB77759}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -128,14 +129,6 @@ Global
 		{5FFBAE56-BBFE-4648-9519-FD6C596F1354}.Release|x64.Build.0 = Release|x64
 		{5FFBAE56-BBFE-4648-9519-FD6C596F1354}.Release|x86.ActiveCfg = Release|Win32
 		{5FFBAE56-BBFE-4648-9519-FD6C596F1354}.Release|x86.Build.0 = Release|Win32
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Debug|x64.ActiveCfg = Debug|x64
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Debug|x64.Build.0 = Debug|x64
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Debug|x86.ActiveCfg = Debug|Win32
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Debug|x86.Build.0 = Debug|Win32
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x64.ActiveCfg = Release|x64
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x64.Build.0 = Release|x64
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x86.ActiveCfg = Release|Win32
-		{4070EBFA-6BB5-4A4F-8EF0-DBA621C3BE3F}.Release|x86.Build.0 = Release|Win32
 		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x64.Build.0 = Debug|Any CPU
 		{1BF929CF-73B6-4DB4-8265-7FB331791B1F}.Debug|x86.ActiveCfg = Debug|Any CPU

@@ -6,12 +6,12 @@
 namespace bali
 {
 
-    void translateShape(CONVEXSHAPE & shape, vec::VECTOR2 delta)
+    void translateShape(CONVEXSHAPE & shape, sf::Vector2f delta)
     {
         size_t pc = shape.getPointCount();
         for (auto i = 0; i < pc; i++)
         {
-            vec::VECTOR2 pt = shape.getPoint(i) + delta;
+            sf::Vector2f pt = shape.getPoint(i) + delta;
             shape.setPoint(i, pt);
         }
     }

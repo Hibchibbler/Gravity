@@ -138,6 +138,11 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
         c.HARPOON_KEY= std::strtoul(configValues["HARPOON_KEY"].c_str(), NULL, 0);
         c.HARPOON_TIME = std::stoi(configValues["HARPOON_TIME"]);
 
+        c.DOWN_KEY = std::strtoul(configValues["DOWN_KEY"].c_str(), NULL, 0);
+        c.DOWN_TIME = std::stoi(configValues["DOWN_TIME"]);
+        c.UP_KEY = std::strtoul(configValues["UP_KEY"].c_str(), NULL, 0);
+        c.UP_TIME = std::stoi(configValues["UP_TIME"]);
+
     }
     else
     {

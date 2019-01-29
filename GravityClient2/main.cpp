@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "GameClient.h"
-#include "ClientContext.h"
+//#include "ClientContext.h"
 #include <memory>
 
 int main()

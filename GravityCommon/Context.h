@@ -8,14 +8,14 @@
 #include <stdint.h>
 #include "XMLLoaders/TMX.h"
 #include "ConfigLoader.h"
-#include "MouseKeyboard.h"
+//#include "MouseKeyboard.h"
 #include "GameWindow.h"
 #include "QuadTree/QuadTree.h"
-#include "EntityManager.h"
+#include "Camera.h"
 
 #include "Entity.h"
 #include "Texture.h"
-
+#include "Player.h"
 namespace bali 
 {
 
@@ -29,28 +29,38 @@ class Context
 public:
     typedef Context* Ptr;
 
-    enum TargetTexture {
-        FRONT = 0,
-        BACK = 0,
+    enum Locality {
+        LOCAL = 0,
+        REMOTE1,
+        REMOTE2,
+        REMOTE3,
+        REMOTE4
     };
-
+    Camera          camera;
     GameWindow      gameWindow;
-    MouseKeyboard   mouseKeyboard;
-    PhysicsConfig   physicsConfig;
     KeyboardConfig  keyboardConfig;
-    EntityManager   entitymanager;
+    PhysicsConfig   physicsConfig;
+
     TMX::Map::Ptr   map;
     sf::Font        systemfont;
 
-    Vec<Entity>     entities;        // holds the entity prototypes. many rigid body may refer to one entity.
-    Vec<RigidBody>  bodies;          // holds actualized copies if entities
+    Vec<Proto>      protos;        // stores the entity prototypes. entities refer to these prototypes
+                                   // for their default information, and geometry
+    Vec<Entity>     entities;      // stores entities that currently exist.
+    Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
 
-    Vec<Shape>      collisionshapes; // buildShapes
-    Vec<Tile>       backgroundtiles; // buildsf::LineStrip
-    Vec<Tile>       foregroundtiles; // sf::LineStrip
+    Vec<Shape>      collisionshapes;
+    Vec<Tile>       backgroundtiles;
+    Vec<Tile>       foregroundtiles;
+
+    qt::QuadTree::ShPtr    foregroundQuadTree;
+    qt::QuadTree::ShPtr    backgroundQuadTree;
+    qt::QuadTree::ShPtr    collisionQuadTree;
 
     Vec<Vertex>     backgroundvertices; // these are updated each frame
     Vec<Vertex>     foregroundvertices; 
+    Vec<Shape>      collisionshapesvisible;
+    Vec<Shape>      collisionshapesvisibleTemp;
 
     Texture         backgroundtilesettexture;
     Texture         foregroundtilesettexture;
@@ -59,6 +69,7 @@ public:
 
     bool            lostfocus;
     sf::Time        frametime;
+    sf::Time        frameacc;
     float           mainZoomFactor;
     uint32_t        frames_since_jump;
     sf::Clock       clock;

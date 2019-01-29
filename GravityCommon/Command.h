@@ -1,27 +1,18 @@
-#ifndef Command_h_
-#define Command_h_
-#include <stdint.h>
-#include <Windows.h>
-#include "Vector2.h"
+#ifndef Command_H_
+#define Command_H_
+
+#include <SFML\System.hpp>
+#include <vector>
+
 namespace bali
 {
 
-class Timestamp
-{
-public:
-    void start();
-    void end();
-    void update();
-    LARGE_INTEGER getTime();
-
-    LARGE_INTEGER f;
-    LARGE_INTEGER s;
-    LARGE_INTEGER e;
-};
 
 class Command
 {
 public:
+    Command() {}
+    ~Command() {}
     enum Code
     {
         POSITION,
@@ -44,20 +35,20 @@ public:
 
     class Position {
     public:
-        vec::VECTOR2 pos;
+        sf::Vector2f pos;
     };
 
     class Velocity {
     public:
-        vec::VECTOR2 vel;
+        sf::Vector2f vel;
     };
 
     class Acceleration {
     public:
-        vec::VECTOR2 accel;
+        sf::Vector2f accel;
     };
 
-    class Angle{
+    class Angle {
     public:
         float angle;
     };
@@ -66,13 +57,13 @@ public:
     public:
         float        str;
         bool         gnd;
-        vec::VECTOR2 dir;
+        sf::Vector2f dir;
     };
 
-    class Jump{
+    class Jump {
     public:
         float str;
-        vec::VECTOR2 dir;
+        sf::Vector2f dir;
     };
 
     class Charge
@@ -80,17 +71,16 @@ public:
     public:
         float        str;
         bool         gnd;
-        vec::VECTOR2 dir;
+        sf::Vector2f dir;
     };
 
     class Gravity
     {
-    public:                         
+    public:
         float        str;
-        vec::VECTOR2 dir;
+        sf::Vector2f dir;
     };
 
-    Command();
 
     uint64_t timestamp;
     uint32_t code;
@@ -110,9 +100,6 @@ public:
     };
 };
 
-
-
 }
 
 #endif
-

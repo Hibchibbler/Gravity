@@ -6,13 +6,16 @@
 #define RigidBody_H_
 
 #include <stdint.h>
+#include <SFML/System.hpp>
 #include <queue>
 #include <list>
 #include "Vector2.h"
-#include "Command.h"
+#include "CommandQueue.h"
 #include "Collider.h"
+#include "ConfigLoader.h"
 
 namespace bali {
+
 
 class RigidBody
 {
@@ -26,28 +29,23 @@ public:
         angle = 0.0f;
         eid = 0;
     }
-    vec::VECTOR2 impulse(vec::VECTOR2 force);
 
-    vec::VECTOR2 pos;
-    vec::VECTOR2 vel;
-    vec::VECTOR2 accel;
+    sf::Vector2f impulse(sf::Vector2f force);
+
+    sf::Vector2f pos;
+    sf::Vector2f vel;
+    sf::Vector2f accel;
     uint32_t     mass;
     float        angle;
-
     Collider     collider;
     uint32_t     eid; // This id tells us which Entity we are associated with.
 
-    std::list<Command>  cmdHistory;
-    struct CompareCommandPriority {
-        bool operator()(Command const & p1, Command const & p2) {
-            // return "true" if "p1" is ordered before "p2", for example:
-            return p1.priority < p2.priority;
-        }
-    };
+    CommandQueue        cmdqueue;
 
-    std::priority_queue<Command, std::vector<Command>, CompareCommandPriority>  cmdQ;
+
 public:
 };
+
 
 
 }

@@ -10,6 +10,7 @@
 #include <iterator>
 
 #include "Builders.h"
+#include "Proto.h"
 #include <assert.h>
 namespace bali
 {
@@ -28,9 +29,53 @@ loadTexture(
     t.tex.loadFromImage(t.img);
 }
 
-uint32_t loadEntities(Vec<Entity> & entities, TMX::Objectgroup::Ptr & objectGroup)
+
+sf::Color GetRandomColor(int k = 0)
 {
-    entities.push_back(Entity());
+    int g = rand() % 6;
+    if (k != 0)
+        g = k;
+    switch (g)
+    {
+    case 0:
+        return sf::Color::Red;
+    case 1:
+        return sf::Color::Blue;
+    case 2:
+        return sf::Color::White;
+    case 3:
+        return sf::Color::Magenta;
+    case 4:
+        return sf::Color::Cyan;
+    case 5:
+        return sf::Color::Yellow;
+    }
+}
+Proto
+getCopyOfProto(
+    Vec<Proto> & protos,
+    uint32_t id
+)
+{
+    for (auto y = protos.begin(); y != protos.end(); y++)
+    {
+        if (y->id == id)
+        {
+            return *y;
+        }
+    }
+    throw;
+}
+
+uint32_t 
+loadPrototype(Proto & proto,
+              TMX::Objectgroup::Ptr & objectGroup
+)
+{
+
+    //
+    // First load up the properties
+    //
     for (auto prop = objectGroup->properties.begin(); prop != objectGroup->properties.end(); prop++)
     {
         if ((*prop)->type == "int")
@@ -38,12 +83,13 @@ uint32_t loadEntities(Vec<Entity> & entities, TMX::Objectgroup::Ptr & objectGrou
             if ((*prop)->name == "mass")
             {
                 int mass = std::atoi((*prop)->value.c_str());
-                entities.back().body.mass = mass;
+                proto.body.mass = mass;
             }
-            else if ((*prop)->name == "entityid")
+            else if ((*prop)->name == "protoid")
             {
-                int eid = std::atoi((*prop)->value.c_str());
-                entities.back().id = eid;
+                // The unique id for this prototype
+                int pid = std::atoi((*prop)->value.c_str());
+                proto.id = pid;
             }
         }
         else if ((*prop)->type == "float")
@@ -66,38 +112,44 @@ uint32_t loadEntities(Vec<Entity> & entities, TMX::Objectgroup::Ptr & objectGrou
         }
         else// string is default
         {
-            if ((*prop)->name == "entitytype")
+            if ((*prop)->name == "prototype")
             {
                 if ((*prop)->value == "player")
                 {
-                    entities.back().type = Entity::Type::PLAYER;
+                    proto.type = Proto::Type::PLAYER;
                 }
                 else if ((*prop)->value == "monster")
                 {
-                    entities.back().type = Entity::Type::MONSTER;
+                    proto.type = Proto::Type::MONSTER;
                 }
                 else if ((*prop)->value == "consumable")
                 {
-                    entities.back().type = Entity::Type::PLAYER;
+                    proto.type = Proto::Type::CONSUMABLE;
                 }
             }
         }
     }
 
+    //
+    // Then, load up the objects (aka geometry)
+    //
     for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
     {
         if ((*obj)->polygon != nullptr)
         {
-            buildPolygon(entities.back().shape, *obj);
+            proto.shapes.push_back(Shape());
+            buildPolygon(proto.shapes.back(), *obj);
         }
         else if ((*obj)->polyline != nullptr)
         {//NOTE: discard last point, engine assume last point is same as first.
          // TMX format is explicit about first and last point. even though they will always be the same.
-            buildPolyline(entities.back().shape, *obj);
+            proto.shapes.push_back(Shape());
+            buildPolyline(proto.shapes.back(), *obj);
         }
         else
         {//a rectangle
-            buildRectangle(entities.back().shape, *obj);
+            proto.shapes.push_back(Shape());
+            buildRectangle(proto.shapes.back(), *obj);
         }
     }
 
@@ -194,7 +246,7 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
     {
         std::vector<std::string> pairs = split(obj->polygon->points, ' ');
         s.setPointCount(pairs.size());
-        s.setPosition(vec::VECTOR2(obj->x, obj->y));
+        s.setPosition(sf::Vector2f(obj->x, obj->y));
 
         if (obj->rotation == 0)
         {
@@ -248,7 +300,7 @@ bool buildPolyline(Shape & s, TMX::Object::Ptr obj)
             max = 2;
 
         s.setPointCount(max);
-        s.setPosition(vec::VECTOR2(obj->x, obj->y));
+        s.setPosition(sf::Vector2f(obj->x, obj->y));
 
         if (obj->rotation == 0)
         {
@@ -396,8 +448,27 @@ sf::Vector2i GID2XY(int gid, int total_columns)
     ret.x = gid % total_columns;
     return ret;
 }
+
+qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom)
+{
+    qt::AABB searchRegion;
+    sf::Vector2f c = center;
+    c.x = floor(c.x);
+    c.y = floor(c.y);
+
+    sf::Vector2f s = size;
+    s.x *= zoom;
+    s.y *= zoom;
+
+    searchRegion.min.x = (float)((int)(c.x - (s.x / 2) + 64));
+    searchRegion.min.y = (float)((int)(c.y - (s.y / 2) + 64));
+    searchRegion.max.x = (float)((int)(c.x + (s.x / 2) - 64));
+    searchRegion.max.y = (float)((int)(c.y + (s.y / 2) - 64));
+    return searchRegion;
+}
+
 /*
-vec::VECTOR2 rotatePoint(vec::VECTOR2 v, vec::VECTOR2 origin, float angle)
+sf::Vector2f rotatePoint(sf::Vector2f v, sf::Vector2f origin, float angle)
 {
     //std::cout << angle << " ";
     angle = angle*(PI / 180.0f);
@@ -541,7 +612,7 @@ uint32_t addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float a
     return 0;
 }
 
-qt::AABB getSearchRegion(vec::VECTOR2 center, vec::VECTOR2 size, float zoom)
+qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom)
 {
     qt::AABB searchRegion;
     sf::Vector2f c = center;
@@ -645,7 +716,7 @@ bool buildPolygon(TMX::Object::Ptr obj, Shape & s, bool applyOffset = false)
     {
         std::vector<std::string> pairs = split(obj->polygon->points, ' ');
         s.setPointCount(pairs.size());
-        s.setPosition(vec::VECTOR2(obj->x, obj->y));
+        s.setPosition(sf::Vector2f(obj->x, obj->y));
 
         if (obj->rotation == 0)
         {
@@ -699,7 +770,7 @@ bool buildPolyline(TMX::Object::Ptr obj, Shape & s, bool applyOffset = false)
             max = 2;
 
         s.setPointCount(max);
-        s.setPosition(vec::VECTOR2(obj->x, obj->y));
+        s.setPosition(sf::Vector2f(obj->x, obj->y));
 
         if (obj->rotation == 0)
         {
@@ -827,8 +898,8 @@ uint32_t buildPlayerObjectLayers(Shapes & polygons, TMX::Objectgroup::Ptr & obje
 //                    sf::Vector2f p2 = polygons.back().getPoint((0 + 1) % pc);
 
 //                    SAT::Segment seg;
-//                    seg.start = vec::VECTOR2(p1.x, p1.y);
-//                    seg.end = vec::VECTOR2(p2.x, p2.y);
+//                    seg.start = sf::Vector2f(p1.x, p1.y);
+//                    seg.end = sf::Vector2f(p2.x, p2.y);
 //                    sharedEdges.push_back(seg);
 //                }
 //            }

@@ -153,6 +153,7 @@
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="ClientContext.h" />
     <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="KeyboardHandlers.h" />
     <ClInclude Include="StageInit.h" />
     <ClInclude Include="StageMain.h" />
   </ItemGroup>
@@ -161,6 +162,7 @@
     <ClCompile Include="imgui\imgui-sfml\imgui-SFML.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="KeyboardHandlers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="StageInit.cpp" />
     <ClCompile Include="StageMain.cpp" />

@@ -47,6 +47,10 @@ struct KeyboardConfig
     uint32_t ATTACK_TIME;
     uint32_t HARPOON_KEY;
     uint32_t HARPOON_TIME;
+    uint32_t DOWN_KEY;//='S'
+    uint32_t DOWN_TIME;
+    uint32_t UP_KEY;//='W'
+    uint32_t UP_TIME;
 };
 
 struct AnimationConfig

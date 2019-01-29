@@ -7,14 +7,6 @@
 #define ClientContext_h_
 
 #include "GravityCommon/Context.h"
-#include "XMLLoaders/TMX.h"
-#include "QuadTree/quadtree.h"
-#include "SATAlgo/SATAlgo.h"
-#include "GravityCommon/ConfigLoader.h"
-#include "GravityCommon/Player.h"
-#include "GravityCommon/MouseKeyboard.h"
-#include "GravityCommon/Level.h"
-#include "XMLLoaders/TextureAtlasLoader.h"
 
 
 namespace bali

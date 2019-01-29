@@ -3,19 +3,18 @@
 #include <iostream>
 #include <iomanip>
 
-
+#include "Physics.h"
 
 namespace bali
 {
 
 
-vec::VECTOR2 RigidBody::impulse(vec::VECTOR2 force)
+sf::Vector2f RigidBody::impulse(sf::Vector2f force)
 {
     //f = ma Newtons
     //a = f/m meters per meters squared or whatever
     return (force / (float)mass);
 }
-
 
 
 }

@@ -8,12 +8,34 @@
 #include <SFML/Window/Mouse.hpp>
 #include <map>
 #include "Vector2.h"
-#include "Player.h"
+//#include "Player.h"
 #include "ConfigLoader.h"
 
 #define KEY_BASE    0x10
 #define MOUSE_BASE  0x00
 
+
+/*
+We offer this:
+Keyboard keys, and mouse buttons are treated homogoneously.
+We'll call them buttons.
+A button is associated with a keyboard key, or mouse button.
+
+A button can be pressed, held, and released.
+a button can be configured to expire after a timeout.
+an expired button press acts as if the button were released, when in fact it has not.
+A button can be configured to detect a second press within a window of time, and trigger a dbl click.
+
+Our scenario:
+buttons associated with lateral movements, do not expire.
+ i.e. - walk laterally
+buttons associated with lateral movements are double click capable.
+ i.e. - dash laterally
+button associated with jump, does expire
+ i.e. - jump a little, or jump a lot. but, after a while, will automatically release.
+
+
+*/
 
 namespace bali {
 class Keypress;
@@ -22,10 +44,8 @@ typedef void(*KeyDblPressedEvent)(Keypress & kp, void* ud);
 typedef void(*KeyHeldEvent)(Keypress & kp, void* ud);
 typedef void(*KeyReleasedEvent)(Keypress & kp, void* ud);
 
-class MouseKeyboard;
 class Keypress
 {
-    friend class MousKeyboard;
 public:
 
     Keypress() {}
@@ -79,7 +99,8 @@ public:
     sf::Time            elp; //how long it was held
     sf::Time            tor;
     float               dur; // Even if held, longer, this will be the maximum duration reported.
-    vec::VECTOR2        nml;
+
+    sf::Vector2f        nml; //TODO: this needs to be a generic datum...
 
     uint32_t            cc;
     bool                mouse;

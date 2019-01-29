@@ -141,19 +141,19 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Builders.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Command.h" />
+    <ClInclude Include="CommandQueue.h" />
     <ClInclude Include="ConfigLoader.h" />
     <ClInclude Include="Context.h" />
+    <ClInclude Include="Controller.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="EntityIntent.h" />
-    <ClInclude Include="EntityManager.h" />
-    <ClInclude Include="EntityState.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="Geometry.h" />
-    <ClInclude Include="Level.h" />
     <ClInclude Include="MouseKeyboard.h" />
+    <ClInclude Include="Proto.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
@@ -166,11 +166,11 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Builders.cpp" />
-    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
+    <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Geometry.cpp" />
-    <ClCompile Include="Level.cpp" />
     <ClCompile Include="MouseKeyboard.cpp" />
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="Physics.cpp" />

@@ -18,14 +18,17 @@ namespace bali
 #define DEG_TO_RAD(x)   \
         (x) * (PI / 180.0f);
 
+sf::Color GetRandomColor(int k);
+
+
 //bool isSharedEdge(SAT::ContactInfo & ci, std::vector<SAT::Segment> & sharedEdges);
 //uint32_t buildSharedEdgesLayers(SAT::Segment::Vec & sharedEdges, TMX::Objectgroup::Vec & objectGroups);
-//vec::VECTOR2 rotatePoint(vec::VECTOR2 v, vec::VECTOR2 origin, float angle);
+//sf::Vector2f rotatePoint(sf::Vector2f v, sf::Vector2f origin, float angle);
 sf::Vector2i GID2XY(int gid, int total_columns);
 //uint32_t addQuad(bali::QuadArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip);
 //uint32_t addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle);
 //uint32_t addRotShape(bali::Shape & s, sf::FloatRect p, float angle);
-//qt::AABB getSearchRegion(vec::VECTOR2 center, vec::VECTOR2 size, float zoom = 1.0f);
+qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom = 1.0f);
 //uint32_t buildTileLayer(Tile::Vec & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer);
 //uint32_t buildTileLayers(Tile::VecVec & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layer);
 //uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint32_t tileWidth, uint32_t tileHeight);
@@ -48,12 +51,26 @@ sf::Vector2i GID2XY(int gid, int total_columns);
 //      Shapes are retrieved, and then passed to collision detection
 //  The arrays of vertex are passed to the GPU
 
+uint32_t
+addQuad(
+    Vec<Vertex> & v,
+    sf::FloatRect c,
+    sf::IntRect t,
+    unsigned char flip
+);
+
 void
 loadTexture(
     Texture         &t,
     TMX::Map::Ptr   map,
     std::string     tilesetname,
     sf::Color       c
+);
+
+uint32_t
+loadPrototype(
+    Proto & proto,
+    TMX::Objectgroup::Ptr & objectGroup
 );
 
 bool
@@ -74,10 +91,10 @@ buildPolyline(
     TMX::Object::Ptr obj
 );
 
-uint32_t
-loadEntities(
-    Vec<Entity> & entities, 
-    TMX::Objectgroup::Ptr & objectGroup
+Proto
+getCopyOfProto(
+    Vec<Proto> & protos,
+    uint32_t id
 );
 
 uint32_t 

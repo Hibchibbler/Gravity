@@ -2,11 +2,7 @@
 #define Entity_h_
 
 #include <stdint.h>
-#include "RigidBody.h"
-//#include "Collider.h"
-//#include "EntityIntent.h"
-//#include "EntityState.h"
-#include "Geometry.h"
+#include "Proto.h"
 
 namespace bali
 {
@@ -14,24 +10,46 @@ namespace bali
 class Entity
 {
 public:
-    enum class Type {
-        PLAYER,
-        CONSUMABLE,
-        MONSTER
+    typedef Entity* Ptr;
+    enum class State
+    {
+        INIT,
+        IDLING,    // physics based
+        MOVING,   // physics basedd
+        JUMPING, // button based
+        FALLING, // physics based
+        CHARGING  // button based
     };
 
-    Type                type;
-    uint32_t            id;
+    Entity()
+    {
+        state = State::INIT;
+        moving = false;
+        jumping = false;
+        charging = false;
+    }
 
-    Shape               shape;
-    RigidBody           body; // This is a template value
-                              // We load these values as defaults
+    void initialize(Proto & p) {
+        proto = p;
+        state = State::IDLING;
+        moving = false;
+        jumping = false;
+        charging = false;
+    }
+    State    state;
 
-    //Collider            collider;
+    Proto       proto;
+    Collider    collider;
 
-    //sf::Time            stepaccum;
-    //AnimationManager    animan;
+    bool isActive() { return moving || jumping || charging; }
+    uint8_t     moving;
+    uint8_t     jumping;
+    uint8_t     charging;
+
+    Vec<Shape> collisionShapes;
+
 };
+
 
 }
 

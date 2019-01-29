@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2018
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MouseKeyboard.h"
@@ -163,7 +163,6 @@ void MouseKeyboard::updateKeypress(Keypress & kp)
                 kp.exp = true;
                 std::cout << "expired ";
                 kp.released(kp, ud);
-
             }
         }
     }
