@@ -159,6 +159,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Polygons.h" />
     <ClInclude Include="Renderable.h" />
+    <ClInclude Include="SpatialBuckets.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector2.h" />

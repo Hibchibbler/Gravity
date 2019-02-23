@@ -154,11 +154,9 @@ namespace bali
                 return true;
             }
 
-            std::vector<XY> search(const AABB & searchRect)
+            bool search(const AABB & searchRect, std::vector<XY> & points)
             {
-                std::vector<XY> points;
-                search(theRoot, searchRect, points);
-                return points;
+                return search(theRoot, searchRect, points);
             }
 
             bool search(Node *node, const AABB & searchRect, std::vector<XY> &points)
@@ -168,10 +166,11 @@ namespace bali
 
                 if (node->boundary.intersects(searchRect))
                 {
-                    for (auto p = 0; p < node->points.size(); p++)
-                    {
-                        points.push_back(node->points[p]);
-                    }
+                    //for (auto p = 0; p < node->points.size(); p++)
+                    //{
+                    //    points.push_back(node->points[p]);
+                    //}
+                    points.insert(points.end(), node->points.begin(), node->points.end());
 
                     search(node->nw, searchRect, points);
                     search(node->ne, searchRect, points);

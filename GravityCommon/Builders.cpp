@@ -460,10 +460,10 @@ qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom)
     s.x *= zoom;
     s.y *= zoom;
 
-    searchRegion.min.x = (float)((int)(c.x - (s.x / 2) + 64));
-    searchRegion.min.y = (float)((int)(c.y - (s.y / 2) + 64));
-    searchRegion.max.x = (float)((int)(c.x + (s.x / 2) - 64));
-    searchRegion.max.y = (float)((int)(c.y + (s.y / 2) - 64));
+    searchRegion.min.x = (float)((int)(c.x - (s.x / 2)));
+    searchRegion.min.y = (float)((int)(c.y - (s.y / 2)));
+    searchRegion.max.x = (float)((int)(c.x + (s.x / 2)));
+    searchRegion.max.y = (float)((int)(c.y + (s.y / 2)));
     return searchRegion;
 }
 

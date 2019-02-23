@@ -92,8 +92,10 @@ public:
     }
 
     sf::Vector2f normal;
-    Segment edge;
+    //Segment edge;
     float overlap;
+    int32_t thisindex;
+    int32_t thatindex;
 };
 
 typedef std::vector<ContactInfo> Axes;
@@ -123,16 +125,15 @@ public:
     }
     bool overlap(const Projection & p)
     {
-        if (x > min(p.x, p.y) && x < max(p.x, p.y) ||
-            y > min(p.x, p.y) && y < max(p.x, p.y))
-        {
-            return true;
-        }
-        return false;
-        //return (y >= x) ? 
-        //            (((x <= p.x) && (p.x <= y)) || 
-        //             ((x <= p.y) && (p.y <= y)) ) : 
-        //             (((y <= p.x) && (p.x <= x)) || ((y <= p.y) && (p.y <= x)));
+        float aMin = min(x, y);
+        float aMax = max(x, y);
+
+        float bMin = min(p.x, p.y);
+        float bMax = max(p.x, p.y);
+
+        if (aMax <= bMin || bMax <= aMin)
+            return false;
+        return true;
     }
     float getOverlap(const Projection & p)
     {
@@ -159,7 +160,7 @@ class Shape
 {
 public:
 
-    static Segment::Vec getSegments(bali::CONVEXSHAPE & shape)
+    static Segment::Vec getSegments(sf::ConvexShape & shape)
     {
         Segment::Vec segments;
         size_t pc = shape.getPointCount();
@@ -175,11 +176,12 @@ public:
         }
         return segments;
     }
-    static Axes getSeparatingAxes(bali::CONVEXSHAPE & shape)
+    static Axes getSeparatingAxes(sf::ConvexShape & shape)
     {
         Axes axes;
         // loop over the vertices
         size_t pc = shape.getPointCount();
+        axes.reserve(pc);
         for (int i = 0; i < pc; i++)
         {
             // get the current vertex
@@ -197,25 +199,26 @@ public:
             // the perp method is just (x, y) => (-y, x) or (y, -x)
             ContactInfo axis;
             axis.normal = normal;
-            axis.edge.start = p1;// +shape.getPosition();
-            axis.edge.end = p2;// +shape.getPosition();
-            axis.edge.off = shape.getOrigin();
+            //axis.edge.start = p1;// +shape.getPosition();
+            //axis.edge.end = p2;// +shape.getPosition();
+            //axis.edge.off = shape.getOrigin();
             axes.push_back(axis);
         }
         return axes;
     }
 
-    static Projection project(bali::CONVEXSHAPE & shape, const ContactInfo & axis)
+    static Projection project(sf::ConvexShape & shape, const ContactInfo & axis)
     {
-        float min = vec::dot(axis.normal, shape.getPoint(0) + (shape.getPosition() - shape.getOrigin()));
-        //float min = vec::dot(axis.normal, shape.getPoint(0));
+        sf::Vector2f spos = shape.getPosition();
+        sf::Vector2f sorg = shape.getOrigin();
+        size_t numpts = shape.getPointCount();
+        float min = vec::dot(axis.normal, shape.getPoint(0) + (spos - sorg));
         float max = min;
 
-        for (int i = 1; i < shape.getPointCount(); i++) {
-            sf::Vector2f pean = shape.getPoint(i) + (shape.getPosition() - shape.getOrigin());
+        for (int i = 1; i < numpts; i++) {
+            sf::Vector2f pean = shape.getPoint(i) + (spos - sorg);
 
             float p = vec::dot(axis.normal, pean);
-            //double p = vec::dot(axis.normal, shape.getPoint(i));
             if (p <= min) {
                 min = p;
             }
@@ -228,7 +231,7 @@ public:
         return proj;
     }
 
-    static bool ismtvvalid(bali::CONVEXSHAPE & shape, bali::CONVEXSHAPE & other, vec::VECTOR2 mtv)
+    static bool ismtvvalid(sf::ConvexShape & shape, sf::ConvexShape & other, vec::VECTOR2 mtv)
     {
         vec::VECTOR2 c1, c2;
         vec::VECTOR2 dir;
@@ -245,41 +248,26 @@ public:
         c2 = c2 / (float)other.getPointCount();
 
         dir = c2 - c1;
+        // HACK
+        if (vec::mag(dir) < 0.001f) 
+        {
+            dir = vec::VECTOR2((rand() % 10) + 1.f, (rand() % 10) + 1.f);
+//            std::cout << "what?";
+        }
         dir = vec::norm(dir);//dir.norm();
-        float jah = vec::dot(dir,mtv);
+        float jah = vec::dot(dir,mtv*3.0f);
         if (jah < 0.f)
             return true;
         return false;
-        //std::cout << dist1 << "..." << dist2<< std::endl;
-
-        //std::cout << "[" << dist1 << ", " << dist2 << ", " << mtv.magnitude() << "] ";
-        //std::cout << "(";
-        //std::cout << c1.x;
-        //std::cout << ", ";
-        //std::cout << c1.y;
-        //std::cout << ",,";
-        //std::cout << c2.x;
-        //std::cout << ", ";
-        //std::cout << c2.y;
-        //std::cout << " = ";
-        //std::cout << dist1 << ", = ";
-        //std::cout << dist2 << ")";
-
-        //std::cout << "{" << dist1 << ", " << dist2 << ", " << mtv.magnitude() << "}";
-        //if (dist1 < dist2) {
-        //    return true;
-        //}
-        //return false;
-
     }
 
     static bool collision(
-        bali::CONVEXSHAPE & shape,
-        bali::CONVEXSHAPE & other,
+        sf::ConvexShape & shape,
+        sf::ConvexShape & other,
         std::vector<ContactInfo> & hitInfo
     )
     {
-        hitInfo.clear();
+        //hitInfo.clear();
 
         Axes axes1 = getSeparatingAxes(shape);
         Axes axes2 = getSeparatingAxes(other);
@@ -315,7 +303,10 @@ public:
                         mtv.overlap = o;
                         minimumOverlap1 = o;
                         axis.overlap = o;
-                        //hitInfo.push_back(ContactInfo(axis));
+                        //if (o > 0.0f)
+                        //{
+                        //    //hitInfo.push_back(ContactInfo(axis));
+                        //}
                         //std::cout << " W[" << o << "]," << " G[" << minimumOverlap1 << "]," << std::endl; //<< (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                     }
                 }
@@ -350,18 +341,24 @@ public:
                         mtv.overlap = o;
                         minimumOverlap1 = o;
                         axis.overlap = o;
-                        //hitInfo.push_back(ContactInfo(axis));
+                        //if (o > 0.0f)
+                        //{
+                        //    //hitInfo.push_back(ContactInfo(axis));
+                        //}
                         //std::cout << " W[" << o << "]," << " G[" << minimumOverlap1 << "]," << std::endl;
                     }
                 }
             }
         }
-        //cout << "<<<<<<<<<" << std::endl;
         // if we get here then we know that every axis had overlap on it
         // so we can guarantee an intersection
-        //std::cout << ss.str();
-        hitInfo.push_back(mtv);
-        return true;
+        if (mtv.overlap > 0.0f)
+        {
+            hitInfo.push_back(ContactInfo(mtv));
+            return true;
+        }
+        return false;
+        //return true;
     }
 };
 }

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "Proto.h"
+#include "SATAlgo\SATAlgo.h"//TODO: don't include this!!! jeezzuz
 
 namespace bali
 {
@@ -46,7 +47,14 @@ public:
     uint8_t     jumping;
     uint8_t     charging;
 
-    Vec<Shape> collisionShapes;
+    // These cross reference into the list that owns them.
+    Vec<size_t> collisionShapes;//cleared in update
+    Vec<size_t> collisionEntities;// cleared in update
+
+    sf::Vector2f totalForce;
+    sf::Vector2f totalPos;
+    uint32_t numForces;
+    float totalMagnitude;
 
 };
 

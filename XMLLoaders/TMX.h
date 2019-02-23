@@ -167,6 +167,7 @@ namespace bali {
             Polygon::Ptr        polygon;
             Polyline::Ptr       polyline;
             Image::Ptr          image;
+            Point::Ptr          point;
         };
 
         class Objectgroup

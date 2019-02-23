@@ -88,6 +88,9 @@
     <ClInclude Include="Proto.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SpatialBuckets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">

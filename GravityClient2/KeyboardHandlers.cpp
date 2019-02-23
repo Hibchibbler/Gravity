@@ -21,6 +21,29 @@ void KeyPressedHandler(Keypress & kp, void* ud)
     {
         //context->camera.view.move(sf::Vector2f(-25.f, 0.f));
         //body.pos += sf::Vector2f(25.f, 0.f);
+        if (context->entities[0].collider.jumpNormal == vec::Zero())
+        {
+            // Character is in the air.
+            // Jump upwards
+            //kp.nml = physics::upVector(context->entities[0].proto.body.angle);
+            //context->entities[0].jumping = true;
+            std::cout << "FJA ";
+        }
+        // UpVector DOT SurfaceNormal > 0 == Not too steep
+        else if (vec::dot(physics::upVector(context->entities[0].proto.body.angle), context->entities[0].collider.surfaceNormal) > -0.01f)
+        {
+            // Character is on the ground
+            // Jump according to the angle of the ground
+            kp.nml = context->entities[0].collider.jumpNormal;
+            //context->entities[0].collider.jumpNormal = vec::Zero();
+            context->entities[0].jumping = true;
+            std::cout << "FJS ";
+        }
+        else
+        {
+            // Character is touching something "steep"
+            // ignore request
+        }
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
@@ -36,11 +59,11 @@ void KeyPressedHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.DOWN_KEY)
     {
-        player.entity->moving = true;
+        //player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.UP_KEY)
     {
-        player.entity->moving = true;
+        //player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
@@ -59,16 +82,19 @@ void KeyDblPressedHandler(Keypress & kp, void* ud)
     {
         //context->camera.view.move(sf::Vector2f(-25.f, 0.f));
         //body.pos += sf::Vector2f(25.f, 0.f);
+        context->entities[0].jumping = true;
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
         //context->camera.view.move(sf::Vector2f(0.f, 25.f));
         //body.pos += sf::Vector2f(0.f, 25.f);
+        player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.LEFT_KEY)
     {
         //context->camera.view.move(sf::Vector2f(0.f, -25.f));
         //body.pos += sf::Vector2f(0.f, -25.f);
+        player.entity->moving = true;
     }
     std::cout << "DblPress ";
 }
@@ -76,24 +102,42 @@ void KeyDblPressedHandler(Keypress & kp, void* ud)
 void KeyHeldHandler(Keypress & kp, void* ud)
 {
     ClientContext::Ptr context = (ClientContext::Ptr)ud;
+    Player & player = context->players[0];// Only local will have these handlers installed.
+    Entity & entity = *player.entity;
+    RigidBody & body = player.entity->proto.body;//context->entities[context->players[0].entityindex].body;
 
     if (kp.cc == context->keyboardConfig.ATTACK_KEY)
     {
         for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         {
-            e->proto.body.angle += 2.5f;
+            e->proto.body.angle += 10.0f;
         }
+
+        //// Get mouse pixels
+        //sf::Vector2i p = sf::Mouse::getPosition(context->gameWindow.window);
+        ////Map Pixel to Coords:
+        //sf::Vector2f mouse_world = context->gameWindow.window.mapPixelToCoords(p);
+        //sf::Vector2f fin = mouse_world - context->entities[0].proto.body.pos;
+        //std::cout << "[[" << fin.x << ", " << fin.y << "]]" << std::endl;
+        ////CommandQueue::postModifyVelocity(context->entities[0].proto.body, fin * 8.0f, 1);
+        ////context->entities[0].proto.body.vel = fin * 4.0f;
+
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
         for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         {
-            e->proto.body.angle -= 2.5f;
+            e->proto.body.angle -= 10.0f;
         }
     }
     else if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
-        
+        if (entity.jumping == true)
+        {
+            float str = 1.0f;
+            assert(kp.nml != vec::Zero());
+            CommandQueue::postJump(body, str, kp.nml);
+        }
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
@@ -111,10 +155,7 @@ void KeyHeldHandler(Keypress & kp, void* ud)
             kp.nml = vec::normal(localEntity.collider.surfaceNormal) * -1.0f;
             grounded = true;
         }
-        /*physics::SubmitMove(localEntity.proto.body.,
-            str,
-            kp.nml,
-            grounded);*/
+
         CommandQueue::postMove(localEntity.proto.body, str, kp.nml, grounded);
 
         localEntity.collider.surfaceNormal = vec::Zero();
@@ -135,57 +176,22 @@ void KeyHeldHandler(Keypress & kp, void* ud)
             kp.nml = vec::normal(localEntity.collider.surfaceNormal) * 1.0f;
             grounded = true;
         }
-        /*physics::SubmitMove(localEntity.proto.body.,
-            str,
-            kp.nml,
-            grounded);*/
+
         CommandQueue::postMove(localEntity.proto.body, str, kp.nml, grounded);
 
         localEntity.collider.surfaceNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.DOWN_KEY)
     {
-        float str = 1.f;
-        bool grounded = false;
-        Player & localPlayer = context->players[0];
-        Entity & localEntity = *localPlayer.entity;
-
-
-       kp.nml = physics::downVector(localEntity.proto.body.angle);
-
-        /*physics::SubmitMove(localEntity.proto.body.,
-        str,
-        kp.nml,
-        grounded);*/
-        CommandQueue::postMove(localEntity.proto.body, str, kp.nml, grounded);
-
-        localEntity.collider.surfaceNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.UP_KEY)
     {
-        float str = 8.f;
-        bool grounded = false;
-        Player & localPlayer = context->players[0];
-        Entity & localEntity = *localPlayer.entity;
-
-
-        kp.nml = physics::upVector(localEntity.proto.body.angle);
-
-        /*physics::SubmitMove(localEntity.proto.body.,
-        str,
-        kp.nml,
-        grounded);*/
-        CommandQueue::postMove(localEntity.proto.body, str, kp.nml, grounded);
-
-        localEntity.collider.surfaceNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.ROTATE_RIGHT_KEY)
     {
-
     }
     else if (kp.cc == context->keyboardConfig.ROTATE_LEFT_KEY)
     {
-
     }
     std::cout << ".";
 }
@@ -196,7 +202,8 @@ void KeyReleasedHandler(Keypress & kp, void* ud)
 
     if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
-
+        context->players[0].entity->jumping = false;
+        context->entities[0].collider.jumpNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
@@ -208,19 +215,17 @@ void KeyReleasedHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.DOWN_KEY)
     {
-        context->players[0].entity->moving = false;
+        //context->players[0].entity->moving = false;
     }
     else if (kp.cc == context->keyboardConfig.UP_KEY)
     {
-        context->players[0].entity->moving = false;
+        //context->players[0].entity->moving = false;
     }
     else if (kp.cc == context->keyboardConfig.ROTATE_RIGHT_KEY)
     {
-
     }
     else if (kp.cc == context->keyboardConfig.ROTATE_LEFT_KEY)
     {
-
     }
     std::cout << "Released" << std::endl;
 }

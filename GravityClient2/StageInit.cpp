@@ -77,6 +77,7 @@ uint32_t StageInit::initialize()
     context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
 
 
+
     //
     // Fuck it, Let's create a player
     // and some monsters
@@ -84,49 +85,64 @@ uint32_t StageInit::initialize()
     Proto p = context->protos[0]; // Player0
     Proto m = context->protos[1]; // Monster0
     Proto c = context->protos[2]; // Consumable0
+    float x, y;
 
     context->entities.push_back(Entity());
     context->entities.back().proto = p;
+    x = context->map->getObjectGroup("Player0")->objects[0]->x;
+    y = context->map->getObjectGroup("Player0")->objects[0]->y;
+    context->entities.back().proto.body.pos = sf::Vector2f(x, y);
+    //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
 
     context->entities.push_back(Entity());
     context->entities.back().proto = c;
-    srand(time(NULL));
-    for (int g = 2; g < 50; g++) {
-        context->entities.push_back(Entity());
-        context->entities.back().proto = m;
-        float x, y;
-        float a = rand() % 84;
-        float b = rand() % 84;
-        float nega = rand() % 2;
-        float negb = rand() % 2;
-        x = context->map->getObjectGroup("Monster0")->objects[0]->x + (nega * a);
-        y = context->map->getObjectGroup("Monster0")->objects[0]->y + (negb * b);
-        context->entities[g].proto.body.pos = sf::Vector2f(x, y);
-        context->entities[g].moving = true;
-        context->entities[g].proto.shapes.back().setFillColor(GetRandomColor(0));
-    }
-
-
-    //HACK: 
-    float x, y;
-    x = context->map->getObjectGroup("Player0")->objects[0]->x;
-    y = context->map->getObjectGroup("Player0")->objects[0]->y;
-    context->entities[0].proto.body.pos = sf::Vector2f(x, y);
-
-    
     x = context->map->getObjectGroup("Consumable0")->objects[0]->x;
     y = context->map->getObjectGroup("Consumable0")->objects[0]->y;
-    context->entities[1].proto.body.pos = sf::Vector2f(x, y);
-    context->entities[1].moving = true;
+    context->entities.back().proto.body.pos = sf::Vector2f(x, y);
+    //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
+    context->entities.back().moving = true;
 
+    srand(time(NULL));
+    TMX::Objectgroup::Ptr og = context->map->getObjectGroup("MonsterInstances");
+    for (int g = 0; g < og->objects.size(); g++) {
+        context->entities.push_back(Entity());
+        context->entities.back().proto = m;
 
+        context->entities.back().moving = (rand()%2 == 0 ? true : false);
+        context->entities.back().proto.shapes.back().setFillColor(GetRandomColor(0));
 
+        float x, y;
+        float a = og->objects[g]->point->x;//(rand() % 256)+1.0f;
+        float b = og->objects[g]->point->y;//(rand() % 256)+1.0f;
+        //float nega = (rand() % 2) -1.0f;
+        //float negb = (rand() % 2) - 1.0f;
+        //x = context->map->getObjectGroup("Monster0")->objects[0]->x + (nega * a);
+        //y = context->map->getObjectGroup("Monster0")->objects[0]->y + (negb * b);
+        context->entities.back().proto.body.pos = sf::Vector2f(a, b);
+        //context->entities.back().proto.body.vel = sf::Vector2f(a/16.0f, b/16.0f);
+        context->entities.back().proto.shapes[0].setPosition(context->entities.back().proto.body.pos);
+
+        //vec::VECTOR2 c1, c2;
+        //vec::VECTOR2 dir;
+        //Shape & shape = context->entities.back().proto.shapes[0];
+        //for (int u = 0; u < shape.getPointCount(); u++)
+        //{
+        //    c1 = c1 + (shape.getPoint(u) + shape.getPosition());
+        //}
+        //c1 = c1 / (float)shape.getPointCount();
+
+        //context->entities.back().proto.shapes[0].setOrigin(c1);
+        //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
+    }
 
     //
     // Load Collision Polygon geometry from TMX map
     //
     loadPolygons(context->collisionshapes,
                  context->map->getObjectGroup("Collision0"));
+
+    loadPolygons(context->gravityzones,
+        context->map->getObjectGroup("GravityZones"));
 
     //
     // Load tiles from TMX map
@@ -143,50 +159,60 @@ uint32_t StageInit::initialize()
     //
     // Put the tiles in a quad tree
     //
-    int maxDepth = 9;
-    qt::AABB aabb;
-    aabb.min.x = -64;
-    aabb.min.y = -64;
-    aabb.max.x = aabb.max.y = (context->map->width + 2) * 32;//in pixels
-    
-    context->foregroundQuadTree = std::make_shared<qt::QuadTree>();
-    context->foregroundQuadTree->initialize(aabb, maxDepth);
+    //int maxDepth = 9;
+    //qt::AABB aabb;
+    //aabb.min.x = -64;
+    //aabb.min.y = -64;
+    //aabb.max.x = aabb.max.y = (context->map->width + 2) * 32;//in pixels
+    //
+    //context->foregroundQuadTree = std::make_shared<qt::QuadTree>();
+    //context->foregroundQuadTree->initialize(aabb, maxDepth);
 
-    context->backgroundQuadTree = std::make_shared<qt::QuadTree>();
-    context->backgroundQuadTree->initialize(aabb, maxDepth);
+    //context->backgroundQuadTree = std::make_shared<qt::QuadTree>();
+    //context->backgroundQuadTree->initialize(aabb, maxDepth);
 
-    context->collisionQuadTree = std::make_shared<qt::QuadTree>();
-    context->collisionQuadTree->initialize(aabb, maxDepth);
+    //context->collisionQuadTree = std::make_shared<qt::QuadTree>();
+    //context->collisionQuadTree->initialize(aabb, maxDepth);
 
-    for (uint64_t tid = 0; tid < context->foregroundtiles.size(); tid++)
-    {
-        qt::XY pt;
-        pt.ti = tid;
+    //context->entityQuadTree = std::make_shared<qt::QuadTree>();
+    //context->entityQuadTree->initialize(aabb, maxDepth);
 
-        sf::FloatRect gb;
-        gb.left = context->foregroundtiles[tid].x;
-        gb.top = context->foregroundtiles[tid].y;
-        gb.height = 32;
-        gb.width = 32;
-        pt.x = gb.left + gb.width / 2.0f;
-        pt.y = gb.top + gb.height / 2.0f;
-        context->foregroundQuadTree->insert(pt);
-    }
+    context->entitybuckets.initialize(0, 0, 2425, 2425, 125, 125);
+    context->cpolybuckets.initialize(0, 0, 2504, 2504, 12, 12);
+    context->fgtbuckets.initialize(0, 0, 2500, 2500, 20, 20);
+    context->bgtbuckets.initialize(0, 0, 2500, 2500, 20, 20);
 
-    for (uint64_t tid = 0; tid < context->backgroundtiles.size(); tid++)
-    {
-        qt::XY pt;
-        pt.ti = tid;
+    //for (uint64_t tid = 0; tid < context->foregroundtiles.size(); tid++)
+    //{
+    //    qt::XY pt;
+    //    pt.ti = tid;
 
-        sf::FloatRect gb;
-        gb.left = context->backgroundtiles[tid].x;
-        gb.top = context->backgroundtiles[tid].y;
-        gb.height = 32;
-        gb.width = 32;
-        pt.x = gb.left + gb.width / 2.0f;
-        pt.y = gb.top + gb.height / 2.0f;
-        context->backgroundQuadTree->insert(pt);
-    }
+    //    sf::FloatRect gb;
+    //    gb.left = context->foregroundtiles[tid].x;
+    //    gb.top = context->foregroundtiles[tid].y;
+    //    gb.height = 32;
+    //    gb.width = 32;
+    //    pt.x = gb.left + gb.width / 2.0f;
+    //    pt.y = gb.top + gb.height / 2.0f;
+    //    //context->foregroundQuadTree->insert(pt);
+    //    //context->fgtbuckets.add(pt.x, pt.y, tid);
+    //}
+
+    //for (uint64_t tid = 0; tid < context->backgroundtiles.size(); tid++)
+    //{
+    //    qt::XY pt;
+    //    pt.ti = tid;
+
+    //    sf::FloatRect gb;
+    //    gb.left = context->backgroundtiles[tid].x;
+    //    gb.top = context->backgroundtiles[tid].y;
+    //    gb.height = 32;
+    //    gb.width = 32;
+    //    pt.x = gb.left + gb.width / 2.0f;
+    //    pt.y = gb.top + gb.height / 2.0f;
+    //   // context->backgroundQuadTree->insert(pt);
+    //    //context->bgtbuckets.add(pt.x, pt.y, tid);
+    //}
 
     for (uint64_t tid = 0; tid < context->collisionshapes.size(); tid++)
     {
@@ -196,22 +222,24 @@ uint32_t StageInit::initialize()
         sf::FloatRect gb = context->collisionshapes[tid].getGlobalBounds();
         pt.x = gb.left + gb.width / 2.0f;
         pt.y = gb.top + gb.height / 2.0f;
-        context->collisionQuadTree->insert(pt);
+        //context->collisionQuadTree->insert(pt);
+        context->cpolybuckets.add(pt.x, pt.y, tid);
     }
+
 
     //
     // Create vertex arrays from the Tile data
     //  to be used for rendering.
     //
-    //createVertexLayer(context->backgroundvertices,
-    //                  context->backgroundtiles,
-    //                  context->map->tilewidth,
-    //                  context->map->tileheight);
+    createVertexLayer(context->backgroundvertices,
+                      context->backgroundtiles,
+                      context->map->tilewidth,
+                      context->map->tileheight);
 
-    //createVertexLayer(context->foregroundvertices,
-    //                  context->foregroundtiles,
-    //                  context->map->tilewidth,
-    //                  context->map->tileheight);
+    createVertexLayer(context->foregroundvertices,
+                      context->foregroundtiles,
+                      context->map->tilewidth,
+                      context->map->tileheight);
 
     loadTexture(context->backgroundtilesettexture, 
                 context->map,

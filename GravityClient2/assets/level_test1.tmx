@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="1.1.6" orientation="orthogonal" renderorder="right-down" width="75" height="75" tilewidth="32" tileheight="32" infinite="0" nextobjectid="1002">
+<map version="1.0" tiledversion="1.1.6" orientation="orthogonal" renderorder="right-down" width="75" height="75" tilewidth="32" tileheight="32" infinite="0" nextobjectid="2779">
  <properties>
   <property name="DeleteTiles" value="true"/>
   <property name="NoOverlappingRules" value="true"/>
@@ -12,12 +12,12 @@
  </tileset>
  <objectgroup name="Player0">
   <properties>
-   <property name="mass" type="int" value="4"/>
+   <property name="mass" type="int" value="1"/>
    <property name="protoid" type="int" value="0"/>
    <property name="prototype" value="player"/>
   </properties>
-  <object id="982" x="1296" y="216">
-   <polyline points="-1.66667,0 -9.66667,-8 -9.66667,-24 -1.66667,-32 14.3333,-32 22.3333,-24 22.3333,-8 14.3333,0 -1.66667,0"/>
+  <object id="2132" x="1312" y="102">
+   <polyline points="0,0 6,-6 18,-6 24,0 24,12 18,18 6,18 0,12 0,0"/>
   </object>
  </objectgroup>
  <objectgroup name="Consumable0">
@@ -26,8 +26,8 @@
    <property name="protoid" type="int" value="30"/>
    <property name="prototype" value="consumable"/>
   </properties>
-  <object id="1001" x="1088" y="224">
-   <polyline points="0,0 16,-32 64,-32 96,8 0,0"/>
+  <object id="2103" x="1128" y="128">
+   <polyline points="0,0 8,0 16,16 8,32 0,32 -8,16 0,0"/>
   </object>
  </objectgroup>
  <objectgroup name="Monster0">
@@ -36,7 +36,7 @@
    <property name="protoid" type="int" value="10"/>
    <property name="prototype" value="monster"/>
   </properties>
-  <object id="997" x="1120" y="104">
+  <object id="1006" x="1216" y="152">
    <polyline points="0,0 8,-8 16,-8 24,0 24,8 16,16 8,16 0,8 0,0"/>
   </object>
  </objectgroup>
@@ -6301,6 +6301,7 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6316,8 +6317,7 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="2147487493"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6376,6 +6376,8 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile gid="3938"/>
+   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6389,10 +6391,8 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="2147487493"/>
+   <tile gid="3938"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6451,6 +6451,9 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
+   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6462,12 +6465,9 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="2147487493"/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6526,9 +6526,9 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
-   <tile gid="2147487493"/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
    <tile gid="3953"/>
    <tile gid="3970"/>
    <tile gid="3937"/>
@@ -6540,9 +6540,9 @@
    <tile gid="3969"/>
    <tile gid="3938"/>
    <tile gid="3970"/>
-   <tile gid="3845"/>
-   <tile/>
-   <tile/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6601,8 +6601,8 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile gid="2147487493"/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
    <tile gid="3954"/>
    <tile gid="3916"/>
    <tile gid="3970"/>
@@ -6616,8 +6616,8 @@
    <tile gid="3916"/>
    <tile gid="3919"/>
    <tile gid="3970"/>
-   <tile gid="3845"/>
-   <tile/>
+   <tile gid="3938"/>
+   <tile gid="3938"/>
    <tile/>
    <tile/>
    <tile/>
@@ -11298,7 +11298,7 @@
    <tile gid="1073745761"/>
   </data>
  </layer>
- <objectgroup color="#ffff00" name="Collision">
+ <objectgroup color="#ffff00" name="Collision" visible="0">
   <object id="992" x="128" y="32">
    <polyline points="0,0 0,64 160,64 160,0 0,0"/>
   </object>
@@ -11620,7 +11620,7 @@
    <polygon points="0,0 0,-32 136,-32 136,0"/>
   </object>
   <object id="598" x="1472" y="32">
-   <polygon points="0,0 0,-32 160,-32 160,0"/>
+   <polygon points="0,0 0,-32 192,-32 192,0"/>
   </object>
   <object id="599" x="1632" y="160">
    <polygon points="0,0 0,-128 32,-128 32,0"/>
@@ -11944,22 +11944,58 @@
    <polyline points="0,0 0,-48 32,-64 32,0 0,0"/>
   </object>
   <object id="975" x="992" y="416">
-   <polyline points="0,0 64,-64 240,-64 128,8 0,48 0,0"/>
+   <polyline points="0,0 64,-64 240,-64 240,48 0,48 0,0"/>
   </object>
   <object id="976" x="1232" y="464">
-   <polyline points="112,-32 0,-112 176,-112 240,-48 240,0 112,-32"/>
+   <polyline points="0,0 0,-112 176,-112 240,-48 240,0 0,0"/>
   </object>
   <object id="977" x="992" y="512">
-   <polyline points="0,0 0,-48 144,-8 240,64 64,64 0,0"/>
+   <polyline points="0,0 0,-48 240,-48 240,64 64,64 0,0"/>
   </object>
   <object id="978" x="1232" y="576">
-   <polyline points="0,0 112,-80 240,-112 240,-64 176,0 0,0"/>
+   <polyline points="0,0 0,-112 240,-112 240,-64 176,0 0,0"/>
   </object>
   <object id="980" x="928" y="2016">
    <polyline points="0,0 64,-32 64,48 0,80 0,0"/>
   </object>
   <object id="981" x="1056" y="2032">
    <polyline points="0,0 0,-80 64,-112 64,-32 0,0"/>
+  </object>
+  <object id="1015" x="1408" y="352">
+   <polyline points="-32,32 96,-96 96,64 64,64 -32,32"/>
+  </object>
+  <object id="2100" x="960" y="256">
+   <polyline points="0,0 128,128 32,160 0,160 0,0"/>
+  </object>
+ </objectgroup>
+ <objectgroup name="MonsterInstances">
+  <object id="2108" x="1176" y="168">
+   <properties>
+    <property name="monsterid" type="int" value="0"/>
+   </properties>
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup name="GravityZones" visible="0">
+  <object id="2772" name="northwest" x="0" y="0" width="1216" height="1240">
+   <properties>
+    <property name="gangle" type="float" value="15"/>
+   </properties>
+  </object>
+  <object id="2773" name="northeast" x="1216" y="0" width="1216" height="1240">
+   <properties>
+    <property name="gangle" type="float" value="0"/>
+   </properties>
+  </object>
+  <object id="2777" name="southwest" x="0" y="1240" width="1216" height="1240">
+   <properties>
+    <property name="gangle" type="float" value="45"/>
+   </properties>
+  </object>
+  <object id="2778" name="southeast" x="1216" y="1240" width="1216" height="1240">
+   <properties>
+    <property name="gangle" type="float" value="90"/>
+   </properties>
   </object>
  </objectgroup>
 </map>

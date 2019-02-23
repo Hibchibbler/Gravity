@@ -471,6 +471,14 @@ namespace bali {
                 ctx->map->objectgroups.back()->objects.back()->polyline = ptr;
 
             }
+            else if (state == "map objectgroup object point")
+            {
+                Point::Ptr ptr = make_shared<Point>();
+                ptr->x = ctx->map->objectgroups.back()->objects.back()->x;
+                ptr->y = ctx->map->objectgroups.back()->objects.back()->y;
+                ctx->map->objectgroups.back()->objects.back()->point = ptr;
+
+            }
             else if (state == "map objectgroup object image")
             {//case MapContext::LoadState::MAP_OBJECTGROUP_OBJECT_IMAGE: {
                 Image::Ptr ptr = make_shared<Image>();

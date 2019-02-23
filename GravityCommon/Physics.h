@@ -81,34 +81,68 @@ updateRigidBody(
     sf::Time & accumulator
 );
 
-bool CollisionResponse(
+void
+integrateEuler(
     RigidBody & rb,
+    PhysicsConfig & pc
+);
+
+void
+updateRigidBodyInternal(
+    RigidBody & rb,
+    PhysicsConfig & pc
+);
+
+sf::Vector2f
+CollisionResponseEntity(
+    RigidBody & rb,
+    RigidBody & orb,
     sf::Vector2f collision_normal,
+    float overlap,
+    PhysicsConfig & pc
+);
+
+sf::Vector2f
+CollisionResponseWall(
+    RigidBody & rb,
+    float omass,
+    sf::Vector2f ovel,
+    sf::Vector2f cn,
     float overlap,
     bool playerMoving,
     PhysicsConfig & pc
 );
 
-bool 
-ResolveProtoCollisions(
-    Entity & entity,
-    Vec<Entity> & otherentities,
-    Vec<Proto> & protos,
-    OnCollisionEvent onCollision,
-    OnNonCollisionEvent onNonCollision,
-    void* ud,
-    PhysicsConfig & pc
-);
+//bool 
+//GetProtoCollisionContacts(
+//    Entity & entity,
+//    Entity & otherentity,
+//    Vec<Proto> & protos,
+//    OnCollisionEvent onCollision,
+//    OnNonCollisionEvent onNonCollision,
+//    void* ud,
+//    PhysicsConfig & pc,
+//    std::list<SAT::ContactInfo> & contacts
+//);
 
 bool
-ResolvePolygonCollisions(
-    Entity & entity,
-    Vec<Shape> & collisionpolygons,
+ResolveAllCollisions(
+    Context* context,
     OnCollisionEvent onCollision,
     OnNonCollisionEvent onNonCollision,
-    void* ud,
     PhysicsConfig & pc
 );
+//
+//bool
+//ResolvePolygonCollisions(
+//    Entity & entity,
+//    Vec<Shape> & collisionpolygons,
+//    OnCollisionEvent onCollision,
+//    OnNonCollisionEvent onNonCollision,
+//    void* ud,
+//    PhysicsConfig & pc,
+//    std::list<SAT::ContactInfo> & contacts
+//);
 //
 //void UpdateMotion (
 //    RigidBody & phy,

@@ -16,6 +16,8 @@
 #include "Entity.h"
 #include "Texture.h"
 #include "Player.h"
+#include "SpatialBuckets.h"
+
 namespace bali 
 {
 
@@ -49,13 +51,21 @@ public:
     Vec<Entity>     entities;      // stores entities that currently exist.
     Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
 
+    Vec<Shape>      gravityzones;
     Vec<Shape>      collisionshapes;
     Vec<Tile>       backgroundtiles;
     Vec<Tile>       foregroundtiles;
+    Vec<SAT::ContactInfo> allcontacts;
 
     qt::QuadTree::ShPtr    foregroundQuadTree;
     qt::QuadTree::ShPtr    backgroundQuadTree;
     qt::QuadTree::ShPtr    collisionQuadTree;
+    qt::QuadTree::ShPtr    entityQuadTree;
+
+    SpatialBuckets  entitybuckets;
+    SpatialBuckets  cpolybuckets;
+    SpatialBuckets  fgtbuckets;
+    SpatialBuckets  bgtbuckets;
 
     Vec<Vertex>     backgroundvertices; // these are updated each frame
     Vec<Vertex>     foregroundvertices; 
@@ -73,6 +83,10 @@ public:
     float           mainZoomFactor;
     uint32_t        frames_since_jump;
     sf::Clock       clock;
+
+    bool            paused;
+    sf::Time pausedacc;
+    sf::Time pausedftime;
 
 };
 

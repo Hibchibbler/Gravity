@@ -15,11 +15,14 @@
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <random>
 #include "ConfigLoader.h"
 #include "Player.h"
-
+#include "Builders.h"
 
 #include <assert.h>
+
+#define CORRECTION_FACTOR 2.0f
 
 using namespace bali::vec;
 
@@ -41,6 +44,712 @@ void cleanup()
 {
 
 }
+
+
+sf::Vector2f physics::ReflectUnitVector(sf::Vector2f d, sf::Vector2f n)
+{
+    sf::Vector2f v;
+    v = d - 2 * (vec::dot(d, n))*n;
+    return v;
+}
+
+bool CorrectPosition(
+    RigidBody & rb,
+    sf::Vector2f collision_normal,
+    float overlap
+)
+{
+    sf::Vector2f posDelta = collision_normal * overlap;
+
+    CommandQueue::postModifyPosition(rb, posDelta, false);
+    return true;
+}
+
+
+sf::Vector2f
+physics::CollisionResponseEntity(
+    RigidBody & rb,
+    RigidBody & orb,
+    sf::Vector2f cn,
+    float overlap,
+    PhysicsConfig & pc
+)
+{
+    float ma = 1.0f / rb.mass;
+    float mb = 1.0f / orb.mass;
+    sf::Vector2f Vrel = rb.vel - orb.vel;                // Relative velocity (N.B. - walls have 0 velocity)
+    float velAlongNormal = vec::dot(Vrel, cn);  // Magnitude of velocity, at impact, along collision normal.
+    float e = pc.RESTITUTION;
+    // Skip response if moving away
+    if (velAlongNormal > 0)
+        return vec::Zero();// rb.vel;
+    sf::Vector2f VR = Vrel - cn*velAlongNormal*(2.0f);
+    // magnitude of velocity along collision normal
+    // after restitution is taken into account
+    float j = -(1 + e) * velAlongNormal;
+    j = j / ma;
+    sf::Vector2f jn = cn * j;
+    // and to turn it into a force magnitude, account for mass
+
+    // the force applied along the collision normal
+    sf::Vector2f Vnew = (VR * j * ma);
+
+}
+
+sf::Vector2f
+ApplyImpulse(
+    sf::Vector2f v,
+    float j,
+    sf::Vector2f n
+)
+{
+    return (v + (n * j));
+}
+
+sf::Vector2f
+physics::CollisionResponseWall(
+    RigidBody & rb,
+    float omass,
+    sf::Vector2f ovel,
+    sf::Vector2f cn,
+    float overlap,
+    bool EntityActive,
+    PhysicsConfig & pc
+)
+{
+    ////////// https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-friction-scene-and-jump-table--gamedev-7756
+    float ma = 1.0f / rb.mass;
+    float mb = (omass == 0 ? 0 : 1.0f / omass);
+    sf::Vector2f Vrel = rb.vel - ovel;          // Relative velocity (N.B. - walls have 0 velocity)
+    float velAlongNormal = vec::dot(Vrel, cn);  // Magnitude of velocity, at impact, along collision normal.
+    float e = pc.RESTITUTION;
+
+    // Skip response if moving away
+    if (velAlongNormal >= 0)
+        return vec::Zero();
+
+    // magnitude of velocity along collision normal
+    // after restitution is taken into account
+    float j = -(1 + e) * velAlongNormal;
+    j = j / (ma+mb);
+    sf::Vector2f jcn = cn * j;
+
+    // the force applied along the collision normal
+    sf::Vector2f totalresponse = (jcn * ma);
+
+    // Add friction to the mix
+    // IFF entity does not intend to move.
+    if (!EntityActive)
+    {
+        
+        sf::Vector2f t = Vrel - cn*velAlongNormal;
+        
+        if (t != vec::Zero())
+        {
+            t = vec::norm(t);
+            float velAlongTangent = vec::dot(Vrel, t);
+            float jt = -(1 + e) * (velAlongTangent / (ma + mb));
+            float absjt = abs(jt);
+            sf::Vector2f friction;
+            if (absjt < j * pc.STATIC_FRICTION)
+            {
+                friction = t * jt;
+                //std::cout << std::setprecision(3) <<"1) " << absjt << " < " << j * pc.STATIC_FRICTION << std::endl;
+            }
+            else
+            {
+                friction =  t * -j * pc.DYNAMIC_FRICTION;
+                //std::cout << "2";
+                std::cout << std::setprecision(3) << "2) " << absjt << " < " << j * pc.STATIC_FRICTION << std::endl;
+            }
+            totalresponse = totalresponse + (friction * ma);
+        }
+    }
+    return totalresponse;
+}
+
+#define PRINT_DIAGNOSTICS
+
+bool GreatestOverlap(SAT::ContactInfo a, SAT::ContactInfo b)
+{
+    // descending order, largest to smallest.
+    return a.overlap < b.overlap;
+}
+
+bool
+ResolveAllCollisions(
+    Context* context,
+    OnCollisionEvent onCollision, 
+    OnNonCollisionEvent onNonCollision,
+    PhysicsConfig & pc
+)
+{
+    
+    bool collision = false;
+    bool done = false;
+    int iter = 0;
+    std::vector<SAT::ContactInfo> entityContacts;
+    std::vector<SAT::ContactInfo> wallContacts;
+
+   
+    sf::Time framequant = context->frameacc + context->frametime;
+    sf::Time simtime;
+     sf::Clock simclock;
+    while (framequant >= sf::seconds(pc.FIXED_DELTA) && !context->paused)
+    {
+        if (framequant > sf::seconds(pc.FIXED_DELTA)*20.f)
+        {
+            framequant = sf::seconds(pc.FIXED_DELTA)*20.f;
+            std::cout << "Death Spiral Detected!" << std::endl;
+        }
+        framequant -= sf::seconds(pc.FIXED_DELTA);
+        for (int e = 0; e < context->entities.size(); e++)
+        {
+            ////////// Do the deed //////////
+            updateRigidBodyInternal(context->entities[e].proto.body, pc);
+            integrateEuler(context->entities[e].proto.body, pc);
+            /////////////////////////////////
+
+
+            // Reinitialize 1 pass entity structures.
+            
+           // context->entities[e].proto.shapes[0].move(-7, 0);
+            context->entities[e].collisionEntities.clear();
+
+            context->entities[e].totalForce = vec::Zero();
+            context->entities[e].totalMagnitude = 0.0f;
+            context->entities[e].numForces = 0;
+
+
+            /////////////////
+            float width = context->entities[e].proto.shapes[0].getLocalBounds().width/2.f;
+            float height= context->entities[e].proto.shapes[0].getLocalBounds().height/2.f;
+
+            width += context->entities[e].proto.body.pos.x;
+            height+= context->entities[e].proto.body.pos.y;
+
+            sf::Vector2f newpos(width, height);
+            context->entities[e].proto.shapes[0].setPosition(newpos);
+            //context->entities[e].proto.shapes[0].setPosition(context->entities[e].proto.body.pos);
+            ////////////////
+
+        }
+        // Reinitialize 1 pass global structures
+        context->allcontacts.clear();
+        context->entitybuckets.clear();
+
+        ///////////////////////////////////////////////
+        //
+        // collect the collision polygons visible to each entity
+        //
+
+        for (int e = 0; e < context->entities.size(); e++) {
+
+            context->entities[e].collisionShapes.clear();
+
+            std::vector<size_t> nays;
+            context->cpolybuckets.getneighbors(context->entities[e].proto.body.pos.x,
+                                               context->entities[e].proto.body.pos.y,
+                                               nays);
+            context->entities[e].collisionShapes.insert(context->entities[e].collisionShapes.end(),
+                nays.begin(),
+                nays.end());
+        }
+        ///////////////////////////////////////////////
+        // Build Spatial Buckets for entities
+        for (uint64_t e = 0; e < context->entities.size(); e++)
+        {
+            //context->entitybuckets.add(context->entities[e].proto.body.pos.x+ (context->entities[e].proto.shapes[0].getGlobalBounds().width / 2.0f),
+            //                           context->entities[e].proto.body.pos.y+ (context->entities[e].proto.shapes[0].getGlobalBounds().height / 2.0f),// Change it also in StageMain.cpp
+            //                           e);
+            context->entitybuckets.add(context->entities[e].proto.body.pos.x,
+                context->entities[e].proto.body.pos.y,// Change it also in StageMain.cpp
+                e);
+        }
+        //
+        // Using newly create bucket, Locate nearest neighbors for each entity
+        //
+        for (int e = 0; e < context->entities.size(); e++)
+        {
+            std::vector<size_t> nays;
+            context->entitybuckets.getneighbors(context->entities[e].proto.body.pos.x,
+                                                context->entities[e].proto.body.pos.y,
+                                                nays);
+            context->entities[e].collisionEntities.insert(context->entities[e].collisionEntities.end(),
+                                                          nays.begin(),
+                                                          nays.end());
+        }
+        ///////////////////////////////////////////////
+
+        // Collect collision contacts for entity to entity
+        for (int j = 0; j < context->entities.size(); j++)
+        {
+            for (int e = 0; e < context->entities[j].collisionEntities.size(); e++)
+            {
+                std::vector<SAT::ContactInfo> tempContacts;
+                size_t index =  context->entities[j].collisionEntities[e];
+                if (j == index)
+                    continue;
+                if (SAT::Shape::collision(context->entities[j].proto.shapes[0],
+                                          context->entities[index].proto.shapes[0],
+                                          tempContacts))
+                {
+                    tempContacts.back().thisindex = j;
+                    tempContacts.back().thatindex = index;
+                    context->allcontacts.push_back(tempContacts.back());
+                }
+            }
+        }
+
+        // Collect collision contacts for entity-to-wall
+        for (int j = 0; j < context->entities.size(); j++)
+        {
+            for (int p = 0; p < context->entities[j].collisionShapes.size(); p++)
+            {
+                std::vector<SAT::ContactInfo> tempContacts;
+                size_t index = context->entities[j].collisionShapes[p];
+                if (SAT::Shape::collision(context->entities[j].proto.shapes[0],
+                                          context->collisionshapes[index],
+                                          tempContacts))
+                {
+                    tempContacts.back().thisindex = j;
+                    tempContacts.back().thatindex = -1;
+                    context->allcontacts.push_back(tempContacts.back());
+                }
+            }
+        }
+        std::sort(context->allcontacts.begin(),
+                  context->allcontacts.end(),
+                  GreatestOverlap);
+
+        /*std::random_device rd;
+        std::mt19937 generator(rd());
+        std::shuffle(context->allcontacts.begin(), context->allcontacts.end(), generator);*/
+
+        for (int j = 0; j < context->allcontacts.size(); j++)
+        {
+            SAT::ContactInfo & contact = context->allcontacts[j];
+            Entity* thisEntity = &context->entities[contact.thisindex];
+            float thatmass = 0.f;
+            sf::Vector2f thatvel;
+            sf::Vector2f posDelta;
+            float overlap;
+            if (contact.thatindex != -1)
+            {
+                Entity* thatEntity = &context->entities[contact.thatindex];
+                thatmass = thatEntity->proto.body.mass;
+                thatvel = thatEntity->proto.body.vel;
+                overlap = contact.overlap / 2.0f;
+            }
+            else
+            {
+                thatmass = 0.0f;
+                overlap = contact.overlap;
+            }
+            posDelta = contact.normal * overlap;
+            sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
+                                                          thatmass,
+                                                          thatvel,
+                                                          contact.normal,
+                                                          overlap,
+                                                          thisEntity->isActive(),
+                                                          pc);
+
+            thisEntity->totalPos = thisEntity->totalPos + posDelta;
+            thisEntity->totalForce = thisEntity->totalForce + velDelta;
+            thisEntity->numForces++;
+
+            CommandQueue::postModifyPosition(thisEntity->proto.body,
+                                                posDelta,
+                                                false);
+
+            CommandQueue::postModifyVelocity(thisEntity->proto.body,
+                                                velDelta,
+                                                false);
+
+            physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
+            onCollision(context, *thisEntity, contact.normal);
+
+        }
+
+        //for (int j = 0; j < context->entities.size(); j++)
+        //{
+        //    Entity* thisEntity = &context->entities[j];
+        //    if (thisEntity->numForces > 0)
+        //    {
+        //        /*CommandQueue::postModifyPosition(thisEntity->proto.body,
+        //            thisEntity->totalPos / (float)thisEntity->numForces,
+        //            false);*/
+
+        //        //physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
+        //        CommandQueue::postModifyVelocity(thisEntity->proto.body,
+        //            thisEntity->totalForce / (float)thisEntity->numForces,
+        //            false);
+
+        //        physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
+        //        //onCollision(context, *thisEntity, thisEntity->totalForce);
+
+        //        thisEntity->numForces = 0;
+        //        thisEntity->totalPos = vec::Zero();
+        //        thisEntity->totalForce = vec::Zero();
+        //    }
+        //    else 
+        //    {
+        //        onNonCollision(context, *thisEntity);
+        //    }
+        //}
+
+        simtime += simclock.restart();
+    }
+    context->frameacc = framequant; // store the left over time for next iteration.
+    return true;
+}
+
+
+void
+updateRigidBodyInternal(
+    RigidBody & rb,
+    PhysicsConfig & pc
+)
+{
+    //
+    // Integrate motion
+    //
+    Command cmd;
+    sf::Vector2f velAcc;
+    sf::Vector2f theVel;
+    float ta = 0.f;
+
+    while (rb.cmdqueue.nextCommand(rb, cmd))
+    {
+        //float ma = 1.0f / rb.mass;
+        switch (cmd.code)
+        {
+        case Command::Code::ACCELERATION:
+            if (cmd.set) {
+                rb.accel = cmd.accel.accel;
+            }
+            else {
+                rb.accel += cmd.accel.accel;
+            }
+            break;
+        case Command::Code::VELOCITY:
+            if (cmd.set) {
+                rb.vel = cmd.vel.vel;
+            }
+            else {
+                rb.vel += cmd.vel.vel;
+            }
+            break;
+        case Command::Code::POSITION:
+            if (cmd.set) {
+                rb.pos = cmd.pos.pos;
+            }
+            else {
+                rb.pos += cmd.pos.pos;
+            }
+            break;
+        case Command::Code::ANGLE:
+            rb.angle = cmd.ang.angle;
+            break;
+        case Command::Code::MOVE:
+            rb.vel += physics::ApplyMove(cmd.mov, rb, pc.MOVE_STRENGTH, pc.FREEFALL_MOVE_STRENGTH, pc.MOVE_VELOCITY_MAX);
+            break;
+        case Command::Code::CHARGE:
+            rb.vel += physics::ApplyCharge(cmd.chg, rb, pc.MOVE_STRENGTH, pc.CHARGE_VELOCITY_MAX);
+            break;
+        case Command::Code::JUMP:
+            rb.vel += physics::ApplyJump(cmd.jmp, rb, pc.JUMP_STRENGTH, pc.JUMP_VELOCITY_MAX);
+            break;
+        }// end switch
+    }
+}
+
+/*
+The main idea here is we increment the physics at fixed time deltas.
+Mostly, we should only be performing 1 fixed delta per update.
+But if for some reason we get temporary local lag,
+our accumulator will help us get the physics engine
+caught back up because it tells us how many fixed deltas
+we are behind by.
+
+
+Each entity has a Command queue that is populated from various sources (keyboard input, collision response, etc)
+The commands in this queue are applied to the target entity here.
+*/
+void
+updateRigidBody(
+    RigidBody & rb,
+    sf::Time elapsed,
+    PhysicsConfig & pc,
+    sf::Time & accumulator
+)
+{
+
+    //accumulator += elapsed;
+
+    while (accumulator.asMilliseconds() > pc.FIXED_DELTA)
+    {
+        accumulator -= sf::seconds(pc.FIXED_DELTA);
+
+        updateRigidBodyInternal(rb, pc);
+
+        integrateEuler(rb, pc);
+
+    }
+}
+
+void
+integrateEuler(
+    RigidBody & rb,
+    PhysicsConfig & pc
+)
+{
+    //
+    // Apply drag if physical is airborne.
+    // But, only apply drag in the lateral directions.
+    //
+    //if (rb.vel != vec::Zero())
+
+    //if (!rb.collider.isCollided[0] && !rb.collider.isCollided[1]) {
+    //    //rb.vel -= physics::ApplyDrag(rb, pc.DRAG_CONSTANT);
+    //}
+
+    //
+    // semi-implicit euler
+    //
+    rb.accel = (physics::downVector(rb.angle) * pc.GRAVITY_CONSTANT);
+    rb.vel += (rb.accel * pc.FIXED_DELTA) * (float)rb.mass;
+    ClampUpperVector(rb.vel, pc.VELOCITY_MAX);
+    rb.pos += rb.vel * pc.FIXED_DELTA;
+}
+
+void physics::ClampUpperVector(sf::Vector2f & vel, float max)
+{
+    //
+    // Limit Velocity
+    //
+    if (vel.x > max)
+    {
+        vel.x = max;
+    }
+
+    if (vel.x < -max)
+    {
+        vel.x = -max;
+    }
+
+    if (vel.y > max)
+    {
+        vel.y = max;
+    }
+
+    if (vel.y < -max)
+    {
+        vel.y = -max;
+    }
+}
+
+//physics::Intersection::Intersection()
+//{
+//    time = 0.0f;
+//    rayPoint = sf::Vector2f(0.0f, 0.0f);
+//    segPoint = sf::Vector2f(0.0f, 0.0f);
+//    angle = 0;
+//    expired = true;
+//    segment = Segment(rayPoint, rayPoint, rayPoint);
+//}
+
+sf::Vector2f physics::rotVector(float angle)
+{
+    float a = DEG_TO_RAD(angle);
+    sf::Vector2f v(0.f, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f rotVector(float angle, sf::Vector2f v)
+{
+    float a = DEG_TO_RAD(angle);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f physics::upVector(float angle)
+{
+    float a = DEG_TO_RAD(angle - 90.f);
+    sf::Vector2f v(0, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f physics::leftVector(float angle)
+{
+    //float a = DEG_TO_RAD(angle - 180 - LEFTUP);
+    float a = DEG_TO_RAD(angle - 180.f);
+    sf::Vector2f v(0.f, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f physics::downVector(float angle)
+{
+    float a = DEG_TO_RAD(angle - 270.f);
+    sf::Vector2f v(0.f, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f physics::rightVector(float angle)
+{
+    //float a = DEG_TO_RAD(angle - 360 + LEFTUP);
+    float a = DEG_TO_RAD(angle - 360.f);
+    sf::Vector2f v(0.f, 1.f);
+    float m = vec::mag(v);
+    v.x = m * cos(a);
+    v.y = m * sin(a);
+    v = vec::norm(v);
+
+    return v;
+}
+
+sf::Vector2f
+physics::ApplyDrag(RigidBody & phy, float drag_coefficient)
+{
+    sf::Vector2f draglateral;
+    sf::Vector2f lv = leftVector(phy.angle);
+    sf::Vector2f uv = upVector(phy.angle);
+    sf::Vector2f dv = downVector(phy.angle);
+    sf::Vector2f velnorm = vec::norm(phy.vel);
+    float upStrength = vec::dot(uv, velnorm);
+    float downStrength = vec::dot(dv, velnorm);
+
+    //
+    // Apply drag when in the air, and falling.
+    // And, only apply to the lateral component 
+    // of the velocity.
+    //
+    if (downStrength > upStrength)
+    {
+        sf::Vector2f drag = drag_coefficient * phy.vel;
+        draglateral = vec::dot(drag, lv)* lv;
+        //phy.vel -= draglateral;
+    }
+    return draglateral;
+}
+
+sf::Vector2f
+physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
+{
+    sf::Vector2f u;
+    sf::Vector2f up = upVector(phy.angle) * 0.90f;
+    if (j.dir != vec::Zero())
+    {
+        if (vec::dot(j.dir, downVector(phy.angle)) < 0.01f)
+        {
+            u = vec::norm(j.dir + up)  * j.str * jump_strength;
+            //u = phy.impulse(u);
+            //if (vec::mag(phy.vel + u) > jump_velocity_max)
+            //{
+            //    u = vec::Zero();
+            //}
+            //phy.vel += u;
+        }
+    }
+    return u;
+}
+
+sf::Vector2f
+physics::ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max)
+{
+    sf::Vector2f dir = vec::norm(chg.dir);
+    sf::Vector2f m = dir * chg.str * charge_strength;
+    //m = phy.impulse(m);
+    if (vec::mag(phy.vel + m) > charge_velocity_max)
+    {
+        m = vec::Zero();
+    }
+    //phy.vel += m;
+    return m;
+}
+
+sf::Vector2f
+physics::ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
+{
+    sf::Vector2f m;
+    if (!mov.gnd)
+    {
+        if (mov.dir != vec::Zero())
+        {
+            sf::Vector2f dir = vec::norm(mov.dir);
+            m = dir * mov.str * freefall_move_strength * (1.0f / phy.mass);
+            //m = phy.impulse(m);
+        }
+    }
+    else
+    {
+        sf::Vector2f dir = vec::norm(mov.dir);
+        m = dir * mov.str * move_strength * (1.0f / phy.mass);
+        //m = phy.impulse(m);
+    }
+
+    //if (vec::mag(phy.vel + m) > move_velocity_max)
+    //{
+    //    m = vec::norm(phy.vel) * move_velocity_max;
+    //}
+    //phy.vel += m;
+    return m;
+}
+
+
+
+
+void SaveCommandHistory(std::string file, std::list<Command> & history)
+{
+    std::ofstream fout;
+    fout.open(file, std::ios::binary);
+
+    if (fout.is_open())
+    {
+        for (auto i = history.begin(); i != history.end(); i++)
+        {
+            //fout << i->timestamp;
+            //fout << i->code;
+            //fout << i->priority;
+            //fout << i->set;
+        }
+    }
+    else
+    {
+        // problem opening output file
+    }
+}
+
+void LoadCommandHistory(std::string file, std::list<Command> & history)
+{
+
+}
+
 //
 //// Find intersection of RAY & SEGMENT
 //bool physics::getIntersection(sf::Vector2f rayStart, sf::Vector2f ray, Segment segment, physics::Intersection & intersection)
@@ -197,442 +906,6 @@ void cleanup()
 //}
 //
 
-sf::Vector2f physics::ReflectUnitVector(sf::Vector2f d, sf::Vector2f n)
-{
-    sf::Vector2f v;
-    v = d - 2 * (vec::dot(d, n))*n;
-    return v;
-}
-
-bool physics::CollisionResponse (
-    RigidBody & rb,
-    sf::Vector2f collision_normal,
-    float overlap,
-    bool playerMoving,
-    PhysicsConfig & pc
-)
-{
-    float newMag = 0.f;
-    sf::Vector2f original_velocity = rb.vel;
-    collision_normal = vec::norm(collision_normal);
-    sf::Vector2f newVelocity;
-    sf::Vector2f posDelta = collision_normal * overlap * 1.0f;
-
-    CommandQueue::postModifyPosition(rb, posDelta, false);
-    newVelocity = collision_normal*(vec::dot(original_velocity, collision_normal)) * -1.f * (1 + pc.RESTITUTION) + original_velocity;
-    assert(newVelocity != vec::Zero());
-    assert(overlap != 0.0f);
-
-    newMag = vec::mag(newVelocity);
-    CommandQueue::postModifyVelocity(rb, newVelocity, true);
-
-    //
-    // If velocity is low,
-    // use static friction
-    // otherwise, use dynamic
-    // friction.
-    if (playerMoving)
-    {
-
-    }
-    else
-    {
-        ////if (newMag < pc.STATIC_FRICTION_VELOCITY_MAX)
-        ////{
-        //// https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-friction-scene-and-jump-table--gamedev-7756
-        //sf::Vector2f tangent = newVelocity - (collision_normal * vec::dot(newVelocity, collision_normal));
-        //tangent = vec::norm(tangent);
-        //float jt = vec::dot(newVelocity, tangent) * -1.0f;
-
-        //sf::Vector2f rotated_collision_normal = rotVector(rb.angle, collision_normal);
-        //sf::Vector2f frictionvector = tangent * jt * pc.STATIC_FRICTION *( (vec::dot(rotated_collision_normal, rightVector(rb.angle))) /vec::mag(rb.vel));
-
-        ////sf::Vector2f frictionvector = tangent * jt * pc.STATIC_FRICTION;
-
-        //CommandQueue::postModifyVelocity(rb, frictionvector, false);
-
-    }
-    //physics::ModifyAcceleration(phys, vec::Zero(), true);
-    return true;
-}
-
-
-#define PRINT_DIAGNOSTICS
-bool physics::ResolvePolygonCollisions(Entity & entity, Vec<Shape> & collisionpolygons, OnCollisionEvent onCollision, OnNonCollisionEvent onNonCollision, void* ud, PhysicsConfig & pc)
-{
-    bool collision = false;
-    std::vector<SAT::ContactInfo> contacts;
-
-    entity.collider.isCollided[1] = entity.collider.isCollided[0];
-    entity.collider.isCollided[0] = false;
-
-    for (auto oent = collisionpolygons.begin(); oent != collisionpolygons.end(); ++oent)
-    {
-        if (SAT::Shape::collision(entity.proto.shapes[0], *oent, contacts)) {
-            entity.collider.isCollided[0] = collision;
-            CollisionResponse(entity.proto.body, contacts.back().normal, contacts.back().overlap, entity.isActive(), pc);
-            onCollision(ud, entity, contacts.back().normal);
-            return true;
-        }
-        else {
-            onNonCollision(ud, entity);
-        }
-    }
-    return collision;
-}
-bool physics::ResolveProtoCollisions(Entity & entity, Vec<Entity> & otherentities, Vec<Proto> & protos, OnCollisionEvent onCollision, OnNonCollisionEvent onNonCollision, void* ud, PhysicsConfig & pc)
-{
-    bool collision = false;
-    std::vector<SAT::ContactInfo> contacts;
-
-    entity.collider.isCollided[1] = entity.collider.isCollided[0];
-    entity.collider.isCollided[0] = false;
-
-    for (auto oent = otherentities.begin(); oent != otherentities.end(); ++oent)
-    {
-        if (&entity == &(*oent)) {
-            continue;
-        }
-        if (SAT::Shape::collision(entity.proto.shapes[0], oent->proto.shapes[0], contacts)) {
-            entity.collider.isCollided[0] = collision;
-            CollisionResponse(entity.proto.body, contacts.back().normal, contacts.back().overlap / 3.0f, entity.isActive(), pc);
-            onCollision(ud, entity, contacts.back().normal);
-            return true;
-        }
-        else {
-            onNonCollision(ud, entity);
-        }
-    }
-    return collision;
-}
-
-
-/*
-The main idea here is we increment the physics at fixed time deltas.
-Mostly, we should only be performing 1 fixed delta per update.
-But if for some reason we get temporary local lag,
-our accumulator will help us get the physics engine
-caught back up because it tells us how many fixed deltas
-we are behind by.
-
-
-Each entity has a Command queue that is populated from various sources (keyboard input, collision response, etc)
-The commands in this queue are applied to the target entity here.
-*/
-void
-updateRigidBody(
-    RigidBody & rb,
-    sf::Time elapsed,
-    PhysicsConfig & pc,
-    sf::Time & accumulator
-)
-{
-
-    accumulator += elapsed;
-
-    while (accumulator.asMilliseconds() > pc.FIXED_DELTA)
-    {
-        accumulator -= sf::seconds(pc.FIXED_DELTA);
-
-        //
-        // Integrate motion
-        //
-        Command cmd;
-        sf::Vector2f velAcc;
-        sf::Vector2f theVel;
-        float ta = 0.f;
-
-        while (rb.cmdqueue.nextCommand(rb, cmd))
-        {
-            switch (cmd.code)
-            {
-            case Command::Code::ACCELERATION:
-                if (cmd.set) {
-                    rb.accel = cmd.accel.accel;
-                }
-                else {
-                    rb.accel += cmd.accel.accel;
-                }
-                break;
-            case Command::Code::VELOCITY:
-                if (cmd.set) {
-                    rb.vel = cmd.vel.vel;
-                }
-                else {
-                    rb.vel += cmd.vel.vel;
-                }
-                break;
-            case Command::Code::POSITION:
-                if (cmd.set) {
-                    rb.pos = cmd.pos.pos;
-                }
-                else {
-                    rb.pos += cmd.pos.pos;
-                }
-                break;
-            case Command::Code::ANGLE:
-                rb.angle = cmd.ang.angle;
-                break;
-            case Command::Code::MOVE:
-                rb.vel += physics::ApplyMove(cmd.mov, rb, pc.MOVE_STRENGTH, pc.FREEFALL_MOVE_STRENGTH, pc.MOVE_VELOCITY_MAX);
-                break;
-            case Command::Code::CHARGE:
-                rb.vel += physics::ApplyCharge(cmd.chg, rb, pc.MOVE_STRENGTH, pc.CHARGE_VELOCITY_MAX);
-                break;
-            case Command::Code::JUMP:
-                rb.vel += physics::ApplyJump(cmd.jmp, rb, pc.JUMP_STRENGTH, pc.JUMP_VELOCITY_MAX);
-                break;
-            }// end switch
-        }
-        //
-        // Apply drag if physical is airborne.
-        // But, only apply drag in the lateral directions.
-        //
-        //if (rb.vel != vec::Zero())
-
-        if (!rb.collider.isCollided[0] && !rb.collider.isCollided[1]) {
-            //rb.vel -= physics::ApplyDrag(rb, pc.DRAG_CONSTANT);
-        }
-
-        //
-        // semi-implicit euler
-        //
-        rb.accel = physics::downVector(rb.angle) * pc.GRAVITY_CONSTANT;
-        rb.vel += (rb.accel * pc.FIXED_DELTA);
-        //ClampUpperVector(rb.vel, pc.VELOCITY_MAX);
-        rb.pos += rb.vel * pc.FIXED_DELTA;
-
-    }
-}
-
-void physics::ClampUpperVector(sf::Vector2f & vel, float max)
-{
-    //
-    // Limit Velocity
-    //
-    if (vel.x > max)
-    {
-        vel.x = max;
-    }
-
-    if (vel.x < -max)
-    {
-        vel.x = -max;
-    }
-
-    if (vel.y > max)
-    {
-        vel.y = max;
-    }
-
-    if (vel.y < -max)
-    {
-        vel.y = -max;
-    }
-}
-
-//physics::Intersection::Intersection()
-//{
-//    time = 0.0f;
-//    rayPoint = sf::Vector2f(0.0f, 0.0f);
-//    segPoint = sf::Vector2f(0.0f, 0.0f);
-//    angle = 0;
-//    expired = true;
-//    segment = Segment(rayPoint, rayPoint, rayPoint);
-//}
-
-sf::Vector2f physics::rotVector(float angle)
-{
-    float a = DEG_TO_RAD(angle);
-    sf::Vector2f v(0.f, 1.f);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f rotVector(float angle, sf::Vector2f v)
-{
-    float a = DEG_TO_RAD(angle);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f physics::upVector(float angle)
-{
-    float a = DEG_TO_RAD(angle - 90.f);
-    sf::Vector2f v(0, 1.f);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f physics::leftVector(float angle)
-{
-    //float a = DEG_TO_RAD(angle - 180 - LEFTUP);
-    float a = DEG_TO_RAD(angle - 180.f);
-    sf::Vector2f v(0.f, 1.f);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f physics::downVector(float angle)
-{
-    float a = DEG_TO_RAD(angle - 270.f);
-    sf::Vector2f v(0.f, 1.f);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f physics::rightVector(float angle)
-{
-    //float a = DEG_TO_RAD(angle - 360 + LEFTUP);
-    float a = DEG_TO_RAD(angle - 360.f);
-    sf::Vector2f v(0.f, 1.f);
-    float m = vec::mag(v);
-    v.x = m * cos(a);
-    v.y = m * sin(a);
-    v = vec::norm(v);
-
-    return v;
-}
-
-sf::Vector2f
-physics::ApplyDrag(RigidBody & phy, float drag_coefficient)
-{
-    sf::Vector2f draglateral;
-    sf::Vector2f lv = leftVector(phy.angle);
-    sf::Vector2f uv = upVector(phy.angle);
-    sf::Vector2f dv = downVector(phy.angle);
-    sf::Vector2f velnorm = vec::norm(phy.vel);
-    float upStrength = vec::dot(uv, velnorm);
-    float downStrength = vec::dot(dv, velnorm);
-
-    //
-    // Apply drag when in the air, and falling.
-    // And, only apply to the lateral component 
-    // of the velocity.
-    //
-    if (downStrength > upStrength)
-    {
-        sf::Vector2f drag = drag_coefficient * phy.vel;
-        draglateral = vec::dot(drag, lv)* lv;
-        //phy.vel -= draglateral;
-    }
-    return draglateral;
-}
-
-sf::Vector2f
-physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
-{
-    sf::Vector2f u;
-    sf::Vector2f up = upVector(phy.angle) * 0.90f;
-    if (j.dir != vec::Zero())
-    {
-        if (vec::dot(j.dir, downVector(phy.angle)) < 0.01f)
-        {
-            u = vec::norm(j.dir + up)  * j.str * jump_strength;
-            u = phy.impulse(u);
-            if (vec::mag(phy.vel + u) > jump_velocity_max)
-            {
-                u = vec::Zero();
-            }
-            //phy.vel += u;
-        }
-    }
-    return u;
-}
-
-sf::Vector2f
-physics::ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max)
-{
-    sf::Vector2f dir = vec::norm(chg.dir);
-    sf::Vector2f m = dir * chg.str * charge_strength;
-    m = phy.impulse(m);
-    if (vec::mag(phy.vel + m) > charge_velocity_max)
-    {
-        m = vec::Zero();
-    }
-    //phy.vel += m;
-    return m;
-}
-
-sf::Vector2f
-physics::ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
-{
-    sf::Vector2f m;
-    if (!mov.gnd)
-    {
-        if (mov.dir != vec::Zero())
-        {
-            sf::Vector2f dir = vec::norm(mov.dir);
-            m = dir * mov.str * freefall_move_strength;
-            m = phy.impulse(m);
-        }
-    }
-    else
-    {
-        sf::Vector2f dir = vec::norm(mov.dir);
-        m = dir * mov.str * move_strength;
-        m = phy.impulse(m);
-    }
-
-    if (vec::mag(phy.vel + m) > move_velocity_max)
-    {
-        m = vec::Zero();
-    }
-    //phy.vel += m;
-    return m;
-}
-
-
-
-
-void SaveCommandHistory(std::string file, std::list<Command> & history)
-{
-    std::ofstream fout;
-    fout.open(file, std::ios::binary);
-
-    if (fout.is_open())
-    {
-        for (auto i = history.begin(); i != history.end(); i++)
-        {
-            //fout << i->timestamp;
-            //fout << i->code;
-            //fout << i->priority;
-            //fout << i->set;
-        }
-    }
-    else
-    {
-        // problem opening output file
-    }
-}
-
-void LoadCommandHistory(std::string file, std::list<Command> & history)
-{
-
-}
-
-
-
 
 
 
@@ -646,3 +919,4 @@ void LoadCommandHistory(std::string file, std::list<Command> & history)
 
 }
 }
+
