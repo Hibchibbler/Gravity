@@ -11,6 +11,9 @@
 #include "Geometry.h"
 #include "Entity.h"
 #include "Texture.h"
+#include "SpatialBuckets.h"
+#include "Pathfinding.h"
+#include "Context.h"
 #include <stdint.h>
 
 namespace bali
@@ -51,6 +54,36 @@ qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom = 1.
 //      Shapes are retrieved, and then passed to collision detection
 //  The arrays of vertex are passed to the GPU
 
+sf::Vector2f
+GetCentroid(
+    Shape & shape
+);
+
+void
+CreateEntityBucket(
+    Vec<Entity> & entities,
+    SpatialBuckets & buckets
+);
+
+void
+GetEntityNeighbors(
+    Vec<Entity> & entities,
+    SpatialBuckets & buckets
+);
+
+void
+CreateCPolyBucket(
+    Vec<Shape> & cpolys,
+    SpatialBuckets & buckets
+);
+
+void
+GetCPolyNeighbors(
+    Context* context,
+    Vec<Entity> & entities,
+    SpatialBuckets & buckets
+);
+
 uint32_t
 addQuad(
     Vec<Vertex> & v,
@@ -89,6 +122,26 @@ bool
 buildPolyline(
     Shape & s,
     TMX::Object::Ptr obj
+);
+
+//uint32_t
+//loadPoints(Vec<Waypoint> & waypoints,
+//    TMX::Objectgroup::Ptr & objectGroup
+//);
+//
+//bool
+//buildPoint(Shape & s, TMX::Object::Ptr obj);
+
+//bool
+//buildWaypoints(
+//    Vec<Waypoint> & waypoints,
+//    TMX::Objectgroup::Ptr & objectGroup
+//);
+
+bool
+buildWaypoints10(
+    Vec<Waypoint> & waypoints,
+    TMX::Objectgroup::Ptr & objectGroup
 );
 
 Proto

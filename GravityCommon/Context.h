@@ -17,9 +17,18 @@
 #include "Texture.h"
 #include "Player.h"
 #include "SpatialBuckets.h"
+#include "Pathfinding.h"
+#include "AIDirector.h"
 
 namespace bali 
 {
+
+//class Waypoint
+//{
+//public:
+//    size_t id;
+//    sf::Vector2f pos;
+//};
 
 //
 // Context is an abstract base class
@@ -52,20 +61,14 @@ public:
     Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
 
     Vec<Shape>      gravityzones;
-    Vec<Shape>      collisionshapes;
+    Vec<Waypoint>   waypoints;        // stores static prototypes.
+    SpatialBuckets  entitybuckets;
+    SpatialBuckets  cpolybuckets;
+
+    Vec<Shape>      allcollisionshapes;
     Vec<Tile>       backgroundtiles;
     Vec<Tile>       foregroundtiles;
     Vec<SAT::ContactInfo> allcontacts;
-
-    qt::QuadTree::ShPtr    foregroundQuadTree;
-    qt::QuadTree::ShPtr    backgroundQuadTree;
-    qt::QuadTree::ShPtr    collisionQuadTree;
-    qt::QuadTree::ShPtr    entityQuadTree;
-
-    SpatialBuckets  entitybuckets;
-    SpatialBuckets  cpolybuckets;
-    SpatialBuckets  fgtbuckets;
-    SpatialBuckets  bgtbuckets;
 
     Vec<Vertex>     backgroundvertices; // these are updated each frame
     Vec<Vertex>     foregroundvertices; 
@@ -84,11 +87,15 @@ public:
     uint32_t        frames_since_jump;
     sf::Clock       clock;
 
+    AIDirector      AIDirector;
+
     bool            paused;
     sf::Time pausedacc;
     sf::Time pausedftime;
 
 };
+
+
 
 
 }

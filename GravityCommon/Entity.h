@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "Proto.h"
 #include "SATAlgo\SATAlgo.h"//TODO: don't include this!!! jeezzuz
-
+#include "Behavior.h"
 namespace bali
 {
 
@@ -36,9 +36,19 @@ public:
         moving = false;
         jumping = false;
         charging = false;
-    }
-    State    state;
 
+        registerwithaidirector = false;
+        ignoreentitycollision = false;
+
+        behavior.initialize();
+    }
+
+    void update(sf::Time elapsed)
+    {
+        //behavior.update(elapsed);
+    }
+    State       state;
+    Behavior    behavior;
     Proto       proto;
     Collider    collider;
 
@@ -48,13 +58,25 @@ public:
     uint8_t     charging;
 
     // These cross reference into the list that owns them.
-    Vec<size_t> collisionShapes;//cleared in update
-    Vec<size_t> collisionEntities;// cleared in update
+    Vec<size_t> collisionshapes;//cleared in update
+    Vec<size_t> collisionentities;// cleared in update
+    Vec<size_t> waypointpath;
+    size_t seekwaypoint;
+    size_t currentwaypoint;
+    Vec<Segment> visiblesegments;
 
-    sf::Vector2f totalForce;
-    sf::Vector2f totalPos;
-    uint32_t numForces;
-    float totalMagnitude;
+    bool registerwithaidirector;
+    bool ignoreentitycollision;
+
+    sf::Vector2f upper;
+    sf::Vector2f ahead;
+    sf::Vector2f lower;
+    sf::Vector2f distupper;
+    sf::Vector2f distahead;
+    sf::Vector2f distlower;
+
+    sf::Vector2f avgForce;
+    float numForce;
 
 };
 

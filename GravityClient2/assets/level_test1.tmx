@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="1.1.6" orientation="orthogonal" renderorder="right-down" width="75" height="75" tilewidth="32" tileheight="32" infinite="0" nextobjectid="2779">
+<map version="1.0" tiledversion="1.1.6" orientation="orthogonal" renderorder="right-down" width="75" height="75" tilewidth="32" tileheight="32" infinite="0" nextobjectid="2814">
  <properties>
   <property name="DeleteTiles" value="true"/>
   <property name="NoOverlappingRules" value="true"/>
@@ -10,34 +10,45 @@
  <tileset firstgid="3845" name="tilesetFore" tilewidth="32" tileheight="32" tilecount="240" columns="16">
   <image source="tilesetB.png" trans="ff00ff" width="512" height="480"/>
  </tileset>
- <objectgroup name="Player0">
+ <objectgroup color="#0000ff" name="Player0">
   <properties>
+   <property name="e" type="float" value="0.2"/>
+   <property name="id" type="int" value="0"/>
    <property name="mass" type="int" value="1"/>
-   <property name="protoid" type="int" value="0"/>
    <property name="prototype" value="player"/>
   </properties>
-  <object id="2132" x="1312" y="102">
+  <object id="2132" x="1296" y="128">
    <polyline points="0,0 6,-6 18,-6 24,0 24,12 18,18 6,18 0,12 0,0"/>
   </object>
  </objectgroup>
- <objectgroup name="Consumable0">
+ <objectgroup color="#ff0000" name="Consumable0">
   <properties>
+   <property name="id" type="int" value="30"/>
    <property name="mass" type="int" value="1"/>
-   <property name="protoid" type="int" value="30"/>
    <property name="prototype" value="consumable"/>
   </properties>
-  <object id="2103" x="1128" y="128">
-   <polyline points="0,0 8,0 16,16 8,32 0,32 -8,16 0,0"/>
+  <object id="2103" x="1136" y="256">
+   <polyline points="0,0 17.1852,0 34.3704,24 17.1852,48 0,48 -17.1852,24 0,0"/>
   </object>
  </objectgroup>
- <objectgroup name="Monster0">
+ <objectgroup color="#00ff00" name="Monster0">
   <properties>
+   <property name="id" type="int" value="10"/>
    <property name="mass" type="int" value="1"/>
-   <property name="protoid" type="int" value="10"/>
    <property name="prototype" value="monster"/>
   </properties>
-  <object id="1006" x="1216" y="152">
-   <polyline points="0,0 8,-8 16,-8 24,0 24,8 16,16 8,16 0,8 0,0"/>
+  <object id="2796" x="1004" y="71.2">
+   <polyline points="0,-5.6 5.85714,-16 20.0816,-19.2 35.1429,-14.4 41,-7.2 40.1633,0 34.3061,7.2 26.7755,12.8 16.7347,12.8 4.18367,5.6 0,-5.6"/>
+  </object>
+ </objectgroup>
+ <objectgroup name="Monster1">
+  <properties>
+   <property name="id" type="int" value="11"/>
+   <property name="mass" type="int" value="1"/>
+   <property name="prototype" value="monster"/>
+  </properties>
+  <object id="2800" x="1089.67" y="94">
+   <polyline points="0,0 12.6667,0 19,4.5 25.3333,18 19,31.5 12.6667,36 6.33333,36 -6.33333,31.5 -12.6667,22.5 -12.6667,13.5 -6.33333,4.5 0,0"/>
   </object>
  </objectgroup>
  <layer name="BackgroundLayer" width="75" height="75" visible="0">
@@ -5669,7 +5680,7 @@
    <tile/>
   </data>
  </layer>
- <layer name="ForegroundLayer" width="75" height="75" visible="0">
+ <layer name="ForegroundLayer" width="75" height="75">
   <data>
    <tile gid="2147487585"/>
    <tile gid="2147487585"/>
@@ -6301,7 +6312,6 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6317,7 +6327,8 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="2147487493"/>
+   <tile/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -6376,8 +6387,6 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="3938"/>
-   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6391,8 +6400,10 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="2147487493"/>
-   <tile gid="3938"/>
+   <tile/>
+   <tile/>
+   <tile/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -6451,9 +6462,6 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
-   <tile gid="3845"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6465,9 +6473,12 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="2147487493"/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
+   <tile/>
+   <tile/>
+   <tile/>
+   <tile/>
+   <tile/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -6526,9 +6537,9 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
+   <tile/>
+   <tile/>
+   <tile gid="2147487493"/>
    <tile gid="3953"/>
    <tile gid="3970"/>
    <tile gid="3937"/>
@@ -6540,9 +6551,9 @@
    <tile gid="3969"/>
    <tile gid="3938"/>
    <tile gid="3970"/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
+   <tile gid="3845"/>
+   <tile/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -6601,8 +6612,8 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
+   <tile/>
+   <tile gid="2147487493"/>
    <tile gid="3954"/>
    <tile gid="3916"/>
    <tile gid="3970"/>
@@ -6616,8 +6627,8 @@
    <tile gid="3916"/>
    <tile gid="3919"/>
    <tile gid="3970"/>
-   <tile gid="3938"/>
-   <tile gid="3938"/>
+   <tile gid="3845"/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -11961,21 +11972,9 @@
   <object id="981" x="1056" y="2032">
    <polyline points="0,0 0,-80 64,-112 64,-32 0,0"/>
   </object>
-  <object id="1015" x="1408" y="352">
-   <polyline points="-32,32 96,-96 96,64 64,64 -32,32"/>
-  </object>
-  <object id="2100" x="960" y="256">
-   <polyline points="0,0 128,128 32,160 0,160 0,0"/>
-  </object>
  </objectgroup>
- <objectgroup name="MonsterInstances">
-  <object id="2108" x="1176" y="168">
-   <properties>
-    <property name="monsterid" type="int" value="0"/>
-   </properties>
-   <point/>
-  </object>
- </objectgroup>
+ <objectgroup color="#ffff00" name="MonsterInstances"/>
+ <objectgroup name="ConsumableInstances"/>
  <objectgroup name="GravityZones" visible="0">
   <object id="2772" name="northwest" x="0" y="0" width="1216" height="1240">
    <properties>

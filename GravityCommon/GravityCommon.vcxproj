@@ -139,7 +139,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AIDirector.h" />
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="Aseprite.h" />
+    <ClInclude Include="Pathfinding.h" />
+    <ClInclude Include="Behavior.h" />
     <ClInclude Include="Builders.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
@@ -157,15 +161,19 @@
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="Polygons.h" />
-    <ClInclude Include="Renderable.h" />
+    <ClInclude Include="Sequence.h" />
     <ClInclude Include="SpatialBuckets.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="tinyjson.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AIDirector.cpp" />
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Aseprite.cpp" />
+    <ClCompile Include="Pathfinding.cpp" />
+    <ClCompile Include="Behavior.cpp" />
     <ClCompile Include="Builders.cpp" />
     <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="ConfigLoader.cpp" />
@@ -176,8 +184,9 @@
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Polygons.cpp" />
+    <ClCompile Include="Sequence.cpp" />
     <ClCompile Include="Stage.cpp" />
+    <ClCompile Include="tinyjson.c" />
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>

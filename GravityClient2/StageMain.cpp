@@ -91,9 +91,42 @@ void onCollision(void* context, Entity & entity, sf::Vector2f normal)
 {
     Context* ctx = (Context*)context;
     //std::cout << "X";
-    entity.collider.surfaceNormal = normal;
-    entity.collider.jumpNormal = normal;
-    
+
+    //if (vec::dot(normal, physics::downVector(entity.proto.body.angle)) > 0.f)
+    {
+        entity.collider.surfaceNormal = normal;
+    }
+    //if (vec::dot(normal, physics::downVector(entity.proto.body.angle)) > 0.f)
+    {
+        entity.collider.jumpNormal = normal;
+    }
+
+
+    //if (&entity != &ctx->entities[0])
+    //{//why isn't this being run
+    //    
+    //    sf::Vector2f d = physics::downVector(entity.proto.body.angle);
+    //    //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
+    //    {
+    //        /*float newangle = acos(vec::dot(d, normal));
+    //        entity.proto.body.angle  =  (newangle * (180.f / PI)) / 25.0f;*/
+    //        float newangle;
+    //        newangle = atan2(normal.y, normal.x) - atan2(d.y, d.x);
+    //        
+    //        newangle *= (180.f / PI);
+    //        if (newangle < 0) { newangle += 180.0f; }
+    //        else { newangle -= 180.0f; }
+    //        
+    //        
+    //        float oldangle = entity.proto.body.angle;
+    //        //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
+    //        //entity.proto.body.angle += newangle;
+    //        for (size_t e = 1; e < ctx->entities.size();e++)
+    //        {
+    //            ctx->entities[e].proto.body.angle += newangle; // = entity.proto.body.angle;
+    //        }
+    //    }
+    //}
 }
 
 void onNonCollision(void* context, Entity & entity)
@@ -116,32 +149,91 @@ Shape GetTransformedShape(Shape & shape)
 uint32_t StageMain::doUpdate()
 {
     static std::list<sf::Vector2f> poshistory;
-    context->players[0].controller.mk.Update(context->frametime);
-
-
-
-
-
-    physics::ResolveAllCollisions(context, onCollision, onNonCollision, context->physicsConfig);
-
+    static std::list<float> anglehistory;
     sf::Vector2f pos = context->players[0].entity->proto.body.pos;
     float angle = context->players[0].entity->proto.body.angle;
 
-    sf::Vector2f avgpos;
-    float  poscnt = 0;
-    if (poshistory.size() > 25)
-        poshistory.pop_back();
-    poshistory.push_front(pos);
-    for (auto p = poshistory.begin();
-        p != poshistory.end();
+    
+    
+    
+    context->players[0].controller.mk.Update(context->frametime);
+
+    context->AIDirector.update(context->frametime, context->entities, context->waypoints);
+
+    //for (size_t e = 1; e < context->entities.size(); e++)
+    //{
+    //    Entity & entity = context->entities[e];
+    //    Behavior & behavior = entity.behavior;
+    //    entity.update(context->frametime);
+
+
+    //    if (behavior.getstate() == Behavior::State::WALKING)
+    //    {
+    //        //// Find Closest Way point that is not `lastwaypoint`
+    //        //// Move toward way point
+    //        //// If have arrived at waypoint, update `lastwaypoint` to this waypoint.
+
+    //        //sf::Vector2f minthere;
+    //        //float mindist = 999999999999999999.f;
+    //        //sf::Vector2f here = entity.proto.body.pos;
+
+    //        //for (auto g = context->waypoints.begin();
+    //        //    g != context->waypoints.end();
+    //        //    g++)
+    //        //{
+
+    //        //    // calculate distance from here to there.
+    //        //    // and go in the direction of the minimum distance
+    //        //    sf::Vector2f there = sf::Vector2f(g->x, g->y);
+    //        //    float dist = vec::mag(there - here);
+    //        //    if (dist < mindist)
+    //        //    {
+    //        //        mindist = dist;
+    //        //        minthere = there;
+    //        //    }
+    //        //}
+
+    //        searchastar(context->waypoints, curwp, nextwp);
+    //        //// 
+    //        //if (entity.collider.surfaceNormal != vec::Zero())
+    //        //{
+    //        //    float str = 0.10f;
+    //        //    sf::Vector2f nml;
+    //        //    nml = minthere - here;//vec::normal(entity.collider.surfaceNormal);
+    //        //    //str = vec::mag(nml);
+    //        //    nml = vec::norm(nml);
+    //        //    CommandQueue::postMove(entity.proto.body, str, nml, true);
+    //        //    entity.collider.surfaceNormal = vec::Zero();
+    //        //}
+    //    }
+    //}
+
+
+    
+    
+    physics::ResolveAllCollisions(context, onCollision, onNonCollision, context->physicsConfig);
+
+
+    //////
+    float avgangle = 0.0f;
+    size_t poscnt = 0;
+    if (anglehistory.size() > 225)
+        anglehistory.pop_front();
+    anglehistory.push_back(angle);
+
+    for (auto p = anglehistory.begin();
+        p != anglehistory.end();
         p++)
     {
-        avgpos = avgpos + *p;
+        avgangle = avgangle + *p;
         poscnt++;
     }
-    avgpos = avgpos / poscnt;
+    avgangle /= poscnt;
+    ///////
+
     context->camera.view.setCenter(pos);
     context->camera.view.setRotation(angle);
+
     return 0;
 }
 
@@ -179,50 +271,76 @@ uint32_t StageMain::doDraw()
             context->canvas.draw(&context->foregroundvertices[0], context->foregroundvertices.size(), sf::Quads, states);
         }
         
+        
         //// Draw Collision Polygons
         ////
         //// Construct all collision polygons that are visible to the player
         ////
         for (int h = 0; h < 1; h++)
         {
-            for (int si = 0; si < context->entities[h].collisionShapes.size(); si++)
+            for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
             {
                 states.texture = NULL;
-                context->collisionshapes[context->entities[h].collisionShapes[si]].setFillColor(sf::Color::Transparent);
+                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
                 
-                context->collisionshapes[context->entities[h].collisionShapes[si]].setOutlineThickness(1);
-                context->collisionshapes[context->entities[h].collisionShapes[si]].setOutlineColor(sf::Color::Red);
-                context->canvas.draw(context->collisionshapes[context->entities[h].collisionShapes[si]], states);
+                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineThickness(2);
+                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
+                context->canvas.draw(context->allcollisionshapes[context->entities[h].collisionshapes[si]], states);
             }
         }
         // Draw Entities
-        for (int h = 0; h < context->entities.size(); h++)
+        for (int e = 0; e < context->entities.size(); e++)
         {
-            context->canvas.draw(context->entities[h].proto.shapes[0]);
+            sf::Vector2f newpos = context->entities[e].proto.body.pos;
+            sf::Vector2f vel = context->entities[e].proto.body.vel;
+            sf::Vector2f next = physics::lerp(newpos,
+                vel,
+                context->frametime.asSeconds() * context->physicsConfig.FIXED_DELTA);
+                
+
+            context->entities[e].proto.shapes[0].setPosition(next);
+            context->canvas.draw(context->entities[e].proto.shapes[0]);
+
+
+            //sf::Vertex lines[2];
+            //lines[0].position = context->entities[e].proto.body.pos;
+            //lines[1].position = context->entities[e].distupper;
+
+            //context->canvas.draw(lines, 2, sf::Lines);
+
+            //lines[0].position = context->entities[e].proto.body.pos;
+            //lines[1].position = context->entities[e].distahead;
+
+            //context->canvas.draw(lines, 2, sf::Lines);
+
+            //lines[0].position = context->entities[e].proto.body.pos;
+            //lines[1].position = context->entities[e].distlower;
+
+            //context->canvas.draw(lines,2, sf::Lines);
         }
-        for (int h = 0; h < context->entities[0].collisionEntities.size(); h++)
+
+        // Draw a box where we think the center of the entity is. center of gravity.
+        for (int h = 0; h < context->entities[0].collisionentities.size(); h++)
         {
             sf::RectangleShape rs(sf::Vector2f(4, 4));
-            rs.setFillColor(sf::Color::Cyan);
-            sf::Vector2f pos(context->entities[context->entities[0].collisionEntities[h]].proto.body.pos);
-            //pos.x += (context->entities[context->entities[0].collisionEntities[h]].proto.shapes[0].getGlobalBounds().width / 2.0f);// Change it also in Physics.cpp
-            //pos.y += (context->entities[context->entities[0].collisionEntities[h]].proto.shapes[0].getGlobalBounds().height / 2.0f);
-            /////////////////
-            size_t e = context->entities[0].collisionEntities[h];
-            float width = context->entities[e].proto.shapes[0].getLocalBounds().width / 2.f;
-            float height = context->entities[e].proto.shapes[0].getLocalBounds().height / 2.f;
-
-            width += context->entities[e].proto.body.pos.x;
-            height += context->entities[e].proto.body.pos.y;
-
-            sf::Vector2f newpos(width, height);
-            rs.setPosition(newpos);// +sf::Vector2f(10, 0));
+            rs.setFillColor(sf::Color::Red);
+            sf::Vector2f pos(context->entities[context->entities[0].collisionentities[h]].proto.body.pos);
+            size_t e = context->entities[0].collisionentities[h];
+            sf::Vector2f newpos = GetCentroid(context->entities[e].proto.shapes[0]);
+            rs.setPosition(newpos);
             context->canvas.draw(rs);
         }
-        //for (int e = 0; e < context->entities.size(); e++)
-        //{
-        //    context->entities[0].collisionEntities.clear();
-        //}
+
+        // Draw a box where we think the waypoints are.
+        for (auto w = 0; w< context->waypoints.size();w++)
+        {
+            sf::RectangleShape rs;
+            rs.setSize(sf::Vector2f(6, 6));
+            rs.setPosition(sf::Vector2f(context->waypoints[w].location.x, context->waypoints[w].location.y));
+            rs.setFillColor(sf::Color::Red);
+
+            context->canvas.draw(rs);
+        }
 
         context->canvas.display();
 

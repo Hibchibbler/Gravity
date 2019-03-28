@@ -1,95 +1,100 @@
 #include "Animation.h"
-#include "GravityCommon/Physics.h"
 
 namespace bali
 {
-namespace ani
+
+/////////////////////////////////////////////
+// Animation definitions
+//
+void Animation::initialize(size_t seqid_, uint32_t runlen_, bool repeat_)
 {
-Animation::Animation(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat)
-{
-    initialize(maxFrameIndex, frameDelay, repeat);
+    seqid = seqid_;
+    celid = 0;
+    elapsed = sf::Time::Zero;
+    runlen = runlen_;
+    repeat = repeat_;
+    state = Animation::State::STOPPED;
 }
 
-void Animation::initialize(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat)
+void Animation::update(sf::Time ftime)
 {
-    this->i = 0;
-    this->i_max = maxFrameIndex;
-    this->fdelay = frameDelay;
-    this->running = false;
-    this->repeat = repeat;
+    if (state == Animation::State::STARTED)
+    {
+        elapsed += ftime;
+        if (elapsed.asSeconds() > 0.1f)
+        {
+            if ((celid + 1) % runlen == 0)
+            {
+                if (!repeat)
+                    return;
+            }
+            celid = (celid + 1) % runlen;
+            elapsed = sf::Time::Zero;
+        }
+    }
 }
 
 void Animation::start()
 {
-    clock.restart();
-    this->i = 0;
-    this->running = true;
-}
-
-void Animation::update()
-{
-    if (this->running)
-    {
-        if (clock.getElapsedTime().asMilliseconds() > fdelay)
-        {
-            if (!repeat)
-            {
-                if (i < i_max-1)
-                    i = i + 1;
-            }
-            else
-            {
-                i = (i + 1) % i_max;
-            }
-            clock.restart();
-        }
-    }
+    state = Animation::State::STARTED;
 }
 
 void Animation::stop()
 {
-    this->i = 0;
-    this->running = false;
+    state = Animation::State::STOPPED;
 }
 
-
-Frame Animation::getCurrentFrame()
+void Animation::pause()
 {
-    Frame f = frames[this->i];
-    return f;
+    state = Animation::State::PAUSED;
 }
 
-void AnimationManager::addFrames(const bali::tilemap::TileMap & tm, const std::vector<struct Layout> & frameLayouts)
+uint32_t Animation::getCurrentCell()
 {
-    for (auto n = frameLayouts.begin(); n != frameLayouts.end(); n++)
+    return celid;
+}
+
+uint32_t Animation::getCurrentSequence()
+{
+    return seqid;
+}
+
+/////////////////////////////////////////////
+// Wardrobe definitions
+//
+bool Wardrobe::getAnimation(std::string name, bali::Animation & animation)
+{
+    bool res = false;
+    auto pair = animations.find(name);
+    if (pair != animations.end())
     {
-        animations[n->state] = ani::Animation(n->len, n->delay, n->repeat);
-        for (uint32_t d = 0; d < n->len; d++)
-        {
-            ani::Frame frame;
-            if (n->flipY)
-            {
-                frame = ani::Frame(
-                    tm.layers.back().tiles[d + n->start].x * tm.tilewidth + tm.tilewidth,
-                    tm.layers.back().tiles[d + n->start].y * tm.tileheight,
-                    tm.tilewidth * -1.0f,
-                    tm.tileheight);
-            }
-            else
-            {
-                frame = ani::Frame(
-                    tm.layers.back().tiles[d + n->start].x * tm.tilewidth,
-                    tm.layers.back().tiles[d + n->start].y * tm.tileheight,
-                    tm.tilewidth,
-                    tm.tileheight);
-            }
-
-            animations[n->state].frames.push_back(frame);
-        }
+        animation = pair->second;
+        res = true;
     }
+    return res;
 }
 
+bool Wardrobe::getCell(std::vector<Sequence> & sequences, std::string name, ASE::Cel & cell)
+{
+    bool res = false;
+    auto pair = animations.find(name);
+    if (pair != animations.end())
+    {
+        auto animation = pair->second;
+        auto sequence = sequences[animation.seqid];
+        cell = sequence.cels[animation.celid];
+        res = true;
+    }
+    return res;
+}
+
+bool Wardrobe::getSubRect(ASE::Cel & cell, sf::IntRect & subrect)
+{
+    subrect.left = cell.frame.position.x;
+    subrect.top = cell.frame.position.y;
+    subrect.width = cell.frame.size.w;
+    subrect.height = cell.frame.size.h;
+    return true;
+}
 
 }
-}
-

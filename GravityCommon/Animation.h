@@ -1,113 +1,51 @@
-#ifndef Animation_H_
-#define Animation_H_
+#ifndef ANIMATION_H_
+#define ANIMATION_H_
 
-#include <SFML/System/Clock.hpp>
-#include <stdint.h>
 #include <vector>
 #include <map>
-#include "XMLLoaders/TextureAtlasLoader.h"
-#include "Vector2.h"
-
+#include <SFML\Graphics.hpp>
+#include "Sequence.h"
 
 namespace bali
 {
-namespace ani
-{
-
-struct Frame
-{
-    Frame() = default;
-    Frame(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
-    {
-        this->x = x;
-        this->y = y;
-        this->w = w;
-        this->h = h;
-    }
-    vec::INTRECT getIntRect(bool flipX, bool flipY)
-    {
-        vec::INTRECT r;
-        r.left = x;
-        r.top = y;
-        r.width = w;
-        r.height = h;
-
-        return r;
-    }
-    uint32_t x, y;
-    uint32_t w, h;
-};
 
 class Animation
 {
 public:
-    Animation() = default;
-    Animation(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat);
-    void initialize(uint32_t maxFrameIndex, uint32_t frameDelay, uint32_t repeat);
+    enum State
+    {
+        STOPPED,
+        STARTED,
+        PAUSED
+    };
+    void initialize(size_t seqid_, uint32_t runlen_, bool repeat_);
+    void update(sf::Time ftime);
     void start();
-    void update();
     void stop();
+    void pause();
 
-    Frame getCurrentFrame();
-
-    uint32_t i;
-    uint32_t i_max;
-    uint32_t fdelay;
-    uint32_t running;
-    uint32_t repeat;
-    sf::Clock clock;
-    sf::Time totalTime;
-    std::vector<Frame> frames;
+    uint32_t getCurrentCell();
+    uint32_t getCurrentSequence();
+public:
+    uint32_t seqid;     // Sequence id, refers to a specific sequence
+    uint32_t celid;     // Cel id, refers to a specific cell in a specific sequence
+    sf::Time elapsed;   // Used to track time. We will update a  
+    uint32_t runlen;    // how many cells
+    bool     repeat;
+    State    state;
 };
 
-class AnimationManager
+class Wardrobe
 {
 public:
-    struct Layout {
-        uint32_t state;
-        uint32_t start;
-        uint32_t len;
-        uint32_t delay;
-        uint32_t flipY;
-        uint32_t repeat;
-    };
+    bool getAnimation(std::string name, bali::Animation & animation);
+    bool getCell(std::vector<Sequence> & sequences, std::string name, ASE::Cel & cell);
+    bool getSubRect(ASE::Cel & cell, sf::IntRect & subrect);
 
-    std::map<uint32_t, Animation> animations;
-    void updateTimers() {
-        for (auto a = animations.begin(); a != animations.end(); a++)
-        {
-            a->second.update();
-        }
-    }
-
-    void updateFrames(uint32_t oldState, uint32_t newState)
-    {
-        //
-        // Based on flags and velocity
-        // set player state, and reset
-        // animation.
-        //
-        if (oldState != newState)
-        {
-            animations[(uint32_t)oldState].stop();
-            animations[(uint32_t)newState].start();
-        }
-        else
-        {
-            //
-            // Update all animation sequences..
-            //
-            updateTimers();
-        }
-    }
-
-    void addFrames(const bali::tilemap::TileMap & tm, const std::vector<struct Layout> & frameLayout);
+    std::map<std::string, bali::Animation> animations;
 };
 
 }
-}
-
 
 #endif
-
 

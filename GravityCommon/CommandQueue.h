@@ -28,7 +28,7 @@ public:
 private:
     struct CompareCommandPriority {
         bool operator()(Command const & p1, Command const & p2) {
-            // return "true" if "p1" is ordered before "p2", for example:
+            // return "true" if "p1" is ordered before "p2"
             return p1.priority < p2.priority;
         }
     };

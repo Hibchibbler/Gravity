@@ -11,8 +11,8 @@
 #include <sstream>
 
 #include <SFML\System.hpp>
-//#include "GravityCommon/Polygons.h"
-
+#include <SFML\Graphics\ConvexShape.hpp>
+#include "GravityCommon\Vector2.h"
 
 namespace bali
 {
@@ -92,7 +92,7 @@ public:
     }
 
     sf::Vector2f normal;
-    //Segment edge;
+    Segment seg;
     float overlap;
     int32_t thisindex;
     int32_t thatindex;
@@ -160,22 +160,22 @@ class Shape
 {
 public:
 
-    static Segment::Vec getSegments(sf::ConvexShape & shape)
-    {
-        Segment::Vec segments;
-        size_t pc = shape.getPointCount();
-        for (int i = 0; i < pc; ++i)
-        {
-            // get the current vertex
-            sf::Vector2f p1 = shape.getPoint(i);// +shape.getPosition();
+    //static Segment::Vec getSegments(sf::ConvexShape & shape)
+    //{
+    //    Segment::Vec segments;
+    //    size_t pc = shape.getPointCount();
+    //    for (int i = 0; i < pc; ++i)
+    //    {
+    //        // get the current vertex
+    //        sf::Vector2f p1 = shape.getPoint(i);// +shape.getPosition();
 
-            // get the next vertex
-            sf::Vector2f p2 = shape.getPoint(i + 1 == pc ? 0 : i + 1);// +shape.getPosition();
+    //        // get the next vertex
+    //        sf::Vector2f p2 = shape.getPoint(i + 1 == pc ? 0 : i + 1);// +shape.getPosition();
 
-            segments.push_back(Segment(shape.getPosition(), p1, p2));
-        }
-        return segments;
-    }
+    //        segments.push_back(Segment(shape.getPosition(), p1, p2));
+    //    }
+    //    return segments;
+    //}
     static Axes getSeparatingAxes(sf::ConvexShape & shape)
     {
         Axes axes;
@@ -199,9 +199,9 @@ public:
             // the perp method is just (x, y) => (-y, x) or (y, -x)
             ContactInfo axis;
             axis.normal = normal;
-            //axis.edge.start = p1;// +shape.getPosition();
-            //axis.edge.end = p2;// +shape.getPosition();
-            //axis.edge.off = shape.getOrigin();
+            axis.seg.start = p1;// +shape.getPosition();
+            axis.seg.end = p2;// +shape.getPosition();
+            axis.seg.off = shape.getPosition();
             axes.push_back(axis);
         }
         return axes;
@@ -231,7 +231,7 @@ public:
         return proj;
     }
 
-    static bool ismtvvalid(sf::ConvexShape & shape, sf::ConvexShape & other, vec::VECTOR2 mtv)
+    static bool ismtvvalid(sf::ConvexShape & shape, sf::ConvexShape & other, sf::Vector2f mtv)
     {
         vec::VECTOR2 c1, c2;
         vec::VECTOR2 dir;
@@ -301,6 +301,7 @@ public:
                     {
                         mtv.normal = axis.normal;
                         mtv.overlap = o;
+                        mtv.seg = axis.seg;
                         minimumOverlap1 = o;
                         axis.overlap = o;
                         //if (o > 0.0f)
@@ -339,6 +340,7 @@ public:
                     {
                         mtv.normal = axis.normal;
                         mtv.overlap = o;
+                        mtv.seg = axis.seg;
                         minimumOverlap1 = o;
                         axis.overlap = o;
                         //if (o > 0.0f)

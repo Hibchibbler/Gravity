@@ -10,12 +10,12 @@
 #include "ClientContext.h"
 #include "KeyboardHandlers.h"
 #include "XMLLoaders/TMXReader.h"
-
+#include "GravityCommon\Pathfinding.h"
 
 
 #include <math.h>
 #include  <assert.h>
-
+#include <string>
 namespace bali
 {
 StageInit::StageInit(Context::Ptr context)
@@ -31,6 +31,7 @@ StageInit::~StageInit()
 
 uint32_t StageInit::initialize()
 {
+    srand(time(NULL));
     ////
     //
     // Phase 1: Load Level Assets
@@ -56,11 +57,13 @@ uint32_t StageInit::initialize()
     // Load TMX from file, into map
     //
     context->map = std::make_shared<bali::TMX::Map>();
-    TMX::TMXReader::load("assets\\level_test1.tmx", context->map);
+    TMX::TMXReader::load("assets\\level_test3.tmx", context->map);
 
     //
     // Load protos from TMX map
     //
+
+    // Entity Protos
     context->protos.push_back(Proto());
     loadPrototype(context->protos.back(),
                   context->map->getObjectGroup("Player0"));
@@ -73,8 +76,36 @@ uint32_t StageInit::initialize()
 
     context->protos.push_back(Proto());
     loadPrototype(context->protos.back(),
+                  context->map->getObjectGroup("Monster1"));
+            context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
+
+    context->protos.push_back(Proto());
+    loadPrototype(context->protos.back(),
+                  context->map->getObjectGroup("Monster2"));
+            context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
+
+    context->protos.push_back(Proto());
+    loadPrototype(context->protos.back(),
                   context->map->getObjectGroup("Consumable0"));
     context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
+
+    // Waypoints
+    //buildWaypoints(context->waypoints, context->map->getObjectGroup("Waypoints0"));
+
+    buildWaypoints10(context->waypoints, context->map->getObjectGroup("Waypoints10"));
+
+    //for (auto obj = ogw->objects.begin(); obj != ogw->objects.end(); ++obj)
+    //{
+    //    bool status = false;
+    //    if ((*obj)->point != nullptr)
+    //    {
+    //        sf::Vector2f point((*obj)->x, (*obj)->y);
+    //        Waypoint wp;
+    //        wp.pos = point;
+    //        wp.id = std::strtol((*obj)->properties.back()->value.c_str(),NULL, 10);
+    //        context->waypoints.push_back(wp);
+    //    }
+    //}
 
 
 
@@ -88,6 +119,8 @@ uint32_t StageInit::initialize()
     float x, y;
 
     context->entities.push_back(Entity());
+    context->entities.back().registerwithaidirector = false;
+    context->entities.back().ignoreentitycollision = true;
     context->entities.back().proto = p;
     x = context->map->getObjectGroup("Player0")->objects[0]->x;
     y = context->map->getObjectGroup("Player0")->objects[0]->y;
@@ -95,50 +128,55 @@ uint32_t StageInit::initialize()
     //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
 
     context->entities.push_back(Entity());
+    context->entities.back().registerwithaidirector = true;
     context->entities.back().proto = c;
     x = context->map->getObjectGroup("Consumable0")->objects[0]->x;
     y = context->map->getObjectGroup("Consumable0")->objects[0]->y;
     context->entities.back().proto.body.pos = sf::Vector2f(x, y);
-    //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
     context->entities.back().moving = true;
 
     srand(time(NULL));
     TMX::Objectgroup::Ptr og = context->map->getObjectGroup("MonsterInstances");
     for (int g = 0; g < og->objects.size(); g++) {
         context->entities.push_back(Entity());
-        context->entities.back().proto = m;
+        context->entities.back().registerwithaidirector = true;
+        context->entities.back().ignoreentitycollision = true;
+        std::string strid = og->objects[g]->properties.back()->value;
+        size_t id = std::strtol(strid.c_str(), NULL, 10);
+        std::cout << "[" << id << "]" << std::endl;
+        bool yes = false;
+        for (auto i = context->protos.begin();
+            i != context->protos.end();
+            i++)
+        {
+            if (i->id == id)
+            {
+                context->entities.back().proto = *i;
+                yes = true;
+                break;
+            }
+        }
+        assert(yes == true);
+        //if (yes == false)
+        //{
+        //    int a = 42;
+        //}
+//        context->entities.back().proto = m;
 
-        context->entities.back().moving = (rand()%2 == 0 ? true : false);
+        context->entities.back().moving = true;// (rand() % 2 == 0 ? true : false);
         context->entities.back().proto.shapes.back().setFillColor(GetRandomColor(0));
 
         float x, y;
-        float a = og->objects[g]->point->x;//(rand() % 256)+1.0f;
-        float b = og->objects[g]->point->y;//(rand() % 256)+1.0f;
-        //float nega = (rand() % 2) -1.0f;
-        //float negb = (rand() % 2) - 1.0f;
-        //x = context->map->getObjectGroup("Monster0")->objects[0]->x + (nega * a);
-        //y = context->map->getObjectGroup("Monster0")->objects[0]->y + (negb * b);
+        float a = og->objects[g]->point->x;
+        float b = og->objects[g]->point->y;
         context->entities.back().proto.body.pos = sf::Vector2f(a, b);
-        //context->entities.back().proto.body.vel = sf::Vector2f(a/16.0f, b/16.0f);
         context->entities.back().proto.shapes[0].setPosition(context->entities.back().proto.body.pos);
-
-        //vec::VECTOR2 c1, c2;
-        //vec::VECTOR2 dir;
-        //Shape & shape = context->entities.back().proto.shapes[0];
-        //for (int u = 0; u < shape.getPointCount(); u++)
-        //{
-        //    c1 = c1 + (shape.getPoint(u) + shape.getPosition());
-        //}
-        //c1 = c1 / (float)shape.getPointCount();
-
-        //context->entities.back().proto.shapes[0].setOrigin(c1);
-        //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
     }
 
     //
     // Load Collision Polygon geometry from TMX map
     //
-    loadPolygons(context->collisionshapes,
+    loadPolygons(context->allcollisionshapes,
                  context->map->getObjectGroup("Collision0"));
 
     loadPolygons(context->gravityzones,
@@ -159,73 +197,17 @@ uint32_t StageInit::initialize()
     //
     // Put the tiles in a quad tree
     //
-    //int maxDepth = 9;
-    //qt::AABB aabb;
-    //aabb.min.x = -64;
-    //aabb.min.y = -64;
-    //aabb.max.x = aabb.max.y = (context->map->width + 2) * 32;//in pixels
+    context->entitybuckets.initialize(0, 0, 2460, 2460,75, 75);
+    context->cpolybuckets.initialize(0, 0, 2500, 2500, 15, 15);
+
+    CreateCPolyBucket(context->allcollisionshapes,
+                      context->cpolybuckets);
+
+
     //
-    //context->foregroundQuadTree = std::make_shared<qt::QuadTree>();
-    //context->foregroundQuadTree->initialize(aabb, maxDepth);
-
-    //context->backgroundQuadTree = std::make_shared<qt::QuadTree>();
-    //context->backgroundQuadTree->initialize(aabb, maxDepth);
-
-    //context->collisionQuadTree = std::make_shared<qt::QuadTree>();
-    //context->collisionQuadTree->initialize(aabb, maxDepth);
-
-    //context->entityQuadTree = std::make_shared<qt::QuadTree>();
-    //context->entityQuadTree->initialize(aabb, maxDepth);
-
-    context->entitybuckets.initialize(0, 0, 2425, 2425, 125, 125);
-    context->cpolybuckets.initialize(0, 0, 2504, 2504, 12, 12);
-    context->fgtbuckets.initialize(0, 0, 2500, 2500, 20, 20);
-    context->bgtbuckets.initialize(0, 0, 2500, 2500, 20, 20);
-
-    //for (uint64_t tid = 0; tid < context->foregroundtiles.size(); tid++)
-    //{
-    //    qt::XY pt;
-    //    pt.ti = tid;
-
-    //    sf::FloatRect gb;
-    //    gb.left = context->foregroundtiles[tid].x;
-    //    gb.top = context->foregroundtiles[tid].y;
-    //    gb.height = 32;
-    //    gb.width = 32;
-    //    pt.x = gb.left + gb.width / 2.0f;
-    //    pt.y = gb.top + gb.height / 2.0f;
-    //    //context->foregroundQuadTree->insert(pt);
-    //    //context->fgtbuckets.add(pt.x, pt.y, tid);
-    //}
-
-    //for (uint64_t tid = 0; tid < context->backgroundtiles.size(); tid++)
-    //{
-    //    qt::XY pt;
-    //    pt.ti = tid;
-
-    //    sf::FloatRect gb;
-    //    gb.left = context->backgroundtiles[tid].x;
-    //    gb.top = context->backgroundtiles[tid].y;
-    //    gb.height = 32;
-    //    gb.width = 32;
-    //    pt.x = gb.left + gb.width / 2.0f;
-    //    pt.y = gb.top + gb.height / 2.0f;
-    //   // context->backgroundQuadTree->insert(pt);
-    //    //context->bgtbuckets.add(pt.x, pt.y, tid);
-    //}
-
-    for (uint64_t tid = 0; tid < context->collisionshapes.size(); tid++)
-    {
-        qt::XY pt;
-        pt.ti = tid;
-
-        sf::FloatRect gb = context->collisionshapes[tid].getGlobalBounds();
-        pt.x = gb.left + gb.width / 2.0f;
-        pt.y = gb.top + gb.height / 2.0f;
-        //context->collisionQuadTree->insert(pt);
-        context->cpolybuckets.add(pt.x, pt.y, tid);
-    }
-
+    // Initialize Entity AI
+    //
+    context->AIDirector.initialize(context->entities);
 
     //
     // Create vertex arrays from the Tile data

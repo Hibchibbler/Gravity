@@ -3,11 +3,6 @@
 // 2018
 ///////////////////////////////////////////////////////////////////////////////
 #include "Physics.h"
-
-
-
-
-#include "Polygons.h"
 #include <list>
 #include <sstream>
 #include <iomanip>
@@ -144,7 +139,7 @@ physics::CollisionResponseWall(
         
         sf::Vector2f t = Vrel - cn*velAlongNormal;
         
-        if (t != vec::Zero())
+        if (vec::mag(t) >0)
         {
             t = vec::norm(t);
             float velAlongTangent = vec::dot(Vrel, t);
@@ -160,7 +155,7 @@ physics::CollisionResponseWall(
             {
                 friction =  t * -j * pc.DYNAMIC_FRICTION;
                 //std::cout << "2";
-                std::cout << std::setprecision(3) << "2) " << absjt << " < " << j * pc.STATIC_FRICTION << std::endl;
+                //std::cout << std::setprecision(3) << "2) " << absjt << " < " << j * pc.STATIC_FRICTION << std::endl;
             }
             totalresponse = totalresponse + (friction * ma);
         }
@@ -170,11 +165,161 @@ physics::CollisionResponseWall(
 
 #define PRINT_DIAGNOSTICS
 
+void
+GetEntityEntityContacts(
+    Vec<Entity> & entities,
+    Vec<SAT::ContactInfo> & contacts
+)
+{
+    for (int j = 0; j < entities.size(); j++)
+    {
+        if (entities[j].ignoreentitycollision)
+            continue;
+        for (int e = 0; e < entities[j].collisionentities.size(); e++)
+        {
+            std::vector<SAT::ContactInfo> tempContacts;
+            size_t index = entities[j].collisionentities[e];
+            if (j == index)
+                continue;
+            if (SAT::Shape::collision(entities[j].proto.shapes[0],
+                entities[index].proto.shapes[0],
+                tempContacts))
+            {
+                tempContacts.back().thisindex = j;
+                tempContacts.back().thatindex = index;
+                contacts.push_back(tempContacts.back());
+            }
+        }
+    }
+}
+
+void
+GetEntityWallContacts(
+    Vec<Entity> & entities,
+    Vec<Shape> & collisionshapes,
+    Vec<SAT::ContactInfo> & contacts
+)
+{
+    for (int j = 0; j < entities.size(); j++)
+    {
+        for (int p = 0; p < entities[j].collisionshapes.size(); p++)
+        {
+            std::vector<SAT::ContactInfo> tempContacts;
+            size_t index = entities[j].collisionshapes[p];
+            if (SAT::Shape::collision(entities[j].proto.shapes[0],
+                                      collisionshapes[index],
+                                      tempContacts))
+            {
+                tempContacts.back().thisindex = j;
+                tempContacts.back().thatindex = -1;
+                contacts.push_back(tempContacts.back());
+            }
+        }
+    }
+}
+
 bool GreatestOverlap(SAT::ContactInfo a, SAT::ContactInfo b)
 {
     // descending order, largest to smallest.
     return a.overlap < b.overlap;
 }
+
+void
+ProcessAllContacts(
+    Context* context,
+    Vec<Entity> & entities,
+    Vec<SAT::ContactInfo> & contacts,
+    OnCollisionEvent onCollision,
+    OnNonCollisionEvent onNonCollision,
+    PhysicsConfig & pc
+)
+{
+    std::sort(contacts.begin(),
+        contacts.end(),
+        GreatestOverlap);
+
+    /*std::random_device rd;
+    std::mt19937 generator(rd());
+    std::shuffle(context->allcontacts.begin(), context->allcontacts.end(), generator);*/
+
+    for (int j = 0; j < contacts.size(); j++)
+    {
+        SAT::ContactInfo & contact = contacts[j];
+
+        if (contact.overlap < 0.01)
+            contact.overlap = 0.f;
+        Entity* thisEntity = &entities[contact.thisindex];
+        float thatmass = 0.f;
+        sf::Vector2f thatvel;
+        sf::Vector2f posDelta;
+        float overlap;
+        if (contact.thatindex != -1)
+        {
+            Entity* thatEntity = &entities[contact.thatindex];
+            thatmass = thatEntity->proto.body.mass;
+            thatvel = thatEntity->proto.body.vel;
+            overlap = contact.overlap / 1.0f;
+        }
+        else
+        {
+            thatmass = 0.0f;
+            overlap = contact.overlap * 2.0f;
+        }
+        posDelta = contact.normal * overlap;
+        sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
+            thatmass,
+            thatvel,
+            contact.normal,
+            overlap,
+            thisEntity->isActive(),
+            pc);
+        //if (vec::mag(posDelta) > 0.001)
+        {
+            CommandQueue::postModifyPosition(thisEntity->proto.body,
+                posDelta,
+                false);
+        }
+        //if (vec::mag(velDelta) > 0.001)
+        {
+            CommandQueue::postModifyVelocity(thisEntity->proto.body,
+                thisEntity->proto.body.vel + velDelta,
+                true);
+        }
+        thisEntity->avgForce = thisEntity->avgForce + velDelta;
+        thisEntity->numForce++;
+
+        physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
+        if (contact.thatindex == -1)
+            onCollision(context, *thisEntity, contact.normal);
+
+    }
+
+    //for (int e = 0; e < context->entities.size(); e++)
+    //{
+    //    Entity* thisEntity = &context->entities[e];
+    //    if (thisEntity->numForce > 0)
+    //    {
+    //        CommandQueue::postModifyVelocity(thisEntity->proto.body,
+    //            thisEntity->proto.body.vel + (thisEntity->avgForce / thisEntity->numForce),
+    //            true);
+    //        thisEntity->numForce = 0;
+    //        thisEntity->avgForce = vec::Zero();
+    //        physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
+    //    }
+    //    
+    //}
+}
+
+sf::Vector2f 
+lerp(
+    sf::Vector2f start,
+    sf::Vector2f end,
+    float t
+)
+{
+    return start + (end * t);
+}
+
 
 bool
 ResolveAllCollisions(
@@ -184,17 +329,13 @@ ResolveAllCollisions(
     PhysicsConfig & pc
 )
 {
-    
     bool collision = false;
     bool done = false;
     int iter = 0;
     std::vector<SAT::ContactInfo> entityContacts;
     std::vector<SAT::ContactInfo> wallContacts;
-
-   
     sf::Time framequant = context->frameacc + context->frametime;
-    sf::Time simtime;
-     sf::Clock simclock;
+
     while (framequant >= sf::seconds(pc.FIXED_DELTA) && !context->paused)
     {
         if (framequant > sf::seconds(pc.FIXED_DELTA)*20.f)
@@ -203,203 +344,59 @@ ResolveAllCollisions(
             std::cout << "Death Spiral Detected!" << std::endl;
         }
         framequant -= sf::seconds(pc.FIXED_DELTA);
+
         for (int e = 0; e < context->entities.size(); e++)
         {
-            ////////// Do the deed //////////
+            /////////// Integrate ///////////
             updateRigidBodyInternal(context->entities[e].proto.body, pc);
             integrateEuler(context->entities[e].proto.body, pc);
             /////////////////////////////////
 
 
             // Reinitialize 1 pass entity structures.
-            
-           // context->entities[e].proto.shapes[0].move(-7, 0);
-            context->entities[e].collisionEntities.clear();
-
-            context->entities[e].totalForce = vec::Zero();
-            context->entities[e].totalMagnitude = 0.0f;
-            context->entities[e].numForces = 0;
-
+            context->entities[e].collisionentities.clear();
 
             /////////////////
-            float width = context->entities[e].proto.shapes[0].getLocalBounds().width/2.f;
-            float height= context->entities[e].proto.shapes[0].getLocalBounds().height/2.f;
-
-            width += context->entities[e].proto.body.pos.x;
-            height+= context->entities[e].proto.body.pos.y;
-
-            sf::Vector2f newpos(width, height);
+            sf::Vector2f newpos = context->entities[e].proto.body.pos;
             context->entities[e].proto.shapes[0].setPosition(newpos);
-            //context->entities[e].proto.shapes[0].setPosition(context->entities[e].proto.body.pos);
-            ////////////////
-
         }
         // Reinitialize 1 pass global structures
         context->allcontacts.clear();
         context->entitybuckets.clear();
 
-        ///////////////////////////////////////////////
+        //
         //
         // collect the collision polygons visible to each entity
         //
+        GetCPolyNeighbors(context,
+                    context->entities,
+            context->cpolybuckets);
 
-        for (int e = 0; e < context->entities.size(); e++) {
 
-            context->entities[e].collisionShapes.clear();
-
-            std::vector<size_t> nays;
-            context->cpolybuckets.getneighbors(context->entities[e].proto.body.pos.x,
-                                               context->entities[e].proto.body.pos.y,
-                                               nays);
-            context->entities[e].collisionShapes.insert(context->entities[e].collisionShapes.end(),
-                nays.begin(),
-                nays.end());
-        }
-        ///////////////////////////////////////////////
+        //
         // Build Spatial Buckets for entities
-        for (uint64_t e = 0; e < context->entities.size(); e++)
-        {
-            //context->entitybuckets.add(context->entities[e].proto.body.pos.x+ (context->entities[e].proto.shapes[0].getGlobalBounds().width / 2.0f),
-            //                           context->entities[e].proto.body.pos.y+ (context->entities[e].proto.shapes[0].getGlobalBounds().height / 2.0f),// Change it also in StageMain.cpp
-            //                           e);
-            context->entitybuckets.add(context->entities[e].proto.body.pos.x,
-                context->entities[e].proto.body.pos.y,// Change it also in StageMain.cpp
-                e);
-        }
+        // We rebuild the entire thing every update
+        //
+        CreateEntityBucket(context->entities,
+            context->entitybuckets);
         //
         // Using newly create bucket, Locate nearest neighbors for each entity
         //
-        for (int e = 0; e < context->entities.size(); e++)
-        {
-            std::vector<size_t> nays;
-            context->entitybuckets.getneighbors(context->entities[e].proto.body.pos.x,
-                                                context->entities[e].proto.body.pos.y,
-                                                nays);
-            context->entities[e].collisionEntities.insert(context->entities[e].collisionEntities.end(),
-                                                          nays.begin(),
-                                                          nays.end());
-        }
-        ///////////////////////////////////////////////
+        GetEntityNeighbors(context->entities,
+            context->entitybuckets);
 
+        //
         // Collect collision contacts for entity to entity
-        for (int j = 0; j < context->entities.size(); j++)
-        {
-            for (int e = 0; e < context->entities[j].collisionEntities.size(); e++)
-            {
-                std::vector<SAT::ContactInfo> tempContacts;
-                size_t index =  context->entities[j].collisionEntities[e];
-                if (j == index)
-                    continue;
-                if (SAT::Shape::collision(context->entities[j].proto.shapes[0],
-                                          context->entities[index].proto.shapes[0],
-                                          tempContacts))
-                {
-                    tempContacts.back().thisindex = j;
-                    tempContacts.back().thatindex = index;
-                    context->allcontacts.push_back(tempContacts.back());
-                }
-            }
-        }
+        //
+        GetEntityEntityContacts(context->entities, context->allcontacts);
 
+        //
         // Collect collision contacts for entity-to-wall
-        for (int j = 0; j < context->entities.size(); j++)
-        {
-            for (int p = 0; p < context->entities[j].collisionShapes.size(); p++)
-            {
-                std::vector<SAT::ContactInfo> tempContacts;
-                size_t index = context->entities[j].collisionShapes[p];
-                if (SAT::Shape::collision(context->entities[j].proto.shapes[0],
-                                          context->collisionshapes[index],
-                                          tempContacts))
-                {
-                    tempContacts.back().thisindex = j;
-                    tempContacts.back().thatindex = -1;
-                    context->allcontacts.push_back(tempContacts.back());
-                }
-            }
-        }
-        std::sort(context->allcontacts.begin(),
-                  context->allcontacts.end(),
-                  GreatestOverlap);
+        //
+        GetEntityWallContacts(context->entities, context->allcollisionshapes, context->allcontacts);
 
-        /*std::random_device rd;
-        std::mt19937 generator(rd());
-        std::shuffle(context->allcontacts.begin(), context->allcontacts.end(), generator);*/
+        ProcessAllContacts(context, context->entities, context->allcontacts, onCollision, onNonCollision, pc);
 
-        for (int j = 0; j < context->allcontacts.size(); j++)
-        {
-            SAT::ContactInfo & contact = context->allcontacts[j];
-            Entity* thisEntity = &context->entities[contact.thisindex];
-            float thatmass = 0.f;
-            sf::Vector2f thatvel;
-            sf::Vector2f posDelta;
-            float overlap;
-            if (contact.thatindex != -1)
-            {
-                Entity* thatEntity = &context->entities[contact.thatindex];
-                thatmass = thatEntity->proto.body.mass;
-                thatvel = thatEntity->proto.body.vel;
-                overlap = contact.overlap / 2.0f;
-            }
-            else
-            {
-                thatmass = 0.0f;
-                overlap = contact.overlap;
-            }
-            posDelta = contact.normal * overlap;
-            sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
-                                                          thatmass,
-                                                          thatvel,
-                                                          contact.normal,
-                                                          overlap,
-                                                          thisEntity->isActive(),
-                                                          pc);
-
-            thisEntity->totalPos = thisEntity->totalPos + posDelta;
-            thisEntity->totalForce = thisEntity->totalForce + velDelta;
-            thisEntity->numForces++;
-
-            CommandQueue::postModifyPosition(thisEntity->proto.body,
-                                                posDelta,
-                                                false);
-
-            CommandQueue::postModifyVelocity(thisEntity->proto.body,
-                                                velDelta,
-                                                false);
-
-            physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
-            onCollision(context, *thisEntity, contact.normal);
-
-        }
-
-        //for (int j = 0; j < context->entities.size(); j++)
-        //{
-        //    Entity* thisEntity = &context->entities[j];
-        //    if (thisEntity->numForces > 0)
-        //    {
-        //        /*CommandQueue::postModifyPosition(thisEntity->proto.body,
-        //            thisEntity->totalPos / (float)thisEntity->numForces,
-        //            false);*/
-
-        //        //physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
-        //        CommandQueue::postModifyVelocity(thisEntity->proto.body,
-        //            thisEntity->totalForce / (float)thisEntity->numForces,
-        //            false);
-
-        //        physics::updateRigidBodyInternal(thisEntity->proto.body, context->physicsConfig);
-        //        //onCollision(context, *thisEntity, thisEntity->totalForce);
-
-        //        thisEntity->numForces = 0;
-        //        thisEntity->totalPos = vec::Zero();
-        //        thisEntity->totalForce = vec::Zero();
-        //    }
-        //    else 
-        //    {
-        //        onNonCollision(context, *thisEntity);
-        //    }
-        //}
-
-        simtime += simclock.restart();
     }
     context->frameacc = framequant; // store the left over time for next iteration.
     return true;
@@ -422,7 +419,6 @@ updateRigidBodyInternal(
 
     while (rb.cmdqueue.nextCommand(rb, cmd))
     {
-        //float ma = 1.0f / rb.mass;
         switch (cmd.code)
         {
         case Command::Code::ACCELERATION:
@@ -699,18 +695,18 @@ physics::ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, fl
     sf::Vector2f m;
     if (!mov.gnd)
     {
-        if (mov.dir != vec::Zero())
+        //if (mov.dir != vec::Zero())
         {
             sf::Vector2f dir = vec::norm(mov.dir);
-            m = dir * mov.str * freefall_move_strength * (1.0f / phy.mass);
-            //m = phy.impulse(m);
+            m = dir * mov.str * freefall_move_strength;// *(1.0f / phy.mass);
+            m = phy.impulse(m);
         }
     }
     else
     {
         sf::Vector2f dir = vec::norm(mov.dir);
-        m = dir * mov.str * move_strength * (1.0f / phy.mass);
-        //m = phy.impulse(m);
+        m = dir * mov.str * move_strength;// *(1.0f / phy.mass);
+        m = phy.impulse(m);
     }
 
     //if (vec::mag(phy.vel + m) > move_velocity_max)
@@ -751,73 +747,75 @@ void LoadCommandHistory(std::string file, std::list<Command> & history)
 }
 
 //
-//// Find intersection of RAY & SEGMENT
-//bool physics::getIntersection(sf::Vector2f rayStart, sf::Vector2f ray, Segment segment, physics::Intersection & intersection)
-//{
-//    // RAY in parametric: Point + Delta*T1
-//    float r_px = rayStart.x;
-//    float r_py = rayStart.y;
-//    float r_dx = ray.x;
-//    float r_dy = ray.y;
-//    // SEGMENT in parametric: Point + Delta*T2
-//    float s_px = segment.start.x;// +segment.off.x;
-//    float s_py = segment.start.y;// +segment.off.y;
-//    float s_dx = segment.end.x - segment.start.x;
-//    float s_dy = segment.end.y - segment.start.y;
-//    // Are they parallel? If so, no intersect
-//    float r_mag = sqrt(r_dx*r_dx + r_dy*r_dy);
-//    float s_mag = sqrt(s_dx*s_dx + s_dy*s_dy);
-//
-//    if (r_dx / r_mag == s_dx / s_mag && r_dy / r_mag == s_dy / s_mag) {
-//        // Unit vectors are the same.
-//        return false;
-//    }
-//    // SOLVE FOR T1 & T2
-//    float det = (s_dx*r_dy - s_dy*r_dx);
-//    float T2 = (r_dx*(s_py - r_py) + r_dy*(r_px - s_px)) / det;
-//    float T1 = (s_px + s_dx*T2 - r_px) / r_dx;
-//
-//    // Must be a piece of the ray that is moving away from the origin
-//    if (T1 < 0)         return false;
-//    // Must be within the domain of the segment
-//    if (T2 < 0 || T2>1) return false;
-//
-//    // Return Intersection information
-//    intersection.time = T1;
-//    intersection.rayPoint = sf::Vector2f(r_px + r_dx*T1, r_py + r_dy*T1);
-//    intersection.segPoint = sf::Vector2f(s_px + s_dx*T2, s_py + s_dy*T2);
-//    intersection.segment = segment;
-//    intersection.distance = rayStart - intersection.segPoint;
-//
-//    return true;
-//}
-//
-//bool physics::RayCast(sf::Vector2f dir, sf::Vector2f start, std::vector<Segment> & segments, physics::Intersection & intersect)
-//{
-//    bool found = false;
-//    dir = dir / 8.0f;// This is important. is it?
-//                     ///PHYSPRINT("[Ang](" << angle << ")");
-//    float closest = 999999.9;
-//    for (auto seg = segments.begin(); seg != segments.end(); ++seg)
-//    {
-//        physics::Intersection intersectTemp;
-//        intersectTemp.expired = true;
-//        intersectTemp.rayPoint = start + dir * 3400.0f;
-//        intersectTemp.distance = intersectTemp.rayPoint - start;
-//        intersectTemp.ray = dir;
-//        physics::getIntersection(start, dir, *seg, intersectTemp);
-//        if (vec::mag(intersectTemp.distance) <= closest)
-//        {
-//            closest = vec::mag(intersectTemp.distance);
-//            intersect = intersectTemp;
-//            intersect.expired = false;
-//            found = true;
-//        }
-//    }
-//    return found;
-//}
-//
-//bool physics::RayCast(float a, sf::Vector2f start, std::vector<Segment> & segments, physics::Intersection & intersect)
+// Find intersection of RAY & SEGMENT
+bool getIntersection(sf::Vector2f rayStart, sf::Vector2f ray, Segment segment, Intersection & intersection)
+{
+    // RAY in parametric: Point + Delta*T1
+    float r_px = rayStart.x;
+    float r_py = rayStart.y;
+    float r_dx = ray.x;
+    float r_dy = ray.y;
+    // SEGMENT in parametric: Point + Delta*T2
+    float s_px = segment.start.x;// +segment.off.x;
+    float s_py = segment.start.y;// +segment.off.y;
+    float s_dx = segment.end.x - segment.start.x;
+    float s_dy = segment.end.y - segment.start.y;
+    // Are they parallel? If so, no intersect
+    float r_mag = sqrt(r_dx*r_dx + r_dy*r_dy);
+    float s_mag = sqrt(s_dx*s_dx + s_dy*s_dy);
+
+    if (r_dx / r_mag == s_dx / s_mag && r_dy / r_mag == s_dy / s_mag) {
+        // Unit vectors are the same.
+        return false;
+    }
+    // SOLVE FOR T1 & T2
+    float det = (s_dx*r_dy - s_dy*r_dx);
+    float T2 = (r_dx*(s_py - r_py) + r_dy*(r_px - s_px)) / det;
+    float T1 = (s_px + s_dx*T2 - r_px) / r_dx;
+
+    // Must be a piece of the ray that is moving away from the origin
+    if (T1 < 0)         return false;
+    // Must be within the domain of the segment
+    if (T2 < 0 || T2>1) return false;
+
+    // Return Intersection information
+    intersection.time = T1;
+    intersection.rayPoint = sf::Vector2f(r_px + r_dx*T1, r_py + r_dy*T1);
+    intersection.segPoint = sf::Vector2f(s_px + s_dx*T2, s_py + s_dy*T2);
+    intersection.segment = segment;
+    intersection.distance = rayStart - intersection.segPoint;
+
+    return true;
+}
+
+bool RayCast(sf::Vector2f dir, sf::Vector2f start, std::vector<Segment> & segments, Intersection & intersect)
+{
+    bool found = false;
+    dir = dir / 8.0f;// This is important. is it?
+                     ///PHYSPRINT("[Ang](" << angle << ")");
+    float closest = 999999.9;
+    for (auto seg = segments.begin(); seg != segments.end(); ++seg)
+    {
+        Intersection intersectTemp;
+        intersectTemp.expired = true;
+        intersectTemp.rayPoint = start + dir * 3400.0f;
+        intersectTemp.distance = intersectTemp.rayPoint - start;
+        intersectTemp.ray = dir;
+        physics::getIntersection(start, dir, *seg, intersectTemp);
+        if (vec::mag(intersectTemp.distance) <= closest)
+        {
+            closest = vec::mag(intersectTemp.distance);
+
+            intersect = intersectTemp;
+            intersect.segment = *seg;
+            intersect.expired = false;
+            found = true;
+        }
+    }
+    return found;
+}
+
+//bool RayCast(float a, sf::Vector2f start, std::vector<Segment> & segments, physics::Intersection & intersect)
 //{
 //    float radians = a * (PI / 180.0f);
 //

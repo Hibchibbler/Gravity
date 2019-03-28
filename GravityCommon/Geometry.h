@@ -54,6 +54,36 @@ public:
     uint8_t  flip;
 };
 
+class Segment
+{
+public:
+    sf::Vector2f start;
+    sf::Vector2f end;
+    sf::Vector2f off;
+    uint32_t flags;
+};
+
+class Intersection
+{
+public:
+    Intersection() {}
+    sf::Vector2f distance;
+    float time;
+    sf::Vector2f ray;
+    sf::Vector2f rayPoint;
+    sf::Vector2f segPoint;
+    float angle;
+    bool expired;//did the ray get to the end without hitting anything?
+    Segment segment;
+};
+
+class Ray
+{
+public:
+    sf::Vector2f offset;
+    sf::Vector2f delta;
+};
+
 //class Shape
 //{
 //public:

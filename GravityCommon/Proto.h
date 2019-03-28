@@ -22,7 +22,8 @@ public:
     enum class Type {
         PLAYER,
         CONSUMABLE,
-        MONSTER
+        MONSTER,
+        STATIC
     };
 
     Type        type;

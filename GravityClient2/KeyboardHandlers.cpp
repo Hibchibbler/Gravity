@@ -35,7 +35,7 @@ void KeyPressedHandler(Keypress & kp, void* ud)
             // Character is on the ground
             // Jump according to the angle of the ground
             kp.nml = context->entities[0].collider.jumpNormal;
-            //context->entities[0].collider.jumpNormal = vec::Zero();
+            context->entities[0].collider.jumpNormal = vec::Zero();
             context->entities[0].jumping = true;
             std::cout << "FJS ";
         }
@@ -110,7 +110,7 @@ void KeyHeldHandler(Keypress & kp, void* ud)
     {
         for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         {
-            e->proto.body.angle += 10.0f;
+            e->proto.body.angle += 5.0f;
         }
 
         //// Get mouse pixels
@@ -127,7 +127,7 @@ void KeyHeldHandler(Keypress & kp, void* ud)
     {
         for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         {
-            e->proto.body.angle -= 10.0f;
+            e->proto.body.angle -= 5.0f;
         }
     }
     else if (kp.cc == context->keyboardConfig.JUMP_KEY)

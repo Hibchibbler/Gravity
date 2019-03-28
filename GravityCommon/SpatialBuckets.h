@@ -1,5 +1,5 @@
 #ifndef SPATIAL_BUCKETS_H_
-#define SPATIAL_BUCKERT_H_
+#define SPATIAL_BUCKETS_H_
 
 #include <vector>
 #include <iostream>

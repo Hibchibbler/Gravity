@@ -5,7 +5,6 @@
 #ifndef PHYSICS_H_
 #define PHYSICS_H_
 
-#include "Polygons.h"
 #include <list>
 #include <sstream>
 #include <iomanip>
@@ -30,27 +29,6 @@ namespace bali
 {
 namespace physics
 {
-//class Intersection
-//{
-//public:
-//    Intersection();
-//    sf::Vector2f distance;
-//    float time;
-//    sf::Vector2f ray;
-//    sf::Vector2f rayPoint;
-//    sf::Vector2f segPoint;
-//    float angle;
-//    bool expired;//did the ray get to the end without hitting anything?
-//    Segment segment;
-//};
-//
-//class Ray
-//{
-//public:
-//    sf::Vector2f offset;
-//    sf::Vector2f delta;
-//};
-
 
 //
 // Frame of References
@@ -65,8 +43,8 @@ sf::Vector2f rightVector(float angle);
 //
 // Ray stuff
 //
-//bool getIntersection(sf::Vector2f rayStart, sf::Vector2f ray, Segment segment, Intersection & intersection);
-//bool RayCast(sf::Vector2f dir, sf::Vector2f start, std::vector<Segment> & segments, physics::Intersection & intersect);
+bool getIntersection(sf::Vector2f rayStart, sf::Vector2f ray, Segment segment, Intersection & intersection);
+bool RayCast(sf::Vector2f dir, sf::Vector2f start, std::vector<Segment> & segments, Intersection & intersect);
 //bool RayCast(float a, sf::Vector2f start, std::vector<Segment> & segments, physics::Intersection & intersect);
 //void createLoSTriFan(std::vector<CONVEXSHAPE> & shapes, sf::Vector2f pos, sf::VertexArray & lineSegments);
 
@@ -124,6 +102,13 @@ CollisionResponseWall(
 //    PhysicsConfig & pc,
 //    std::list<SAT::ContactInfo> & contacts
 //);
+
+sf::Vector2f
+lerp(
+    sf::Vector2f start,
+    sf::Vector2f end,
+    float t
+);
 
 bool
 ResolveAllCollisions(
