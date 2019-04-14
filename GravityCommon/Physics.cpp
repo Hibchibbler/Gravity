@@ -157,6 +157,7 @@ physics::CollisionResponseWall(
                 //std::cout << "2";
                 //std::cout << std::setprecision(3) << "2) " << absjt << " < " << j * pc.STATIC_FRICTION << std::endl;
             }
+            //if (vec::mag(friction) > 1.0f)
             totalresponse = totalresponse + (friction * ma);
         }
     }
@@ -258,12 +259,12 @@ ProcessAllContacts(
             Entity* thatEntity = &entities[contact.thatindex];
             thatmass = thatEntity->proto.body.mass;
             thatvel = thatEntity->proto.body.vel;
-            overlap = contact.overlap / 1.0f;
+            overlap = contact.overlap;// *0.8f;
         }
         else
         {
             thatmass = 0.0f;
-            overlap = contact.overlap * 2.0f;
+            overlap = contact.overlap;// *1.1f;
         }
         posDelta = contact.normal * overlap;
         sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
@@ -282,32 +283,20 @@ ProcessAllContacts(
         //if (vec::mag(velDelta) > 0.001)
         {
             CommandQueue::postModifyVelocity(thisEntity->proto.body,
-                thisEntity->proto.body.vel + velDelta,
-                true);
+                velDelta,
+                false);
+                //thisEntity->proto.body.vel + velDelta,
+                //true);
         }
-        thisEntity->avgForce = thisEntity->avgForce + velDelta;
-        thisEntity->numForce++;
+       // thisEntity->avgForce = thisEntity->avgForce + velDelta;
+        //thisEntity->numForce++;
 
         physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
-        if (contact.thatindex == -1)
+        thisEntity->proto.shapes[0].setPosition(thisEntity->proto.body.pos);
+        //if (contact.thatindex == -1)
             onCollision(context, *thisEntity, contact.normal);
 
     }
-
-    //for (int e = 0; e < context->entities.size(); e++)
-    //{
-    //    Entity* thisEntity = &context->entities[e];
-    //    if (thisEntity->numForce > 0)
-    //    {
-    //        CommandQueue::postModifyVelocity(thisEntity->proto.body,
-    //            thisEntity->proto.body.vel + (thisEntity->avgForce / thisEntity->numForce),
-    //            true);
-    //        thisEntity->numForce = 0;
-    //        thisEntity->avgForce = vec::Zero();
-    //        physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
-    //    }
-    //    
-    //}
 }
 
 sf::Vector2f 
@@ -336,6 +325,20 @@ ResolveAllCollisions(
     std::vector<SAT::ContactInfo> wallContacts;
     sf::Time framequant = context->frameacc + context->frametime;
 
+    //for (int e = 0; e < context->entities.size(); e++)
+    //{
+    //    sf::Vector2f newpos = context->entities[e].proto.body.pos;
+    //    sf::Vector2f vel = context->entities[e].proto.body.vel;
+    //    sf::Vector2f next = newpos;
+    //    //if (conteaxt->frameacc < sf::seconds(context->physicsConfig.FIXED_DELTA))
+    //    //assert(context->frametime < sf::seconds(context->physicsConfig.FIXED_DELTA));
+    //    next = physics::lerp(newpos, vel, context->frametime.asSeconds());
+    //    //else
+    //    //    next = newpos;
+    //        //(context->frameacc.asSeconds() + context->frametime.asSeconds()) * context->physicsConfig.FIXED_DELTA);
+    //    context->entities[e].proto.shapes[0].setPosition(next);
+    //}
+
     while (framequant >= sf::seconds(pc.FIXED_DELTA) && !context->paused)
     {
         if (framequant > sf::seconds(pc.FIXED_DELTA)*20.f)
@@ -352,7 +355,6 @@ ResolveAllCollisions(
             integrateEuler(context->entities[e].proto.body, pc);
             /////////////////////////////////
 
-
             // Reinitialize 1 pass entity structures.
             context->entities[e].collisionentities.clear();
 
@@ -360,45 +362,65 @@ ResolveAllCollisions(
             sf::Vector2f newpos = context->entities[e].proto.body.pos;
             context->entities[e].proto.shapes[0].setPosition(newpos);
         }
-        // Reinitialize 1 pass global structures
-        context->allcontacts.clear();
-        context->entitybuckets.clear();
+        uint32_t maxiters = 3;
+        uint32_t curiters = 0;
+        do {
+            // Reinitialize 1 pass global structures
+            context->allcontacts.clear();
+            context->entitybuckets.clear();
 
-        //
-        //
-        // collect the collision polygons visible to each entity
-        //
-        GetCPolyNeighbors(context,
-                    context->entities,
-            context->cpolybuckets);
+            //
+            //
+            // collect the collision polygons visible to each entity
+            //
+            GetCPolyNeighbors(context,
+                context->entities,
+                context->cpolybuckets);
 
 
-        //
-        // Build Spatial Buckets for entities
-        // We rebuild the entire thing every update
-        //
-        CreateEntityBucket(context->entities,
-            context->entitybuckets);
-        //
-        // Using newly create bucket, Locate nearest neighbors for each entity
-        //
-        GetEntityNeighbors(context->entities,
-            context->entitybuckets);
+            //
+            // Build Spatial Buckets for entities
+            // We rebuild the entire thing every update
+            //
+            CreateEntityBucket(context->entities,
+                context->entitybuckets);
+            //
+            // Using newly create bucket, Locate nearest neighbors for each entity
+            //
+            GetEntityNeighbors(context->entities,
+                context->entitybuckets);
 
-        //
-        // Collect collision contacts for entity to entity
-        //
-        GetEntityEntityContacts(context->entities, context->allcontacts);
+            //
+            // Collect collision contacts for entity to entity
+            //
+            GetEntityEntityContacts(context->entities,
+                context->allcontacts);
 
-        //
-        // Collect collision contacts for entity-to-wall
-        //
-        GetEntityWallContacts(context->entities, context->allcollisionshapes, context->allcontacts);
+            //
+            // Collect collision contacts for entity-to-wall
+            //
+            GetEntityWallContacts(context->entities,
+                context->allcollisionshapes,
+                context->allcontacts);
 
-        ProcessAllContacts(context, context->entities, context->allcontacts, onCollision, onNonCollision, pc);
-
+            ProcessAllContacts(context,
+                context->entities,
+                context->allcontacts,
+                onCollision, onNonCollision,
+                pc);
+            curiters++;
+        } while (context->allcontacts.size() > 0 && curiters < maxiters);
     }
     context->frameacc = framequant; // store the left over time for next iteration.
+
+
+    for (Entity & e : context->entities)
+    {
+        /////////////////
+        sf::Vector2f newpos = e.proto.body.pos;
+        newpos = physics::lerp(newpos, e.proto.body.vel, pc.FIXED_DELTA);
+        e.proto.shapes[0].setPosition(newpos);
+    }
     return true;
 }
 

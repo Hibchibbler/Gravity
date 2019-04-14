@@ -65,7 +65,15 @@ namespace bali {
 
         static void character_data_handler(void *data, const char *content, int length)
         {
-
+            MapContext *ctx = (MapContext*)data;
+            std::string state = MapContext::ToString(ctx->stateDeck);
+            if (state == "map layer data")
+            {//TODO: this needs to take into account what the contents are.
+                if (length > 2)
+                {
+                    ctx->map->layers.back()->data->csv.assign(content, length);
+                }
+            }
         }
 
         static void end_element_handler(void *data, const char *element)
@@ -356,6 +364,8 @@ namespace bali {
                     ASSIGNIFMATCHESSTR("compression", ptr->compression);
                     cout << "Unexpected attribute " << attribute[i] << "=" << attribute[i + 1] << " in " << std::string(element) << endl;
                 }
+
+                //ptr->csv.insert
                 ctx->map->layers.back()->data = ptr;
 
             }
@@ -411,7 +421,7 @@ namespace bali {
                 Object::Ptr ptr = make_shared<Object>();
                 for (size_t i = 0; attribute[i]; i += 2)
                 {
-                    ASSIGNIFMATCHESINT("id", ptr->x);
+                    ASSIGNIFMATCHESINT("id", ptr->id);
                     ASSIGNIFMATCHESSTR("name", ptr->name);
                     ASSIGNIFMATCHESSTR("type", ptr->type);
                     ASSIGNIFMATCHESINT("x", ptr->x);

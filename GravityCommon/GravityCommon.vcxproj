@@ -139,6 +139,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ABMap.h" />
     <ClInclude Include="AIDirector.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Aseprite.h" />

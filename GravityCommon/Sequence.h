@@ -2,20 +2,21 @@
 #define SEQUENCE_H_
 
 #include "Aseprite.h"
+#include <map>
 
 namespace bali
 {
 class Sequence
 {
 public:
-    std::string name;
+    std::string frametagname;
     std::vector<ASE::Cel> cels;
 };
 
 void
 LoadSequences(
     ASE::SpriteSheet sheet,
-    std::vector<Sequence> & sequences
+    std::map<std::string, Sequence> & sequences
 );
 }
 #endif

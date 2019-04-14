@@ -103,6 +103,9 @@
     <ClInclude Include="tinyjson.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ABMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">

@@ -1,0 +1,595 @@
+{ "frames": {
+   "xira_final-spritesheet 0.png": {
+    "frame": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 1.png": {
+    "frame": { "x": 0, "y": 320, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 2.png": {
+    "frame": { "x": 0, "y": 640, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 3.png": {
+    "frame": { "x": 0, "y": 960, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 4.png": {
+    "frame": { "x": 0, "y": 1280, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 5.png": {
+    "frame": { "x": 0, "y": 1600, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 6.png": {
+    "frame": { "x": 0, "y": 1920, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 7.png": {
+    "frame": { "x": 0, "y": 2240, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 8.png": {
+    "frame": { "x": 0, "y": 2560, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 9.png": {
+    "frame": { "x": 0, "y": 2880, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 10.png": {
+    "frame": { "x": 0, "y": 3200, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 11.png": {
+    "frame": { "x": 0, "y": 3520, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 12.png": {
+    "frame": { "x": 0, "y": 3840, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 13.png": {
+    "frame": { "x": 0, "y": 4160, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 14.png": {
+    "frame": { "x": 0, "y": 4480, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 15.png": {
+    "frame": { "x": 0, "y": 4800, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 16.png": {
+    "frame": { "x": 0, "y": 5120, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 17.png": {
+    "frame": { "x": 0, "y": 5440, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 18.png": {
+    "frame": { "x": 0, "y": 5760, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 19.png": {
+    "frame": { "x": 0, "y": 6080, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 20.png": {
+    "frame": { "x": 0, "y": 6400, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 21.png": {
+    "frame": { "x": 0, "y": 6720, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 22.png": {
+    "frame": { "x": 0, "y": 7040, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 23.png": {
+    "frame": { "x": 0, "y": 7360, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 24.png": {
+    "frame": { "x": 0, "y": 7680, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 25.png": {
+    "frame": { "x": 0, "y": 8000, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 26.png": {
+    "frame": { "x": 0, "y": 8320, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 27.png": {
+    "frame": { "x": 0, "y": 8640, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 28.png": {
+    "frame": { "x": 0, "y": 8960, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 29.png": {
+    "frame": { "x": 0, "y": 9280, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 30.png": {
+    "frame": { "x": 0, "y": 9600, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 31.png": {
+    "frame": { "x": 0, "y": 9920, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 32.png": {
+    "frame": { "x": 0, "y": 10240, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 33.png": {
+    "frame": { "x": 0, "y": 10560, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 34.png": {
+    "frame": { "x": 0, "y": 10880, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 35.png": {
+    "frame": { "x": 0, "y": 11200, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 36.png": {
+    "frame": { "x": 0, "y": 11520, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 37.png": {
+    "frame": { "x": 0, "y": 11840, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 38.png": {
+    "frame": { "x": 0, "y": 12160, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 39.png": {
+    "frame": { "x": 0, "y": 12480, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 40.png": {
+    "frame": { "x": 0, "y": 12800, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 41.png": {
+    "frame": { "x": 0, "y": 13120, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 42.png": {
+    "frame": { "x": 0, "y": 13440, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 43.png": {
+    "frame": { "x": 0, "y": 13760, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 44.png": {
+    "frame": { "x": 0, "y": 14080, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 45.png": {
+    "frame": { "x": 0, "y": 14400, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 46.png": {
+    "frame": { "x": 0, "y": 14720, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 47.png": {
+    "frame": { "x": 0, "y": 15040, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 48.png": {
+    "frame": { "x": 0, "y": 15360, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 49.png": {
+    "frame": { "x": 0, "y": 15680, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 50.png": {
+    "frame": { "x": 0, "y": 16000, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 51.png": {
+    "frame": { "x": 0, "y": 16320, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 52.png": {
+    "frame": { "x": 0, "y": 16640, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 53.png": {
+    "frame": { "x": 0, "y": 16960, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 54.png": {
+    "frame": { "x": 0, "y": 17280, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 55.png": {
+    "frame": { "x": 0, "y": 17600, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 56.png": {
+    "frame": { "x": 0, "y": 17920, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 57.png": {
+    "frame": { "x": 0, "y": 18240, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 58.png": {
+    "frame": { "x": 0, "y": 18560, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 59.png": {
+    "frame": { "x": 0, "y": 18880, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 60.png": {
+    "frame": { "x": 0, "y": 19200, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 61.png": {
+    "frame": { "x": 0, "y": 19520, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 62.png": {
+    "frame": { "x": 0, "y": 19840, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 63.png": {
+    "frame": { "x": 0, "y": 20160, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 64.png": {
+    "frame": { "x": 0, "y": 20480, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 65.png": {
+    "frame": { "x": 0, "y": 20800, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 66.png": {
+    "frame": { "x": 0, "y": 21120, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 67.png": {
+    "frame": { "x": 0, "y": 21440, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 68.png": {
+    "frame": { "x": 0, "y": 21760, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 69.png": {
+    "frame": { "x": 0, "y": 22080, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 70.png": {
+    "frame": { "x": 0, "y": 22400, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   },
+   "xira_final-spritesheet 71.png": {
+    "frame": { "x": 0, "y": 22720, "w": 320, "h": 320 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 320 },
+    "sourceSize": { "w": 320, "h": 320 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.9-x64",
+  "image": "assets\\xira_final-spritesheet-sheet.png",
+  "format": "RGBA8888",
+  "size": { "w": 320, "h": 23040 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Idling", "from": 0, "to": 3, "direction": "forward" },
+   { "name": "Running", "from": 4, "to": 12, "direction": "forward" },
+   { "name": "NotSure", "from": 13, "to": 16, "direction": "forward" },
+   { "name": "Jumping", "from": 17, "to": 28, "direction": "forward" },
+   { "name": "Dying", "from": 29, "to": 57, "direction": "forward" },
+   { "name": "Exploding", "from": 58, "to": 65, "direction": "forward" }
+  ]
+ }
+}

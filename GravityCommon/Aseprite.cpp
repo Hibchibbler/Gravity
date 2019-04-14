@@ -10,7 +10,7 @@ bool LoadSpriteSheet(
 )
 {
 
-    json_t mem[1024];
+    json_t mem[2048];
     json_t const* json = json_create(jsonbuf, mem, sizeof mem / sizeof *mem);
     if (!json) {
         std::cout << "Error json create." << std::endl;

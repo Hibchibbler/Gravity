@@ -7,29 +7,30 @@
 
 namespace bali
 {
+#define STATE_MASK(x)   \
+    (1UL << (x))
 
 class Behavior
 {
 public:
-    enum State {
-        BIRTH,
+    enum class State {
         DEATH,
+        BIRTH,
         IDLE,
         WALKING,
         RUNNING,
         JUMPING,
         ATTACKING,
         FALLING,
-        SEEKWAYPOINT,
-        SEEKENTITY,
     };
 
-    enum Disposition {
+    enum class Disposition {
         PASSIVE,
         AGGRESSIVE
     };
 
-    enum Specie {
+    enum class Specie { 
+        ROCK,
         BIPED,
         CRAWLER,
         FLYER

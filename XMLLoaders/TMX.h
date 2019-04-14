@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2019
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef tmx_structures_h_
@@ -101,8 +101,11 @@ namespace bali {
             std::string         encoding;
             std::string         compression;
         public:
+            // xml format will have TileA elements.
+            // csv format will be a string.
             // 0 to many
             TileA::Vec          tiles;
+            std::string         csv;
         };
 
         class Image
@@ -408,14 +411,18 @@ namespace bali {
                 nextobjectid    = 0;
             }
 
-            TMX::Objectgroup::Ptr getObjectGroup(std::string name)
+            bool getObjectGroup(std::string name, TMX::Objectgroup::Ptr & og)
             {
+                og.reset();
                 for (auto o = objectgroups.begin(); o != objectgroups.end(); ++o)
                 {
-                    if ((*o)->name != name)
-                        continue;
-                    return *o;
+                    if ((*o)->name == name)
+                    {
+                        og = *o;
+                        return true;
+                    }
                 }
+                return false;
             }
 
             TMX::Tileset::Ptr getTileset(std::string name)
@@ -428,6 +435,19 @@ namespace bali {
                     }
                 }
                 return nullptr;
+            }
+
+            bool getTileset(std::string name, TMX::Tileset::Ptr & ts)
+            {
+                for (auto i = tilesets.begin(); i != tilesets.end(); i++)
+                {
+                    if ((*i)->name == name)
+                    {
+                        ts = *i;
+                        return true;
+                    }
+                }
+                return false;
             }
 
             TMX::Layer::Ptr getLayer(std::string name)

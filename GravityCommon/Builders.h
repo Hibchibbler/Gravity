@@ -144,11 +144,11 @@ buildWaypoints10(
     TMX::Objectgroup::Ptr & objectGroup
 );
 
-Proto
-getCopyOfProto(
-    Vec<Proto> & protos,
-    uint32_t id
-);
+//Proto
+//getCopyOfProto(
+//    Vec<Proto> & protos,
+//    uint32_t id
+//);
 
 uint32_t 
 loadPolygons(
@@ -177,6 +177,23 @@ addQuad(
     sf::FloatRect c,
     sf::IntRect t,
     unsigned char flip
+);
+
+bool
+assignProto(
+    std::vector<Proto> & protos,
+    std::string pid,
+    Proto & proto
+);
+
+bool
+addEntity(
+    bool registerwithaidirector,
+    bool ignoreentitycollision,
+    bool moving,
+    Vec<Entity> & entities,
+    Vec<Proto> & protos,
+    TMX::Objectgroup::Ptr & ogptr
 );
 
 }

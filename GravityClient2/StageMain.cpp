@@ -153,67 +153,28 @@ uint32_t StageMain::doUpdate()
     sf::Vector2f pos = context->players[0].entity->proto.body.pos;
     float angle = context->players[0].entity->proto.body.angle;
 
-    
-    
-    
+    //
+    //
+    //
     context->players[0].controller.mk.Update(context->frametime);
 
+    //
+    //
+    //
     context->AIDirector.update(context->frametime, context->entities, context->waypoints);
 
-    //for (size_t e = 1; e < context->entities.size(); e++)
-    //{
-    //    Entity & entity = context->entities[e];
-    //    Behavior & behavior = entity.behavior;
-    //    entity.update(context->frametime);
-
-
-    //    if (behavior.getstate() == Behavior::State::WALKING)
-    //    {
-    //        //// Find Closest Way point that is not `lastwaypoint`
-    //        //// Move toward way point
-    //        //// If have arrived at waypoint, update `lastwaypoint` to this waypoint.
-
-    //        //sf::Vector2f minthere;
-    //        //float mindist = 999999999999999999.f;
-    //        //sf::Vector2f here = entity.proto.body.pos;
-
-    //        //for (auto g = context->waypoints.begin();
-    //        //    g != context->waypoints.end();
-    //        //    g++)
-    //        //{
-
-    //        //    // calculate distance from here to there.
-    //        //    // and go in the direction of the minimum distance
-    //        //    sf::Vector2f there = sf::Vector2f(g->x, g->y);
-    //        //    float dist = vec::mag(there - here);
-    //        //    if (dist < mindist)
-    //        //    {
-    //        //        mindist = dist;
-    //        //        minthere = there;
-    //        //    }
-    //        //}
-
-    //        searchastar(context->waypoints, curwp, nextwp);
-    //        //// 
-    //        //if (entity.collider.surfaceNormal != vec::Zero())
-    //        //{
-    //        //    float str = 0.10f;
-    //        //    sf::Vector2f nml;
-    //        //    nml = minthere - here;//vec::normal(entity.collider.surfaceNormal);
-    //        //    //str = vec::mag(nml);
-    //        //    nml = vec::norm(nml);
-    //        //    CommandQueue::postMove(entity.proto.body, str, nml, true);
-    //        //    entity.collider.surfaceNormal = vec::Zero();
-    //        //}
-    //    }
-    //}
-
-
-    
-    
+    //
+    //
+    //
     physics::ResolveAllCollisions(context, onCollision, onNonCollision, context->physicsConfig);
 
-
+    for (auto & ent : context->entities)
+    {
+        for (auto & a : ent.proto.wardrobe.animations)
+        {
+            a.second.update(context->frametime);
+        }
+    }
     //////
     float avgangle = 0.0f;
     size_t poscnt = 0;
@@ -255,8 +216,15 @@ uint32_t StageMain::doDraw()
         //
 
         // clear everything
-        context->gameWindow.window.clear(sf::Color::Black);
-        context->canvas.clear(sf::Color::Black);
+        sf::Color c;
+        /*c.r = 20;
+        c.g = 20;
+        c.b = 20;*/
+        c.r = 0;
+        c.g = 0;
+        c.b = 0;
+        context->gameWindow.window.clear(c);
+        context->canvas.clear(c);
 
         // Draw backgound tiles
         if (context->backgroundvertices.size() > 0)
@@ -276,58 +244,114 @@ uint32_t StageMain::doDraw()
         ////
         //// Construct all collision polygons that are visible to the player
         ////
-        for (int h = 0; h < 1; h++)
-        {
-            for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
-            {
-                states.texture = NULL;
-                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
-                
-                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineThickness(2);
-                context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
-                context->canvas.draw(context->allcollisionshapes[context->entities[h].collisionshapes[si]], states);
-            }
-        }
-        // Draw Entities
+        //for (int h = 0; h < 1; h++)
+        ////int h = 0;
+        ////{
+        ////    for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
+        ////    {
+        ////        states.texture = NULL;
+        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
+        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineThickness(2);
+        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
+        ////        context->canvas.draw(context->allcollisionshapes[context->entities[h].collisionshapes[si]], states);
+        ////    }
+        ////}
+        //for (int si = 0; si < context->allcollisionshapes.size(); si++)
+        //{
+        //    states.texture = NULL;
+        //    context->allcollisionshapes[si].setFillColor(sf::Color::Transparent);
+        //    context->allcollisionshapes[si].setOutlineThickness(2);
+        //    context->allcollisionshapes[si].setOutlineColor(sf::Color::Red);
+        //    context->canvas.draw(context->allcollisionshapes[si], states);
+        //}
+
+        //// Draw Entities Shapes
+        //for (int e = 0; e < context->entities.size(); e++)
+        //{
+        //    //rs.setTexture(context->player0spritesheet);
+        //    context->canvas.draw(context->entities[e].proto.shapes[0]);
+        //}
+
         for (int e = 0; e < context->entities.size(); e++)
+        //int e = 0;
         {
-            sf::Vector2f newpos = context->entities[e].proto.body.pos;
-            sf::Vector2f vel = context->entities[e].proto.body.vel;
-            sf::Vector2f next = physics::lerp(newpos,
-                vel,
-                context->frametime.asSeconds() * context->physicsConfig.FIXED_DELTA);
-                
+            Entity & entity = context->entities[e];
+            if (entity.proto.wardrobe.animations.size() == 0)
+                continue;
 
-            context->entities[e].proto.shapes[0].setPosition(next);
-            context->canvas.draw(context->entities[e].proto.shapes[0]);
+            //sf::Vector2f newpos = context->entities[e].proto.body.pos;
+            //sf::Vector2f vel = context->entities[e].proto.body.vel;
+            //sf::Vector2f next;
+            ////if (conteaxt->frameacc < sf::seconds(context->physicsConfig.FIXED_DELTA))
+            ////assert(context->frametime < sf::seconds(context->physicsConfig.FIXED_DELTA));
+            //newpos = physics::lerp(newpos, vel, context->physicsConfig.FIXED_DELTA);// context->frametime.asSeconds());// *context->physicsConfig.FIXED_DELTA);
+            ////else
+            //    next = newpos;
+            //    //(context->frameacc.asSeconds() + context->frametime.asSeconds()) * context->physicsConfig.FIXED_DELTA);
+            //    
 
+            //context->entities[e].proto.shapes[0].setPosition(next);
+            sf::RectangleShape rs;
+            rs.setSize(sf::Vector2f(48,48));
+            //
+            //rs.move(-24, -24);
+            rs.rotate(entity.proto.body.angle);
+            rs.setOrigin(24, 24);
+            rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+            rs.setTexture(&entity.proto.sstex->tex);
 
-            //sf::Vertex lines[2];
-            //lines[0].position = context->entities[e].proto.body.pos;
-            //lines[1].position = context->entities[e].distupper;
+            Animation* animation;
+            Wardrobe & wardrobe = entity.proto.wardrobe;
+            if (entity.moving)
+            {
+                if (entity.proto.wardrobe.getAnimation("Running", animation))
+                {
+                    ASE::Cel & cell = animation->sequence.cels[animation->celid];
+                    sf::IntRect subrect;
+                    ////
+                    //wardrobe.getSubRect(cell, subrect);
+                    if (vec::dot(entity.proto.body.vel, physics::rightVector(entity.proto.body.angle)) > 0.0f)
+                    {
+                        wardrobe.getSubRect(cell, subrect, false);
+                    }
+                    else
+                    {
+                        wardrobe.getSubRect(cell, subrect, true);
+                    }
+                    ////
+                    rs.setTextureRect(subrect);
+                }
+            }
+            else
+            {
 
-            //context->canvas.draw(lines, 2, sf::Lines);
+                if (entity.proto.wardrobe.getAnimation("Idling", animation))
+                {
+                    ASE::Cel & cell = animation->sequence.cels[animation->celid];
+                    sf::IntRect subrect;
 
-            //lines[0].position = context->entities[e].proto.body.pos;
-            //lines[1].position = context->entities[e].distahead;
-
-            //context->canvas.draw(lines, 2, sf::Lines);
-
-            //lines[0].position = context->entities[e].proto.body.pos;
-            //lines[1].position = context->entities[e].distlower;
-
-            //context->canvas.draw(lines,2, sf::Lines);
+                        wardrobe.getSubRect(cell, subrect, false);
+                    
+                    rs.setTextureRect(subrect);
+                    //std::cout << animation->celid  << ", ["<< subrect.top << ", " << subrect.left << ", " << subrect.width << ", " << subrect.height << "] \n";
+                }
+            }
+            sf::RenderStates rendsta;
+            rendsta.texture = &entity.proto.sstex->tex;
+            context->canvas.draw(rs);
         }
+
 
         // Draw a box where we think the center of the entity is. center of gravity.
         for (int h = 0; h < context->entities[0].collisionentities.size(); h++)
         {
-            sf::RectangleShape rs(sf::Vector2f(4, 4));
+            sf::RectangleShape rs(sf::Vector2f(8, 8));
             rs.setFillColor(sf::Color::Red);
             sf::Vector2f pos(context->entities[context->entities[0].collisionentities[h]].proto.body.pos);
             size_t e = context->entities[0].collisionentities[h];
             sf::Vector2f newpos = GetCentroid(context->entities[e].proto.shapes[0]);
             rs.setPosition(newpos);
+            rs.move(-4, -4);
             context->canvas.draw(rs);
         }
 

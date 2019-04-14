@@ -77,6 +77,10 @@ public:
 
     Texture         backgroundtilesettexture;
     Texture         foregroundtilesettexture;
+    Texture         player0spritesheet;
+
+    ASE::SpriteSheet spritesheet;
+    std::vector<bali::Sequence> sequences;
 
     sf::RenderTexture canvas;
 

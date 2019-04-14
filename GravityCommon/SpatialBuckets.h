@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <SFML\System.hpp>
-
+#include <assert.h>
 //
 // SpatialBucket stores entity indexes
 // that are local to this spatial region.
@@ -70,15 +70,15 @@ public:
         if (bx >= 0 && bx < this->numcols * this->bucketwidth &&
             by >= 0 && by < this->numrows * this->bucketheight)
         {
-            uint32_t bx = x / this->bucketwidth;
-            uint32_t by = y / this->bucketheight;
+            bx = x / this->bucketwidth;
+            by = y / this->bucketheight;
 
             int index = XY2GID(bx, by, this->numcols);
             //std::cout << index << std::endl;
-            if (index != id)
-            {
+            //if (index != id)// TODO: why did i do this?!?1
+            //{
                 bucketlist[index].locals.push_back(id);
-            }
+            //}
         }
     }
 
@@ -93,6 +93,7 @@ public:
     int XY2GID(int x, int y, int total_columns)
     {
         int g = (x + (total_columns * y));
+        assert(g >= 0);
         return g;
     }
 

@@ -18,6 +18,17 @@
 namespace bali
 {
 
+std::string
+createProtoName(
+    std::string name,
+    uint32_t & index
+)
+{
+    std::stringstream res;
+    res << name << index;
+    return res.str();
+}
+
 template<typename Out>
 void split(const std::string &s, char delim, Out result) {
     std::stringstream ss;
@@ -70,65 +81,25 @@ sf::Color GetRandomColor(int k = 0)
         return sf::Color::Yellow;
     }
 }
-Proto
-getCopyOfProto(
-    Vec<Proto> & protos,
-    uint32_t id
+
+
+bool
+assignProto(
+    std::vector<Proto> & protos,
+    std::string pid,
+    Proto & proto
 )
 {
-    for (auto y = protos.begin(); y != protos.end(); y++)
+    for (auto & p : protos)
     {
-        if (y->id == id)
+        if (p.pid == pid)
         {
-            return *y;
+            proto = p;
+            return true;
         }
     }
-    throw;
+    return false;
 }
-
-//uint32_t
-//loadPoints(Vec<Shape> & waypointshapes,
-//    TMX::Objectgroup::Ptr & objectGroup
-//)
-//{
-//    //
-//    // Then, load up the objects (aka geometry)
-//    //
-//    for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
-//    {
-//        if ((*obj)->point != nullptr)
-//        {
-//            sf::ConvexShape cs;
-//            buildPoint(cs, *obj);
-//            waypointshapes.push_back(cs);
-//        }
-//    }
-//
-//    return 0;
-//}
-
-//bool
-//buildWaypoints(
-//    Vec<Waypoint> & waypoints,
-//    TMX::Objectgroup::Ptr & objectGroup
-//)
-//{
-//    for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
-//    {
-//        bool status = false;
-//        if ((*obj)->point != nullptr)
-//        {
-//            sf::Vector2f point((*obj)->x, (*obj)->y);
-//            Waypoint wp;
-//            wp.x = point.x;
-//            wp.y = point.y;
-//            wp.id = std::strtol((*obj)->properties.back()->value.c_str(),NULL, 10);
-//            waypoints.push_back(wp);
-//        }
-//    }
-//    return true;
-//}
-
 
 bool
 buildWaypoints10(
@@ -142,41 +113,49 @@ buildWaypoints10(
     {
         //std::unordered_map<sf::Vector2f, Waypoint> wpoints;
         bool status = false;
+        std::vector<std::string> pairs;
         if ((*obj)->polyline != nullptr)
         {
-            //sf::Vector2f point((*obj)->x, (*obj)->y);
-            size_t id = 9999999999;
-            uint32_t flags = 0;
-            size_t weight = 0;
-            for (auto h : (*obj)->properties)
-            {
-                if (h->name == "id")
-                {
-                    id = std::strtol(h->value.c_str(), NULL, 10);
-                }
-                if (h->name == "flags")
-                {
-                    flags = std::strtol(h->value.c_str(), NULL, 16);
-                }
-            }
-
-            std::vector<std::string> pairs = split((*obj)->polyline->points, ' ');
-            assert(id != 9999999999);
-            PolylineDescriptor polyline1;
-            std::vector<Waypoint> allwaypoints; // After processing, should contain all unique waypoints, and their neighbors.
-            std::vector<PathSegment> segments;      // Contains all segments for all polylines.
-            assert(pairs.size() > 1);
-            for (auto p = 0; p < pairs.size();p++)
-            {
-                std::vector<std::string> comp1 = split(pairs[p], ',');
-                float x1 = atol(comp1[0].c_str()) + (*obj)->x;
-                float y1 = atol(comp1[1].c_str()) + (*obj)->y;
-
-                polyline1.flags = flags;
-                polyline1.points.push_back(sf::Vector2f(x1, y1));
-            }
-            allpolylines.push_back(polyline1);
+            pairs = split((*obj)->polyline->points, ' ');
         }
+        else if ((*obj)->polygon != nullptr)
+        {
+            pairs = split((*obj)->polygon->points, ' ');
+        }
+        size_t id = 9999999999;
+        uint32_t flags = 0;
+        size_t weight = 0;
+        for (auto h : (*obj)->properties)
+        {
+            if (h->name == "id")
+            {
+                id = std::strtol(h->value.c_str(), NULL, 10);
+            }
+            if (h->name == "flags")
+            {
+                flags = std::strtol(h->value.c_str(), NULL, 16);
+            }
+        }
+
+            
+        assert(id != 9999999999);
+        PolylineDescriptor polyline1;
+        std::vector<Waypoint> allwaypoints; // After processing, should contain all unique waypoints, and their neighbors.
+        std::vector<PathSegment> segments;      // Contains all segments for all polylines.
+        assert(pairs.size() > 1);
+        for (auto p = 0; p < pairs.size();p++)
+        {
+            std::vector<std::string> comp1 = split(pairs[p], ',');
+            float x1 = atol(comp1[0].c_str()) + (*obj)->x;
+            float y1 = atol(comp1[1].c_str()) + (*obj)->y;
+
+            polyline1.flags = flags;
+            polyline1.points.push_back(sf::Vector2f(x1, y1));
+            if ((*obj)->polygon && p == pairs.size() - 1) {
+                polyline1.points.push_back(polyline1.points.front());
+            }
+        }
+        allpolylines.push_back(polyline1);
     }
 
     std::vector<PathSegment> allsegments;
@@ -205,12 +184,6 @@ loadPrototype(Proto & proto,
             {
                 int mass = std::atoi((*prop)->value.c_str());
                 proto.body.mass = mass;
-            }
-            else if ((*prop)->name == "id")
-            {
-                // The unique id for this prototype
-                int pid = std::atoi((*prop)->value.c_str());
-                proto.id = pid;
             }
         }
         else if ((*prop)->type == "float")
@@ -266,10 +239,11 @@ loadPrototype(Proto & proto,
             buildPolygon(proto.shapes.back(), *obj);
         }
         else if ((*obj)->polyline != nullptr)
-        {//NOTE: discard last point, engine assume last point is same as first.
-         // TMX format is explicit about first and last point. even though they will always be the same.
+        {
             proto.shapes.push_back(Shape());
-            buildPolyline(proto.shapes.back(), *obj);
+            //buildPolyline(proto.shapes.back(), *obj);
+            buildPolygon(proto.shapes.back(), *obj);
+            //buildPolygon(proto.shapes.back(), *obj);
         }
         //else if ((*obj)->point != nullptr)
         //{
@@ -282,7 +256,30 @@ loadPrototype(Proto & proto,
             proto.shapes.push_back(Shape());
             buildRectangle(proto.shapes.back(), *obj);
         }
+        for (auto p : (*obj)->properties)
+        {
+            if (p->name == "spritesheetname")
+            {
+                proto.spritesheetname = p->value;
+                //proto.img0.loadFromFile(proto.spritesheetname);
+            }
+        }
+        /*
+        <object id="2132" x="944" y="248">
+            <properties>
+                <property name="spritesheetname" value="assets\evilman.json"/>
+            </properties>
+            <polyline points="0,0 6,-6 18,-6 24,0 24,12 18,18 6,18 0,12 0,0"/>
+        </object>
+        */
+        // id="2132"  <-- this one.
+        proto.tiledid = (*obj)->id;
     }
+
+    //for (auto obj :  objectGroup->objects)
+    //{
+
+    //}
 
     return 0;
 }
@@ -299,7 +296,8 @@ uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
         {//NOTE: discard last point, engine assume last point is same as first.
          // TMX format is explicit about first and last point. even though they will always be the same.
             shapes.push_back(Shape());
-            buildPolyline(shapes.back(), *obj);
+            //buildPolyline(shapes.back(), *obj);
+            buildPolygon(shapes.back(), *obj);
         }
         else
         {//a rectangle
@@ -319,31 +317,39 @@ uint32_t loadTileLayer(Vec<Tile> & tiles, TMX::Tileset::Ptr & tileset, TMX::Laye
     int totalLayerCols = layer->width;
     int totalLayerRows = layer->height;
 
-    for (int h = 0; h < layer->width; h++)
+    if (layer->data->encoding == "csv")
     {
-        for (int w = 0; w < layer->height; w++)
+
+    }
+    else // XML
+    {
+        for (int h = 0; h < layer->width; h++)
         {
-            uint32_t tileIndex = (totalLayerCols * h) + w;
-            // Mask out the top 3 bits...
-
-            // When gid == 0, the map data did not associate a texture with this map location.
-            // We translate to array indexing by subtracting 1 from the gid.
-
-            Tile tile;
-            if (layer->data->tiles[tileIndex].gid != 0)
+            for (int w = 0; w < layer->height; w++)
             {
-                // Convert GID to x,y
-                uint32_t gid = (layer->data->tiles[tileIndex].gid);
-                tile.flip = (gid & 0xE0000000) >> 29;
-                gid = gid & 0x1FFFFFFF;
-                sf::Vector2i texPos = GID2XY(gid - tileset->firstgid, totalTilesetCols);
-                tile.gid = gid;
-                tile.ti = tileIndex;
-                tile.x = (float)((w*tw));
-                tile.y = (float)((h*th));
-                tile.tx = texPos.x*tw;
-                tile.ty = texPos.y*th;
-                tiles.push_back(tile);
+                uint32_t tileIndex = (totalLayerCols * h) + w;
+                // Mask out the top 3 bits...
+
+                // When gid == 0, the map data did not associate a texture with this map location.
+                // We translate to array indexing by subtracting 1 from the gid.
+
+
+                Tile tile;
+                if (layer->data->tiles[tileIndex].gid != 0)
+                {
+                    // Convert GID to x,y
+                    uint32_t gid = (layer->data->tiles[tileIndex].gid);
+                    tile.flip = (gid & 0xE0000000) >> 29;
+                    gid = gid & 0x1FFFFFFF;
+                    sf::Vector2i texPos = GID2XY(gid - tileset->firstgid, totalTilesetCols);
+                    tile.gid = gid;
+                    tile.ti = tileIndex;
+                    tile.x = (float)((w*tw));
+                    tile.y = (float)((h*th));
+                    tile.tx = texPos.x*tw;
+                    tile.ty = texPos.y*th;
+                    tiles.push_back(tile);
+                }
             }
         }
     }
@@ -358,7 +364,7 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
         std::vector<std::string> pairs = split(obj->polygon->points, ' ');
         s.setPointCount(pairs.size());
         s.setPosition(sf::Vector2f(obj->x, obj->y));
-
+        std::cout << obj->id << std::endl;
         if (obj->rotation == 0)
         {
             int i = 0;
@@ -368,6 +374,7 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
                 float x1, y1;
                 x1 = atol(comp[0].c_str());
                 y1 = atol(comp[1].c_str());
+                
                 s.setPoint(i, sf::Vector2f(x1, y1));
                 ++i;
             }
@@ -397,70 +404,19 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
 }
 
 
-//bool buildPoint(sf::Vector2f & point, TMX::Object::Ptr obj)
-//{
-//    bool status = false;
-//    if (obj->point != nullptr)
-//    {
-//        point.x = obj->x;
-//        point.y = obj->y;
-//        status = true;
-//    }
-//    return status;
-//}
-//
-//bool buildPoint(Shape & s, TMX::Object::Ptr obj)
-//{
-//    bool status = false;
-//    if (obj->point != nullptr)
-//    {
-//        // Lets make a square around the position
-//        s.setPointCount(4);
-//        sf::Vector2f pt1(obj->x, obj->y);
-//        sf::Vector2f pt2(obj->x, obj->y);
-//        sf::Vector2f pt3(obj->x, obj->y);
-//        sf::Vector2f pt4(obj->x, obj->y);
-//
-//#define GIPS 10
-//        // upper left.. pt1
-//        pt1.x -= GIPS;
-//        pt1.y -= GIPS;
-//
-//        // upper right
-//        pt2.x += GIPS;
-//        pt2.y -= GIPS;
-//
-//        // lower right
-//        pt3.x += GIPS;
-//        pt3.y += GIPS;
-//
-//        // lower left
-//        pt4.x -= GIPS;
-//        pt4.y += GIPS;
-//
-//        s.setPoint(0, pt1);
-//        s.setPoint(1, pt2);
-//        s.setPoint(2, pt3);
-//        s.setPoint(3, pt4);
-//    }
-//
-//    return status;
-//}
 //
 // buildPolyline stores the object offset in the position of the Shape.
 // That is to say, the vertices that make up the shape are not translated.
 //
 bool buildPolyline(Shape & s, TMX::Object::Ptr obj)
 {
+    assert(false);// we don't use this function anymore
     bool status = false;
     if (obj->polyline != nullptr)
     {
         std::vector<std::string> pairs = split(obj->polyline->points, ' ');
 
-        size_t max = pairs.size() - 1;
-        if (max == 1)
-            max = 2;
-
+        size_t max = pairs.size() -1;
         s.setPointCount(max);
         s.setPosition(sf::Vector2f(obj->x, obj->y));
 
@@ -664,16 +620,18 @@ CreateCPolyBucket(
     SpatialBuckets & buckets
 )
 {
+    uint32_t cnt = 0;
     for (uint64_t tid = 0; tid < cpolys.size(); tid++)
     {
         qt::XY pt;
         pt.ti = tid;
 
         sf::FloatRect gb = cpolys[tid].getGlobalBounds();
-        pt.x = gb.left + gb.width / 2.0f;
-        pt.y = gb.top + gb.height / 2.0f;
+        pt.x = gb.left + (gb.width / 2.0f);
+        pt.y = gb.top + (gb.height / 2.0f);
 
         buckets.add(pt.x, pt.y, tid);
+        cnt++;
     }
 }
 
@@ -714,543 +672,68 @@ GetCPolyNeighbors(
                                            nays.begin(),
                                            nays.end());
     }
-    for (int e = 0; e < entities.size(); e++)
+    //for (int e = 0; e < entities.size(); e++)
+    //{
+    //    entities[e].visiblesegments.clear();
+    //    for (auto ko : entities[e].collisionshapes)
+    //    {
+    //        size_t pc = context->allcollisionshapes[ko].getPointCount();
+    //        for (auto p = 0; p < pc - 1; p++)
+    //        {
+    //            sf::Vector2f point1 = context->allcollisionshapes[ko].getPoint(p);
+    //            sf::Vector2f point2 = context->allcollisionshapes[ko].getPoint(p+1);
+    //            Segment seg;
+    //            seg.start = point1;
+    //            seg.end = point2;
+    //            seg.off = context->allcollisionshapes[ko].getPosition();
+    //            entities[e].visiblesegments.push_back(seg);
+    //        }
+    //    }
+    //}
+}
+
+bool
+addEntity(
+    bool registerwithaidirector,
+    bool ignoreentitycollision,
+    bool moving,
+    Vec<Entity> & entities,
+    Vec<Proto> & protos,
+    TMX::Objectgroup::Ptr & ogptr
+)
+{
+    for (auto o : ogptr->objects)
     {
-        entities[e].visiblesegments.clear();
-        for (auto ko : entities[e].collisionshapes)
+        std::string pid;
+        uint32_t mass;
+        for (auto p : (*o).properties)
         {
-            size_t pc = context->allcollisionshapes[ko].getPointCount();
-            for (auto p = 0; p < pc - 1; p++)
+            if (p->name == "pid")
             {
-                sf::Vector2f point1 = context->allcollisionshapes[ko].getPoint(p);
-                sf::Vector2f point2 = context->allcollisionshapes[ko].getPoint(p+1);
-                Segment seg;
-                seg.start = point1;
-                seg.end = point2;
-                seg.off = context->allcollisionshapes[ko].getPosition();
-                entities[e].visiblesegments.push_back(seg);
+                pid = p->value;
             }
-        }
-    }
-}
-
-
-/*
-sf::Vector2f rotatePoint(sf::Vector2f v, sf::Vector2f origin, float angle)
-{
-    //std::cout << angle << " ";
-    angle = angle*(PI / 180.0f);
-    
-    v -= origin;
-    v.x = v.x * cos(angle) - v.y * sin(angle);
-    v.y = v.x * sin(angle) + v.y * cos(angle);
-    v += origin;
-    return v;
-}
-
-uint32_t addQuad(bali::QuadArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip)
-{
-    const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x4;
-    const unsigned FLIPPED_VERTICALLY_FLAG = 0x2;
-    const unsigned FLIPPED_DIAGONALLY_FLAG = 0x1;
-
-    // Create Quad, clockwise winding. Add tex too.
-    //             
-    //    1        
-    //    *---* 2  
-    //    |   |    
-    //  4 *---*    
-    //        3    
-    //             
-    sf::Vector2f topleft = sf::Vector2f(t.left, t.top);
-    sf::Vector2f topright = sf::Vector2f(t.left + t.width, t.top);
-    sf::Vector2f bottomright = sf::Vector2f(t.left + t.width, t.top + t.height);
-    sf::Vector2f bottomleft = sf::Vector2f(t.left, t.top + t.height);
-
-    bool dflip = ((flip & FLIPPED_DIAGONALLY_FLAG) > 0 ? true : false);
-    bool hflip = ((flip & FLIPPED_HORIZONTALLY_FLAG) > 0 ? true : false);
-    bool vflip = ((flip & FLIPPED_VERTICALLY_FLAG) > 0 ? true : false);
-
-    if (dflip)
-    {
-        sf::Vector2f temp = bottomleft;
-        bottomleft = topright;
-        topright = temp;
-    }
-
-    if (vflip)
-    {
-        sf::Vector2f temp = topleft;
-        topleft = bottomleft;
-        bottomleft = temp;
-
-        temp = topright;
-        topright = bottomright;
-        bottomright = temp;
-    }
-
-    if (hflip)
-    {
-        sf::Vector2f temp = topleft;
-        topleft = topright;
-        topright = temp;
-
-        temp = bottomleft;
-        bottomleft = bottomright;
-        bottomright = temp;
-    }
-
-    v.append(sf::Vertex(sf::Vector2f(c.left, c.top), topleft));
-    v.append(sf::Vertex(sf::Vector2f(c.left + c.width, c.top), topright));
-    v.append(sf::Vertex(sf::Vector2f(c.left + c.width, c.top + c.height), bottomright));
-    v.append(sf::Vertex(sf::Vector2f(c.left, c.top + c.height), bottomleft));
-
-    return 0;
-}
-
-uint32_t addRotShape(Shape & s, sf::FloatRect p, float angle)
-{
-    float px1, py1;
-    float px2, py2;
-    float px3, py3;
-    float px4, py4;
-
-    angle = angle*(PI / 180.0f);
-
-    px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
-    py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;
-
-    px2 = ((p.width - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py2 = ((p.width - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-    px3 = ((p.width - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py3 = ((p.width - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-    px4 = ((0 - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py4 = ((0 - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-    s.setPointCount(4);
-    s.setPoint(0, sf::Vector2f(px1, py1));
-    s.setPoint(0, sf::Vector2f(px2, py2));
-    s.setPoint(0, sf::Vector2f(px3, py3));
-    s.setPoint(0, sf::Vector2f(px4, py4));
-
-    return 0;
-}
-
-uint32_t addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle)
-{
-
-    float px1, py1;
-    float px2, py2;
-    float px3, py3;
-    float px4, py4;
-
-    angle = angle*(PI / 180.0f);
-
-    px1 = ((0 - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;// +p.width/2.0f;
-    py1 = ((0 - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;//  +p.height/2.0f;
-
-    px2 = ((p.width - p.width / 2.0f) * cos(angle) - (0 - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py2 = ((p.width - p.width / 2.0f) * sin(angle) + (0 - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-    px3 = ((p.width - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py3 = ((p.width - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-    px4 = ((0 - p.width / 2.0f) * cos(angle) - (p.height - p.height / 2.0f) * sin(angle)) + p.left;//+p.width/2.0f;
-    py4 = ((0 - p.width / 2.0f) * sin(angle) + (p.height - p.height / 2.0f) * cos(angle)) + p.top;// +p.height/2.0f;
-
-
-    v.append(sf::Vertex(sf::Vector2f(px1, py1),
-        sf::Vector2f(t.left, t.top)
-    ));
-
-    v.append(sf::Vertex(sf::Vector2f(px2, py2),
-        sf::Vector2f(t.left + t.width, t.top)
-    ));
-
-    v.append(sf::Vertex(sf::Vector2f(px3, py3),
-        sf::Vector2f(t.left + t.width, t.top + t.height)
-    ));
-
-    v.append(sf::Vertex(sf::Vector2f(px4, py4),
-        sf::Vector2f(t.left, t.top + t.height)
-    ));
-
-    return 0;
-}
-
-qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom)
-{
-    qt::AABB searchRegion;
-    sf::Vector2f c = center;
-    c.x = floor(c.x);
-    c.y = floor(c.y);
-
-    sf::Vector2f s = size;
-    s.x *= zoom;
-    s.y *= zoom;
-
-    searchRegion.min.x = (float)((int)(c.x - (s.x / 2) + 64));
-    searchRegion.min.y = (float)((int)(c.y - (s.y / 2) + 64));
-    searchRegion.max.x = (float)((int)(c.x + (s.x / 2) - 64));
-    searchRegion.max.y = (float)((int)(c.y + (s.y / 2) - 64));
-    return searchRegion;
-}
-
-uint32_t buildTileLayer(Tile::Vec & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer)
-{
-    int tw = tileset->tilewidth;
-    int th = tileset->tileheight;
-
-    int totalTilesetCols = tileset->columns;
-    int totalLayerCols = layer->width;
-    int totalLayerRows = layer->height;
-
-    for (int h = 0; h < layer->width; h++)
-    {
-        for (int w = 0; w < layer->height; w++)
-        {
-            uint32_t tileIndex = (totalLayerCols * h) + w;
-            // Mask out the top 3 bits...
-
-            // When gid == 0, the map data did not associated a texture with this map location.
-            // We translate to array indexing by subtracting 1 from the gid.
-
-            Tile pt;
-            if (layer->data->tiles[tileIndex].gid != 0)
+            else if (p->name == "mass")
             {
-                // Convert GID to x,y
-                uint32_t gid = (layer->data->tiles[tileIndex].gid);
-                pt.flip = (gid & 0xE0000000) >> 29;
-                gid = gid & 0x1FFFFFFF;
-                sf::Vector2i texPos = GID2XY(gid - tileset->firstgid, totalTilesetCols);
-                pt.gid = gid;
-                pt.ti = tileIndex;
-                pt.x = (float)((w*tw));
-                pt.y = (float)((h*th));
-                pt.tx = texPos.x*tw;
-                pt.ty = texPos.y*th;
-                tileLayer.push_back(pt);
-            }
-        }
-    }
-    return 0;
-}
-uint32_t buildTileLayers(Tile::VecVec & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layers)
-{
-    for (auto l = layers.begin(); l != layers.end(); l++)
-    {
-        tileLayers.push_back(Tile::Vec());
-        buildTileLayer(tileLayers.back(), tileset, *l);
-    }
-    return 0;
-}
-
-uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint32_t tileWidth, uint32_t tileHeight)
-{
-    for (auto tdi = tileLayer.begin(); tdi != tileLayer.end(); tdi++)
-    {
-        addQuad(quadLayer,
-                sf::FloatRect(tdi->x, tdi->y,
-                (float)tileWidth, (float)tileHeight),
-                sf::IntRect(tdi->tx, tdi->ty,
-                tileWidth, tileHeight),
-                tdi->flip);
-    }
-    return 0;
-}
-
-template<typename Out>
-void split(const std::string &s, char delim, Out result) {
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        *(result++) = item;
-    }
-}
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, std::back_inserter(elems));
-    return elems;
-}
-
-bool buildPolygon(TMX::Object::Ptr obj, Shape & s, bool applyOffset = false)
-{
-    bool status = false;
-    if (obj->polygon != nullptr)
-    {
-        std::vector<std::string> pairs = split(obj->polygon->points, ' ');
-        s.setPointCount(pairs.size());
-        s.setPosition(sf::Vector2f(obj->x, obj->y));
-
-        if (obj->rotation == 0)
-        {
-            int i = 0;
-            for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
-            {
-                std::vector<std::string> comp = split(*pair, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                ++i;
-            }
-            status = true;
-        }
-        else
-        {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
-            {
-                std::vector<std::string> comp = split(*p, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                for (int u = 0; u < abs(obj->rotation); u += 90)
-                {
-                    float temp = x1;
-                    x1 = -y1;
-                    y1 = temp;
-                }
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
-            }
-        }
-    }
-    return status;
-}
-//
-// buildPolyline stores the object offset in the position of the Shape.
-// That is to say, the vertices that make up the shape are not translated.
-//
-bool buildPolyline(TMX::Object::Ptr obj, Shape & s, bool applyOffset = false)
-{
-    bool status = false;
-    if (obj->polyline != nullptr)
-    {
-        std::vector<std::string> pairs = split(obj->polyline->points, ' ');
-
-        size_t max = pairs.size() - 1;
-        if (max == 1)
-            max = 2;
-
-        s.setPointCount(max);
-        s.setPosition(sf::Vector2f(obj->x, obj->y));
-
-        if (obj->rotation == 0)
-        {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
-            {
-                if (i == max)
-                    break;
-                std::vector<std::string> comp = split((*p), ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
-            }
-        }
-        else
-        {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
-            {
-                if (i == max)
-                    break;
-                std::vector<std::string> comp = split(*p, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                for (int u = 0; u < obj->rotation; u += 90)
-                {
-                    float temp = x1;
-                    x1 = -(y1);
-                    y1 = (temp);
-                }
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
+                mass = std::strtol(p->value.c_str(), NULL, 10);
             }
         }
 
-        status = true;
+        entities.push_back(Entity());
+        // Find proto with matching pid
+        // make this entity from that proto.
+        assignProto(protos, pid, entities.back().proto);
+
+        entities.back().moving = moving;
+        entities.back().registerwithaidirector = registerwithaidirector;
+        entities.back().ignoreentitycollision = ignoreentitycollision;
+
+        float x = (*o).x;
+        float y = (*o).y;
+        entities.back().proto.body.pos = sf::Vector2f(x, y);
+        //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
     }
-    return status;
+    return true;
 }
-
-bool buildRectangle(TMX::Object::Ptr obj, Shape & s)
-{
-    bool status = false;
-
-    s.setPointCount(4);
-    s.setPoint(0, sf::Vector2f(obj->x, obj->y));
-    s.setPoint(1, sf::Vector2f(obj->x + obj->width, obj->y));
-    s.setPoint(2, sf::Vector2f(obj->x + obj->width, obj->y + obj->height));
-    s.setPoint(3, sf::Vector2f(obj->x, obj->y + obj->height));
-
-    return status;
-}
-
-uint32_t buildPlayerObjectLayers(Shapes & polygons, TMX::Objectgroup::Ptr & objectGroup)
-{
-    //for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
-    {
-
-        for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
-        {
-            if ((*obj)->polygon != nullptr)
-            {
-                polygons.AddShape(Shape());
-                buildPolygon(*obj, polygons.Last(), false);
-            }
-            else if ((*obj)->polyline != nullptr)
-            {//NOTE: discard last point, engine assume last point is same as first.
-                // TMX format is explicit about first and last point. even though they will always be the same.
-                polygons.AddShape(Shape());
-                buildPolyline(*obj, polygons.Last(), false);
-            }
-            else if ((*obj)->ellipse != nullptr)
-            {
-            }
-            else
-            {//a rectangle
-                polygons.AddShape(Shape());
-                buildRectangle(*obj, polygons.Last());
-            }
-        }
-    }
-
-    return 0;
-}
-
-//bool isSharedEdge(SAT::ContactInfo & ci, std::vector<SAT::Segment> & sharedEdges)
-//{
-//    for (auto se = sharedEdges.begin(); se != sharedEdges.end(); se++)
-//    {
-//        if (ci.edge.isEqual(*se))
-//        {
-//            return true;
-//        }
-//    }
-
-//    return false;
-//}
-
-//uint32_t buildSharedEdgesLayers(SAT::Segment::Vec & sharedEdges, TMX::Objectgroup::Vec & objectGroups)
-//{
-//    for (auto objG = objectGroups.begin(); objG != objectGroups.end(); ++objG)
-//    {
-//        if ((*objG)->name != "SharedEdges")
-//            continue;
-
-//        std::vector<CONVEXSHAPE> polygons;
-//        for (auto obj = (*objG)->objects.begin(); obj != (*objG)->objects.end(); ++obj)
-//        {
-//            if ((*obj)->polyline != nullptr)
-//            {//NOTE: discard last point, engine assume last point is same as first.
-//             // TMX format is explicit about first and last point. even though they will always be the same.
-//                polygons.push_back(CONVEXSHAPE());
-//                buildPolyline(*obj, polygons.back(), true);
-
-
-//                //// Assume one line segment, so 2 points.
-//                size_t pc = polygons.back().getPointCount();
-
-//                if (pc >= 2)
-//                {
-//                    sf::Vector2f p1 = polygons.back().getPoint(0);
-//                    sf::Vector2f p2 = polygons.back().getPoint((0 + 1) % pc);
-
-//                    SAT::Segment seg;
-//                    seg.start = sf::Vector2f(p1.x, p1.y);
-//                    seg.end = sf::Vector2f(p2.x, p2.y);
-//                    sharedEdges.push_back(seg);
-//                }
-//            }
-//        }
-//    }
-//    return 0;
-//}
-
-uint32_t buildShapes(Shapes& polygons, TMX::Objectgroup::Ptr & objectGroup)
-{
-
-    for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
-    {
-        if ((*obj)->polyline != nullptr)
-        {//NOTE: discard last point, engine assume last point is same as first.
-            // TMX format is explicit about first and last point. even though they will always be the same.
-            polygons.AddShape(Shape());
-            buildPolyline(*obj, polygons.Last(), true);
-        }
-        else if ((*obj)->polygon != nullptr)
-        {
-            polygons.AddShape(Shape());
-            buildPolygon(*obj, polygons.Last(), false);
-        }
-    }
-
-    return 0;
-}
-
-uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, Vec<Shapes> & polygons)
-{
-    uint32_t tileid = 0;
-    for (auto i = polygons.begin(); i != polygons.end; i++)
-    {
-        qt::XY pt;
-        pt.ti = tileid;
-
-        sf::FloatRect gb = polygons[tileid].getGlobalBounds();
-        pt.x = gb.left + gb.width / 2.0f;
-        pt.y = gb.top + gb.height / 2.0f;
-        searchLayer->insert(pt);
-
-        tileid++;
-    }
-    return 0;
-}
-
-uint32_t buildPlayerTransformedPolygon(RigidBody & phy, Shapes & pp, Shapes & pcp)
-{
-    pp.Last().setOrigin(8, 16);
-    pp.Last().setPosition(phy.pos);
-    pp.Last().setRotation(phy.angle);
-    pp.Last().setScale(1.0f, 1.0f);
-
-    pcp.AddShape(Shape());
-    pcp.Last().setPointCount(8);
-    for (int w = 0; w < 8; w++) {
-        pcp.Last().setPoint(w,
-            pcp.Last().getTransform().transformPoint(
-                pcp.Last().getPoint(w)
-            )
-        );
-    }
-    return 0;
-}
-
-//
-// This creates an array of layers. where each layer is 
-// composed of quads, where the size of each quad is 
-// equal to the size of the tiles in the last tileset.
-// Assumed that tile sizes are uniform in a single tileset.
-
-*/
-
-
-
-
-
-
-
-
-
-
 
 
 }

@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "RigidBody.h"
 #include "Geometry.h"
+#include "Animation.h"
+#include "Texture.h"
+#include <memory>
 
 namespace bali
 {
@@ -27,10 +30,15 @@ public:
     };
 
     Type        type;
-    uint32_t    id;
-
+    std::string pid;
     Vec<Shape>  shapes;
     RigidBody   body;
+    std::string spritesheetname;
+    ASE::SpriteSheet spritesheet;
+    std::map<std::string, Sequence> sequences;
+    bali::Wardrobe      wardrobe;
+    uint32_t tiledid;
+    std::shared_ptr<Texture> sstex; // Sprite Sheet Texture
 };
 
 
