@@ -96,7 +96,7 @@ void
 loadTexture(
     Texture         &t,
     TMX::Map::Ptr   map,
-    std::string     tilesetname,
+    TMX::Tileset::Ptr & tsb,
     sf::Color       c
 );
 

@@ -35,9 +35,23 @@ void KeyPressedHandler(Keypress & kp, void* ud)
             // Character is on the ground
             // Jump according to the angle of the ground
             kp.nml = context->entities[0].collider.jumpNormal;
-            context->entities[0].collider.jumpNormal = vec::Zero();
+            
             context->entities[0].jumping = true;
             std::cout << "FJS ";
+
+            // "Double" Jump.. with limits.
+            if (context->entities[0].collider.jumpcount++ == context->physicsConfig.JUMP_COUNT)
+            {
+                context->entities[0].collider.jumpNormal = vec::Zero();
+                context->entities[0].collider.jumpcount = 0;
+                //CommandQueue::postModifyVelocity(body,physics::upVector(context->entities[0].proto.body.angle) , false);
+            }
+
+            float str = 1.0f;// *(context->entities[0].collider.jumpcount / 4.0f);
+            assert(kp.nml != vec::Zero());
+            CommandQueue::postJump(body, str, kp.nml);
+
+
         }
         else
         {
@@ -67,7 +81,21 @@ void KeyPressedHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
-        
+        Entity & e = context->entities[0];
+        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
+        if (!context->settings.DISABLE_MOUSE_GRAVITY)
+        {
+            e.proto.body.angle -= 45.f;
+        }
+    }
+    else if (kp.cc == context->keyboardConfig.ATTACK_KEY)
+    {
+        Entity & e = context->entities[0];
+        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
+        if (!context->settings.DISABLE_MOUSE_GRAVITY)
+        {
+            e.proto.body.angle += 45.f;
+        }
     }
     std::cout << "Press ";
 }
@@ -108,10 +136,10 @@ void KeyHeldHandler(Keypress & kp, void* ud)
 
     if (kp.cc == context->keyboardConfig.ATTACK_KEY)
     {
-        for (auto e = context->entities.begin(); e != context->entities.end(); e++)
-        {
-            e->proto.body.angle += 5.0f;
-        }
+        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
+        //{
+        //    e->proto.body.angle += 5.0f;
+        //}
 
         //// Get mouse pixels
         //sf::Vector2i p = sf::Mouse::getPosition(context->gameWindow.window);
@@ -125,18 +153,18 @@ void KeyHeldHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
-        for (auto e = context->entities.begin(); e != context->entities.end(); e++)
-        {
-            e->proto.body.angle -= 5.0f;
-        }
+        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
+        //{
+        //    e->proto.body.angle -= 5.0f;
+        //}
     }
     else if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
         if (entity.jumping == true)
         {
-            float str = 1.0f;
-            assert(kp.nml != vec::Zero());
-            CommandQueue::postJump(body, str, kp.nml);
+            //float str = 1.0f;
+            //assert(kp.nml != vec::Zero());
+            //CommandQueue::postJump(body, str, kp.nml);
         }
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
@@ -203,7 +231,7 @@ void KeyReleasedHandler(Keypress & kp, void* ud)
     if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
         context->players[0].entity->jumping = false;
-        context->entities[0].collider.jumpNormal = vec::Zero();
+        //context->entities[0].collider.jumpNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {

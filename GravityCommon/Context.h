@@ -19,6 +19,7 @@
 #include "SpatialBuckets.h"
 #include "Pathfinding.h"
 #include "AIDirector.h"
+#include "Settings.h"
 
 namespace bali 
 {
@@ -96,6 +97,9 @@ public:
     bool            paused;
     sf::Time pausedacc;
     sf::Time pausedftime;
+
+    sf::Vector2f zaxpos;//for entity 0, hopefully local player.  hacky.
+    Settings settings;
 
 };
 

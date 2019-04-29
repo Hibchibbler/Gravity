@@ -264,7 +264,7 @@ ProcessAllContacts(
         else
         {
             thatmass = 0.0f;
-            overlap = contact.overlap;// *1.1f;
+            overlap = contact.overlap*1.2f;
         }
         posDelta = contact.normal * overlap;
         sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
@@ -280,6 +280,7 @@ ProcessAllContacts(
                 posDelta,
                 false);
         }
+        physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
         //if (vec::mag(velDelta) > 0.001)
         {
             CommandQueue::postModifyVelocity(thisEntity->proto.body,
@@ -350,9 +351,42 @@ ResolveAllCollisions(
 
         for (int e = 0; e < context->entities.size(); e++)
         {
+
+            ////////////////////////////////////////////////////////////////////////////
+            //if (&entity != &ctx->entities[0])
+            {//why isn't this being run
+                //Entity & entity = context->entities[e];
+                //if (entity.collider.surfaceNormal != vec::Zero())
+                //{
+                //    sf::Vector2f d = physics::downVector(entity.proto.body.angle);
+                //    //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
+                //    {
+                //        /*float newangle = acos(vec::dot(d, normal));
+                //        entity.proto.body.angle  =  (newangle * (180.f / PI)) / 25.0f;*/
+                //        float newangle;
+                //        newangle = atan2(entity.collider.surfaceNormal.y, entity.collider.surfaceNormal.x) - atan2(d.y, d.x);
+
+                //        newangle *= (180.f / PI);
+                //        if (newangle < 0) { newangle += 180.0f; }
+                //        else { newangle -= 180.0f; }
+
+
+                //        float oldangle = entity.proto.body.angle;
+                //        //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
+                //        //entity.proto.body.angle += newangle;
+                //        for (size_t e = 0; e < context->entities.size(); e++)
+                //        {
+                //            context->entities[e].proto.body.angle += newangle; // = entity.proto.body.angle;
+                //        }
+                //    }
+                //}
+            }
+            ////////////////////////////////////////////////////////////////////////////
+
             /////////// Integrate ///////////
             updateRigidBodyInternal(context->entities[e].proto.body, pc);
-            integrateEuler(context->entities[e].proto.body, pc);
+            //if (e == 0)
+                integrateEuler(context->entities[e].proto.body, pc);
             /////////////////////////////////
 
             // Reinitialize 1 pass entity structures.
@@ -539,7 +573,19 @@ integrateEuler(
     rb.accel = (physics::downVector(rb.angle) * pc.GRAVITY_CONSTANT);
     rb.vel += (rb.accel * pc.FIXED_DELTA) * (float)rb.mass;
     ClampUpperVector(rb.vel, pc.VELOCITY_MAX);
+
+    /*int64_t vx = (int64_t )rb.vel.x;
+    int64_t vy = (int64_t )rb.vel.y;
+    rb.vel.x = vx;
+    rb.vel.y = vy;*/
+#include <math.h>
+    rb.vel.x = roundf(rb.vel.x);
+    rb.vel.y = roundf(rb.vel.y);
+
     rb.pos += rb.vel * pc.FIXED_DELTA;
+    //rb.pos.x = roundf(rb.pos.x);
+    //rb.pos.y = roundf(rb.pos.y);
+
 }
 
 void physics::ClampUpperVector(sf::Vector2f & vel, float max)
@@ -683,15 +729,10 @@ physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, floa
     sf::Vector2f up = upVector(phy.angle) * 0.90f;
     if (j.dir != vec::Zero())
     {
-        if (vec::dot(j.dir, downVector(phy.angle)) < 0.01f)
+        u = vec::norm(j.dir) * jump_strength;
+        if (vec::dot(up, phy.vel) < 0)
         {
-            u = vec::norm(j.dir + up)  * j.str * jump_strength;
-            //u = phy.impulse(u);
-            //if (vec::mag(phy.vel + u) > jump_velocity_max)
-            //{
-            //    u = vec::Zero();
-            //}
-            //phy.vel += u;
+            u = u - phy.vel;
         }
     }
     return u;

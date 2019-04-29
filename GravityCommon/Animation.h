@@ -12,7 +12,7 @@ namespace bali
 {
 struct ABMapElement
 {
-    Behavior::State behaviorstate;
+    Behavior::LifeCycleState lifecycle;
     std::string sequencename;
 };
 

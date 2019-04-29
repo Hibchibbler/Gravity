@@ -58,8 +58,12 @@ uint32_t StageInit::initialize()
     // Load TMX from file, into map
     //
     context->map = std::make_shared<bali::TMX::Map>();
-    TMX::TMXReader::load("assets\\level_test4.tmx", context->map);
+    TMX::TMXReader::load("assets\\level_test6.tmx", context->map);
 
+
+    
+    //TMX::Layer::Ptr layer = context->map->getLayer("BackgroundImage");
+    //context->backgroundImage;
     //
     // Load protos from TMX map
     //
@@ -157,6 +161,10 @@ uint32_t StageInit::initialize()
     {
         buildWaypoints10(context->waypoints, ogptr);
     }
+    else
+    {
+        std::cout << "ERROR: could not find Waypoints0 in tmx file" << std::endl;
+    }
 
     //
     // Load Collision Polygon geometry from TMX map
@@ -164,6 +172,10 @@ uint32_t StageInit::initialize()
     if (context->map->getObjectGroup("Collision0", ogptr))
     {
         loadPolygons(context->allcollisionshapes, ogptr);
+    }
+    else
+    {
+        std::cout << "ERROR: could not find Collision0 in tmx file" << std::endl;
     }
 
     if (context->map->getObjectGroup("GravityZones", ogptr))
@@ -180,6 +192,10 @@ uint32_t StageInit::initialize()
         loadTileLayer(context->backgroundtiles,
                       tsb,
                       context->map->getLayer("BackgroundLayer"));
+        loadTexture(context->backgroundtilesettexture,
+            context->map,
+            tsb,
+            sf::Color::Blue);
     }
     else
     {
@@ -192,18 +208,32 @@ uint32_t StageInit::initialize()
         loadTileLayer(context->foregroundtiles,
                       tsf,
                       context->map->getLayer("ForegroundLayer"));
+        loadTexture(context->foregroundtilesettexture,
+            context->map,
+            tsf,
+            sf::Color::Blue);
     }
     else
     {
         std::cout << "tilesetFore not found" << std::endl;
     }
 
-
     //
     // Put the tiles in a quad tree
     //
-    context->entitybuckets.initialize(0, 0, 1600, 1600,20, 20);
-    context->cpolybuckets.initialize(0, 0, 2500, 2500, 15, 15);
+    uint32_t dimx = context->map->width * context->map->tilewidth;
+    //uint32_t gx =         dimx / 
+    /*
+
+    context->map->width * context->map->tilewidth
+
+    */
+        
+
+    uint32_t dimy = context->map->height * context->map->tileheight;
+
+    context->entitybuckets.initialize(0, 0, dimx, dimy, 64,64);
+    context->cpolybuckets.initialize(0, 0, dimx, dimy, 12,12);// context->map->width / 2.0f, context->map->height / 2.0f);
 
     CreateCPolyBucket(context->allcollisionshapes,
                       context->cpolybuckets);
@@ -228,21 +258,7 @@ uint32_t StageInit::initialize()
                       context->map->tilewidth,
                       context->map->tileheight);
 
-    if (tsb)
-    {
-        loadTexture(context->backgroundtilesettexture,
-            context->map,
-            "tilesetBack",
-            sf::Color::Blue);
-    }
 
-    if (tsf)
-    {
-        loadTexture(context->foregroundtilesettexture,
-            context->map,
-            "tilesetFore",
-            sf::Color::Blue);
-    }
     context->canvas.create(context->map->width * context->map->tilewidth, 
                            context->map->height * context->map->tileheight);
 
@@ -269,7 +285,7 @@ uint32_t StageInit::initialize()
     context->camera.center = sf::Vector2f(32.f * (75.f / 2.f), 
                                           32.f * (75.f / 2.f));
     context->camera.view = sf::View(context->camera.center, 
-                                    sf::Vector2f(900,900));
+                                    sf::Vector2f(4000,4000));
 
     //
     //
@@ -324,28 +340,38 @@ uint32_t StageInit::doDraw()
 {
     context->gameWindow.window.clear(sf::Color::Black);
     ImGui::Begin("Configuration");
-        ImGui::Button("Button 1");
+        /*ImGui::Button("Button 1");
         ImGui::Button("Button 2");
-        ImGui::Button("Button C");
-        static bool v = true;
-        ImGui::Checkbox("Collision Polygon Visible", &v);
+        ImGui::Button("Button C");*/
+        
+        ImGui::Checkbox("Show Wall Poly", &context->settings.SHOW_OBSTRUCTION_POLYGON);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Entity Poly", &context->settings.SHOW_ENTITY_POLYGON);
+
+        ImGui::Checkbox("Show Waypoints", &context->settings.SHOW_WAYPOINTS);
+        ImGui::Checkbox("Show Centroids", &context->settings.SHOW_ENTITY_CENTROID);
+        
+        ImGui::Checkbox("Auto Gravity Entities", &context->settings.AUTO_GRAVITY_ENTITIES);
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto Gravity Player", &context->settings.AUTO_GRAVITY_PLAYERS);
+
+        ImGui::SliderFloat("FIXED_DELTA", &context->physicsConfig.FIXED_DELTA, 0.001f, 0.03f);
+        ImGui::SliderFloat("GRAVITY_CONSTANT", &context->physicsConfig.GRAVITY_CONSTANT, 100.f, 10000.f);
         ImGui::SliderFloat("MOVE_STRENGTH", &context->physicsConfig.MOVE_STRENGTH, 1.f, 500.f);
-        ImGui::SliderFloat("GRAVITY_CONSTANT", &context->physicsConfig.GRAVITY_CONSTANT, 100.f, 5000.f);
-        ImGui::SliderFloat("FIXED_DELTA", &context->physicsConfig.FIXED_DELTA, 0.f, 1.0f);
-        ImGui::SliderFloat("DRAG_CONSTANT", &context->physicsConfig.DRAG_CONSTANT, 0.f, 1.0f);
-        ImGui::SliderFloat("RESTITUTION", &context->physicsConfig.RESTITUTION, 0.f, 1.0f);
-        ImGui::SliderFloat("SLOW_THRESHOLD", &context->physicsConfig.SLOW_THRESHOLD, 0.f, 2500.0f);
-        ImGui::SliderFloat("STATIC_FRICTION_VELOCITY_MAX", &context->physicsConfig.STATIC_FRICTION_VELOCITY_MAX, 0.f, 2500.0f);
-        ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 2500.0f);
-        ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 1.0f);
-        ImGui::SliderFloat("FAST_JUMP_THRESHOLD", &context->physicsConfig.FAST_JUMP_THRESHOLD, 0.f, 1.0f);
-        ImGui::SliderFloat("JUMP_STRENGTH", &context->physicsConfig.JUMP_STRENGTH, 0.f, 1.0f);
+        ImGui::SliderFloat("JUMP_STRENGTH", &context->physicsConfig.JUMP_STRENGTH, 1.f, 10000.f);
+        ImGui::SliderInt("JUMP_COUNT (Additional Jumps)", (int*)&(context->physicsConfig.JUMP_COUNT), 0.f, 10.0f);
         ImGui::SliderFloat("FREEFALL_MOVE_STRENGTH", &context->physicsConfig.FREEFALL_MOVE_STRENGTH, 0.f, 500.0f);
         ImGui::SliderFloat("VELOCITY_MAX", &context->physicsConfig.VELOCITY_MAX, 0.f, 2500.0f);
-        ImGui::SliderFloat("JUMP_VELOCITY_MAX", &context->physicsConfig.JUMP_VELOCITY_MAX, 0.f, 2500.0f);
-        ImGui::SliderInt("JUMP_COUNT", (int*)&(context->physicsConfig.JUMP_COUNT), 0.f, 100.0f);
-        ImGui::SliderFloat("MOVE_VELOCITY_MAX", &context->physicsConfig.MOVE_VELOCITY_MAX, 0.f, 2500.0f);
-        ImGui::SliderFloat("CHARGE_VELOCITY_MAX", &context->physicsConfig.CHARGE_VELOCITY_MAX, 0.f, 2500.0f);
+        ImGui::SliderFloat("RESTITUTION", &context->physicsConfig.RESTITUTION, 0.f, 1.0f);
+        ImGui::SliderFloat("DRAG_CONSTANT", &context->physicsConfig.DRAG_CONSTANT, 0.f, 1.0f);
+        ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 2500.0f);
+        ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 1.0f);
+        //ImGui::SliderFloat("SLOW_THRESHOLD", &context->physicsConfig.SLOW_THRESHOLD, 0.f, 2500.0f);
+        //ImGui::SliderFloat("STATIC_FRICTION_VELOCITY_MAX", &context->physicsConfig.STATIC_FRICTION_VELOCITY_MAX, 0.f, 2500.0f);
+        //ImGui::SliderFloat("FAST_JUMP_THRESHOLD", &context->physicsConfig.FAST_JUMP_THRESHOLD, 0.f, 1.0f);
+        //ImGui::SliderFloat("JUMP_VELOCITY_MAX", &context->physicsConfig.JUMP_VELOCITY_MAX, 0.f, 2500.0f);
+        //ImGui::SliderFloat("MOVE_VELOCITY_MAX", &context->physicsConfig.MOVE_VELOCITY_MAX, 0.f, 2500.0f);
+        //ImGui::SliderFloat("CHARGE_VELOCITY_MAX", &context->physicsConfig.CHARGE_VELOCITY_MAX, 0.f, 2500.0f);
     ImGui::End();
     ImGui::SFML::Render(context->gameWindow.window);
 

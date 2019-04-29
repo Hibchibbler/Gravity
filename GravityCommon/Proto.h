@@ -16,7 +16,8 @@ namespace bali
 //  values and geometry for the entities to use.
 // A Proto is a prototypical entity.
 //  When an Entity is realized in-game
-//  It will refer to one of these prototypes.
+//  It will get a copy one of the prototype instances.
+// Proto geometry is specified in the TMX file.
 //
 class Proto
 {

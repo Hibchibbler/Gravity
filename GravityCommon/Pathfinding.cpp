@@ -79,9 +79,14 @@ AddPolyline(PolylineDescriptor & polyline, std::vector<PathSegment> & segments)
     for (size_t i = 0; i < polyline.points.size() - 1; i++)
     {
         PathSegment seg;
+
+        seg.pathid = polyline.pathid;
         seg.flags = polyline.flags;
+        seg.looped = polyline.looped;
+
         seg.s = polyline.points[i];
         seg.e = polyline.points[i + 1];
+
         segments.push_back(seg);
     }
 }
@@ -135,8 +140,8 @@ CreateGraph(
     size_t id = 0;
     for (auto seg : segments)
     {
-        Waypoint wp1(1, seg.s.x, seg.s.y, seg.flags);
-        Waypoint wp2(1, seg.e.x, seg.e.y, seg.flags);
+        Waypoint wp1(seg.pathid, seg.flags,seg.looped, 1, seg.s.x, seg.s.y);
+        Waypoint wp2(seg.pathid, seg.flags, seg.looped, 1, seg.e.x, seg.e.y);
 
         for (auto oseg : segments)
         {

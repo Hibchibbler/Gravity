@@ -7,6 +7,10 @@
 #include "ClientContext.h"
 #include "GravityCommon\Physics.h"
 #include "GravityCommon\Builders.h"
+
+#include "imgui.h"
+#include "imgui-sfml/imgui-SFML.h"
+
 #include <math.h>
 #include  <assert.h>
 
@@ -24,7 +28,7 @@ StageMain::~StageMain()
 uint32_t StageMain::initialize()
 {
     //
-
+    ImGui::SFML::Init(context->gameWindow.window);
     //
     // Last things
     //
@@ -34,6 +38,7 @@ uint32_t StageMain::initialize()
 
 uint32_t StageMain::doWindowEvent(sf::Event & event)
 {
+    ImGui::SFML::ProcessEvent(event);
     switch (event.type) {
     case sf::Event::LostFocus:
         break;
@@ -87,9 +92,9 @@ uint32_t StageMain::doWindowEvent(sf::Event & event)
     return 0;
 }
 
-void onCollision(void* context, Entity & entity, sf::Vector2f normal)
+void onCollision(void* context_, Entity & entity, sf::Vector2f normal)
 {
-    Context* ctx = (Context*)context;
+    Context* context = (Context*)context_;
     //std::cout << "X";
 
     //if (vec::dot(normal, physics::downVector(entity.proto.body.angle)) > 0.f)
@@ -101,33 +106,79 @@ void onCollision(void* context, Entity & entity, sf::Vector2f normal)
         entity.collider.jumpNormal = normal;
     }
 
+    if (vec::dot(physics::downVector(entity.proto.body.angle), entity.collider.surfaceNormal) < 0)
+        entity.collider.jumpcount = 0;
 
-    //if (&entity != &ctx->entities[0])
-    //{//why isn't this being run
-    //    
-    //    sf::Vector2f d = physics::downVector(entity.proto.body.angle);
-    //    //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
-    //    {
-    //        /*float newangle = acos(vec::dot(d, normal));
-    //        entity.proto.body.angle  =  (newangle * (180.f / PI)) / 25.0f;*/
-    //        float newangle;
-    //        newangle = atan2(normal.y, normal.x) - atan2(d.y, d.x);
-    //        
-    //        newangle *= (180.f / PI);
-    //        if (newangle < 0) { newangle += 180.0f; }
-    //        else { newangle -= 180.0f; }
-    //        
-    //        
-    //        float oldangle = entity.proto.body.angle;
-    //        //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
-    //        //entity.proto.body.angle += newangle;
-    //        for (size_t e = 1; e < ctx->entities.size();e++)
-    //        {
-    //            ctx->entities[e].proto.body.angle += newangle; // = entity.proto.body.angle;
-    //        }
-    //    }
-    //}
+    //Entity & entity = context->entities[e];
+    
+
+        if (&entity == &context->entities[0] && !context->settings.AUTO_GRAVITY_PLAYERS)
+            return;
+        if (!context->settings.AUTO_GRAVITY_ENTITIES)
+            return;
+
+        if (entity.collider.surfaceNormal != vec::Zero())
+        {
+            if (context->settings.ENABLE_HEAD_BUMP_GRAVITY || 
+                vec::dot(physics::upVector(entity.proto.body.angle), entity.collider.surfaceNormal) > -0.1)
+                //if (&entity != &context->entities[0])
+            {
+                sf::Vector2f d = physics::downVector(entity.proto.body.angle);
+                //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
+                {
+                    /*float newangle = acos(vec::dot(d, normal));
+                    entity.proto.body.angle  =  (newangle * (180.f / PI)) / 25.0f;*/
+                    float newangle;
+                    newangle = atan2(entity.collider.surfaceNormal.y, entity.collider.surfaceNormal.x) - atan2(d.y, d.x);
+
+                    newangle *= (180.f / PI);
+                    if (newangle < 0) { newangle += 180.0f; }
+                    else { newangle -= 180.0f; }
+
+
+                    float oldangle = entity.proto.body.angle;
+                    //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
+                    entity.proto.body.angle += newangle;
+                    //for (size_t e = 0; e < context->entities.size(); e++)
+                    //{
+                    //    context->entities[e].proto.body.angle += newangle; // = entity.proto.body.angle;
+                    //}
+                }
+            }
+        }
+        
+
 }
+
+//float dog(sf::Vector2f source, sf::Vector2f target)
+//{
+//    float deltarad;
+//    float deltadeg;
+//
+//
+//    deltarad = atan2(target.y, target.x) - atan2(source.y, source.x);
+//    if (deltarad < 0) { deltarad += PI; }
+//    else { deltarad -= PI;}
+//    //return deltarad;
+//
+//    deltadeg = deltarad * (180.f / PI);
+//    /*if (deltadeg < 0) { deltadeg += 180.0f; }
+//    else { deltadeg -= 180.0f; }*/
+//    return deltadeg;
+//}
+//
+//void frog(Entity & entity)
+//{
+//    if (entity.collider.surfaceNormal != vec::Zero())
+//    {
+//        sf::Vector2f d = physics::downVector(entity.proto.body.angle);
+//        float deltadeg = dog(d, entity.collider.surfaceNormal);
+//
+//        float oldangle = entity.proto.body.angle;
+//        entity.proto.body.angle += deltadeg;
+//        //std::cout << oldangle << " --> " << entity.proto.body.angle << "  " << std::endl;
+//    }
+//}
 
 void onNonCollision(void* context, Entity & entity)
 {
@@ -153,6 +204,7 @@ uint32_t StageMain::doUpdate()
     sf::Vector2f pos = context->players[0].entity->proto.body.pos;
     float angle = context->players[0].entity->proto.body.angle;
 
+    ImGui::SFML::Update(context->gameWindow.window, context->frametime);
     //
     //
     //
@@ -161,7 +213,7 @@ uint32_t StageMain::doUpdate()
     //
     //
     //
-    context->AIDirector.update(context->frametime, context->entities, context->waypoints);
+    context->AIDirector.update(context->frametime, context->players, context->entities, context->waypoints);
 
     //
     //
@@ -177,8 +229,9 @@ uint32_t StageMain::doUpdate()
     }
     //////
     float avgangle = 0.0f;
+    sf::Vector2f avgpos;
     size_t poscnt = 0;
-    if (anglehistory.size() > 225)
+    if (anglehistory.size() > 2000)
         anglehistory.pop_front();
     anglehistory.push_back(angle);
 
@@ -191,9 +244,25 @@ uint32_t StageMain::doUpdate()
     }
     avgangle /= poscnt;
     ///////
+    if (poshistory.size() > 5)
+        poshistory.pop_front();
+    poshistory.push_back(GetCentroid(context->entities[0].proto.shapes[0]));
 
-    context->camera.view.setCenter(pos);
-    context->camera.view.setRotation(angle);
+    poscnt = 0;
+    for (auto p = poshistory.begin();
+        p != poshistory.end();
+        p++)
+    {
+        avgpos = avgpos + *p;
+        poscnt++;
+    }
+    avgpos = avgpos / (float)poscnt;
+    ///////
+
+    context->zaxpos = avgpos;
+    context->camera.view.setCenter(avgpos);
+    context->camera.view.setRotation(avgangle);
+    context->camera.view.setSize(2500, 2500);
 
     return 0;
 }
@@ -207,6 +276,11 @@ uint32_t StageMain::doDraw()
 
 
     context->gameWindow.window.clear(sf::Color::Black);
+
+
+
+
+
 
     {
         sf::RenderStates states;
@@ -242,35 +316,41 @@ uint32_t StageMain::doDraw()
         
         //// Draw Collision Polygons
         ////
-        //// Construct all collision polygons that are visible to the player
-        ////
-        //for (int h = 0; h < 1; h++)
-        ////int h = 0;
-        ////{
-        ////    for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
-        ////    {
-        ////        states.texture = NULL;
-        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
-        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineThickness(2);
-        ////        context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
-        ////        context->canvas.draw(context->allcollisionshapes[context->entities[h].collisionshapes[si]], states);
-        ////    }
-        ////}
-        //for (int si = 0; si < context->allcollisionshapes.size(); si++)
-        //{
-        //    states.texture = NULL;
-        //    context->allcollisionshapes[si].setFillColor(sf::Color::Transparent);
-        //    context->allcollisionshapes[si].setOutlineThickness(2);
-        //    context->allcollisionshapes[si].setOutlineColor(sf::Color::Red);
-        //    context->canvas.draw(context->allcollisionshapes[si], states);
-        //}
+        // Construct all collision polygons that are visible to the player
+        //
+        if (context->settings.SHOW_OBSTRUCTION_POLYGON)
+        {
+            //for (int h = 0; h < 1; h++)
+            int h = 0;
+            {
+                for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
+                {
+                    states.texture = NULL;
+                    context->allcollisionshapes[context->entities[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
+                    context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineThickness(2);
+                    context->allcollisionshapes[context->entities[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
+                    context->canvas.draw(context->allcollisionshapes[context->entities[h].collisionshapes[si]], states);
+                }
+            }
+            //for (int si = 0; si < context->allcollisionshapes.size(); si++)
+            //{
+            //    states.texture = NULL;
+            //    context->allcollisionshapes[si].setFillColor(sf::Color::Transparent);
+            //    context->allcollisionshapes[si].setOutlineThickness(2);
+            //    context->allcollisionshapes[si].setOutlineColor(sf::Color::Red);
+            //    context->canvas.draw(context->allcollisionshapes[si], states);
+            //}
+        }
 
-        //// Draw Entities Shapes
-        //for (int e = 0; e < context->entities.size(); e++)
-        //{
-        //    //rs.setTexture(context->player0spritesheet);
-        //    context->canvas.draw(context->entities[e].proto.shapes[0]);
-        //}
+        if (context->settings.SHOW_ENTITY_POLYGON)
+        {
+            // Draw Entities Shapes
+            for (int e = 0; e < context->entities.size(); e++)
+            {
+                //rs.setTexture(context->player0spritesheet);
+                context->canvas.draw(context->entities[e].proto.shapes[0]);
+            }
+        }
 
         for (int e = 0; e < context->entities.size(); e++)
         //int e = 0;
@@ -290,16 +370,22 @@ uint32_t StageMain::doDraw()
             //    //(context->frameacc.asSeconds() + context->frametime.asSeconds()) * context->physicsConfig.FIXED_DELTA);
             //    
 
+
             //context->entities[e].proto.shapes[0].setPosition(next);
             sf::RectangleShape rs;
-            rs.setSize(sf::Vector2f(48,48));
+            /*rs.setSize(sf::Vector2f(48,48));*/
+            
             //
             //rs.move(-24, -24);
-            rs.rotate(entity.proto.body.angle);
+            /*rs.rotate(entity.proto.body.angle);
             rs.setOrigin(24, 24);
-            rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+            if (e > 0)
+                rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+            else
+                rs.setPosition(context->zaxpos);
             rs.setTexture(&entity.proto.sstex->tex);
-
+*/
+            sf::IntRect subrect;
             Animation* animation;
             Wardrobe & wardrobe = entity.proto.wardrobe;
             if (entity.moving)
@@ -307,7 +393,7 @@ uint32_t StageMain::doDraw()
                 if (entity.proto.wardrobe.getAnimation("Running", animation))
                 {
                     ASE::Cel & cell = animation->sequence.cels[animation->celid];
-                    sf::IntRect subrect;
+                    
                     ////
                     //wardrobe.getSubRect(cell, subrect);
                     if (vec::dot(entity.proto.body.vel, physics::rightVector(entity.proto.body.angle)) > 0.0f)
@@ -318,8 +404,14 @@ uint32_t StageMain::doDraw()
                     {
                         wardrobe.getSubRect(cell, subrect, true);
                     }
-                    ////
-                    rs.setTextureRect(subrect);
+                    rs.setSize(sf::Vector2f(subrect.width, subrect.height));
+                    rs.rotate(entity.proto.body.angle);
+                    rs.setOrigin(subrect.width / 2.0f, subrect.height / 2.0f);
+                    if (e > 0)
+                        rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+                    else
+                        rs.setPosition(context->zaxpos);
+                    rs.setTexture(&entity.proto.sstex->tex);
                 }
             }
             else
@@ -328,44 +420,60 @@ uint32_t StageMain::doDraw()
                 if (entity.proto.wardrobe.getAnimation("Idling", animation))
                 {
                     ASE::Cel & cell = animation->sequence.cels[animation->celid];
-                    sf::IntRect subrect;
-
-                        wardrobe.getSubRect(cell, subrect, false);
+                    wardrobe.getSubRect(cell, subrect, false);
                     
-                    rs.setTextureRect(subrect);
+                    rs.setSize(sf::Vector2f(subrect.width, subrect.height));
+                    rs.rotate(entity.proto.body.angle);
+                    rs.setOrigin(subrect.width/2.0f, subrect.height/2.0f);
+                    if (e > 0)
+                        rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+                    else
+                        rs.setPosition(context->zaxpos);
+                    rs.setTexture(&entity.proto.sstex->tex);
+
                     //std::cout << animation->celid  << ", ["<< subrect.top << ", " << subrect.left << ", " << subrect.width << ", " << subrect.height << "] \n";
                 }
             }
             sf::RenderStates rendsta;
+            rs.setTextureRect(subrect);
             rendsta.texture = &entity.proto.sstex->tex;
             context->canvas.draw(rs);
         }
 
 
-        // Draw a box where we think the center of the entity is. center of gravity.
-        for (int h = 0; h < context->entities[0].collisionentities.size(); h++)
+
+        if (context->settings.SHOW_ENTITY_CENTROID)
         {
-            sf::RectangleShape rs(sf::Vector2f(8, 8));
-            rs.setFillColor(sf::Color::Red);
-            sf::Vector2f pos(context->entities[context->entities[0].collisionentities[h]].proto.body.pos);
-            size_t e = context->entities[0].collisionentities[h];
-            sf::Vector2f newpos = GetCentroid(context->entities[e].proto.shapes[0]);
-            rs.setPosition(newpos);
-            rs.move(-4, -4);
-            context->canvas.draw(rs);
+            // Draw a box where we think the center of the entity is. center of gravity.
+            for (int h = 0; h < context->entities[0].collisionentities.size(); h++)
+            {
+                sf::RectangleShape rs(sf::Vector2f(8, 8));
+                rs.setFillColor(sf::Color::Red);
+                sf::Vector2f pos(context->entities[context->entities[0].collisionentities[h]].proto.body.pos);
+                size_t e = context->entities[0].collisionentities[h];
+                sf::Vector2f newpos = GetCentroid(context->entities[e].proto.shapes[0]);
+                rs.setPosition(newpos);
+                rs.move(-4, -4);
+                context->canvas.draw(rs);
+            }
         }
-
-        // Draw a box where we think the waypoints are.
-        for (auto w = 0; w< context->waypoints.size();w++)
+        if (context->settings.SHOW_WAYPOINTS)
         {
-            sf::RectangleShape rs;
-            rs.setSize(sf::Vector2f(6, 6));
-            rs.setPosition(sf::Vector2f(context->waypoints[w].location.x, context->waypoints[w].location.y));
-            rs.setFillColor(sf::Color::Red);
+            // Draw a box where we think the waypoints are.
+            for (auto w = 0; w < context->waypoints.size(); w++)
+            {
+                sf::RectangleShape rs;
+                rs.setSize(sf::Vector2f(6, 6));
+                rs.setPosition(sf::Vector2f(context->waypoints[w].location.x, context->waypoints[w].location.y));
+                rs.setFillColor(sf::Color::Yellow);
 
-            context->canvas.draw(rs);
+                context->canvas.draw(rs);
+            }
+
+            //for (auto entity : context->entities)
+
+
         }
-
         context->canvas.display();
 
         // Draw canvas to display
@@ -373,10 +481,60 @@ uint32_t StageMain::doDraw()
         
         context->gameWindow.window.setView(context->camera.view);
         context->gameWindow.window.draw(levelSprite);
+
+        for (size_t e = 1; e < context->entities.size();e++)
+        {
+            Entity & entity = context->entities[e];
+            if (entity.waypointpath.size() > 0)
+            {
+                sf::VertexArray va(sf::PrimitiveType::LineStrip);// , entity.waypointpath.size());
+                
+                for (size_t wpi = entity.currentwaypoint;
+                    wpi < entity.waypointpath.size();
+                    wpi++)
+                {
+                    Waypoint & wp = context->waypoints[entity.waypointpath[wpi]];
+                    //if (wp.looped && wpi == entity.waypointpath.size() - 1)
+                    //    continue;
+                    //Waypoint & wp2 = context->waypoints[entity.waypointpath[wpi+1]];
+                    va.append(wp.location);
+                    //va.append(wp2.location);
+                }
+                context->gameWindow.window.draw(va);
+            }
+        }
         //context->gameWindow.window.display();
     }
 
+    ///////////////////////////
 
+    ImGui::Begin("Options");
+        ImGui::Checkbox("Show Wall Poly", &context->settings.SHOW_OBSTRUCTION_POLYGON);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Entity Poly", &context->settings.SHOW_ENTITY_POLYGON);
+
+        ImGui::Checkbox("Show Waypoints", &context->settings.SHOW_WAYPOINTS);
+        ImGui::Checkbox("Show Centroids", &context->settings.SHOW_ENTITY_CENTROID);
+        //ImGui::Checkbox("Auto Gravity Entities", &context->settings.AUTO_GRAVITY_ENTITIES);
+        //ImGui::SameLine();
+        ImGui::Checkbox("Enable Head Bump Gravity", &context->settings.ENABLE_HEAD_BUMP_GRAVITY);
+        ImGui::Checkbox("Auto Gravity Player", &context->settings.AUTO_GRAVITY_PLAYERS);
+        ImGui::Checkbox("Disable Mouse Gravity", &context->settings.DISABLE_MOUSE_GRAVITY);
+        ImGui::Checkbox("R U Huntable?", &context->players[0].entity->huntable);
+        //ImGui::SliderFloat("FIXED_DELTA", &context->physicsConfig.FIXED_DELTA, 0.001f, 0.03f);
+        //ImGui::SliderFloat("GRAVITY_CONSTANT", &context->physicsConfig.GRAVITY_CONSTANT, 100.f, 10000.f);
+        //ImGui::SliderFloat("MOVE_STRENGTH", &context->physicsConfig.MOVE_STRENGTH, 1.f, 500.f);
+        //ImGui::SliderFloat("JUMP_STRENGTH", &context->physicsConfig.JUMP_STRENGTH, 1.f, 10000.f);
+        //ImGui::SliderInt("JUMP_COUNT (Additional Jumps)", (int*)&(context->physicsConfig.JUMP_COUNT), 0.f, 10.0f);
+        //ImGui::SliderFloat("FREEFALL_MOVE_STRENGTH", &context->physicsConfig.FREEFALL_MOVE_STRENGTH, 0.f, 500.0f);
+        //ImGui::SliderFloat("VELOCITY_MAX", &context->physicsConfig.VELOCITY_MAX, 0.f, 2500.0f);
+        //ImGui::SliderFloat("RESTITUTION", &context->physicsConfig.RESTITUTION, 0.f, 1.0f);
+        //ImGui::SliderFloat("DRAG_CONSTANT", &context->physicsConfig.DRAG_CONSTANT, 0.f, 1.0f);
+        //ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 2500.0f);
+        //ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 1.0f);
+    ImGui::End();
+    ImGui::SFML::Render(context->gameWindow.window);
+    //////////////////////////
 
     context->gameWindow.window.display();
 

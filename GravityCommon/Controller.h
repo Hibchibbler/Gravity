@@ -2,7 +2,7 @@
 #define Controller_h_
 
 #include "MouseKeyboard.h"
-
+#include "Entity.h"
 
 namespace bali
 {
@@ -17,7 +17,7 @@ class Controller
 {
 public:
     void initialize(
-        Context* context,
+        Context*  context,
         KeyboardConfig config,
         KeyPressedEvent pressed,
         KeyDblPressedEvent dblpressed,

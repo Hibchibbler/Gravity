@@ -11,8 +11,8 @@ Behavior::Behavior()
 
 void Behavior::initialize()
 {
-    state = State::BIRTH;
-    disposition = Disposition::AGGRESSIVE;
+    lifestate = LifeCycleState::BIRTH;
+    disposition = Disposition::WANDERING;
     specie = Specie::BIPED;
 }
 

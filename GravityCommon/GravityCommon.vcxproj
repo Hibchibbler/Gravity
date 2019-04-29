@@ -163,11 +163,14 @@
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Sequence.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="SpatialBuckets.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TimedAction.h" />
     <ClInclude Include="tinyjson.h" />
     <ClInclude Include="Vector2.h" />
+    <ClInclude Include="WellnessBar.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIDirector.cpp" />

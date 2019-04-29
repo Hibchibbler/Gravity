@@ -15,6 +15,7 @@ public:
         isCollided[1] = false;
         surfaceNormal = vec::Zero();
         flags = 0;
+        jumpcount = 0;
     }
 
     enum Condition
@@ -37,6 +38,8 @@ public:
     sf::Vector2f        jumpNormal;  // This is set on any contact that is feasible for jumping from
     uint64_t            flags;
     bool                isCollided[2];  // 
+
+    uint32_t            jumpcount;
 
 };
 

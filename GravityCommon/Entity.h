@@ -30,6 +30,7 @@ public:
         moving = false;
         jumping = false;
         charging = false;
+        health = stamina = 100;
     }
 
     void initialize(Proto & p) {
@@ -41,14 +42,13 @@ public:
 
         registerwithaidirector = false;
         ignoreentitycollision = false;
-
+        huntable = false;
         behavior.initialize();
+
+        health = 100;
+        stamina = 100;
     }
 
-    void update(sf::Time elapsed)
-    {
-        //behavior.update(elapsed);
-    }
     InputState          istate;
     Behavior            behavior;
     Proto               proto;
@@ -80,6 +80,13 @@ public:
     sf::Vector2f        avgForce;
     float               numForce;
 
+    uint32_t pathid;// Path Id
+    uint32_t mode;
+
+    bool huntable;
+
+    uint32_t health;
+    uint32_t stamina;
 
 };
 

@@ -13,20 +13,17 @@ namespace bali
 class Behavior
 {
 public:
-    enum class State {
-        DEATH,
+    enum class LifeCycleState {
+        DEAD,
+        DYING,
         BIRTH,
-        IDLE,
-        WALKING,
-        RUNNING,
-        JUMPING,
-        ATTACKING,
-        FALLING,
+        ALIVE
     };
 
     enum class Disposition {
-        PASSIVE,
-        AGGRESSIVE
+        SEEKING,
+        WANDERING,
+        HUNTING,
     };
 
     enum class Specie { 
@@ -39,9 +36,13 @@ public:
     Behavior();
     void initialize();
 
-    State state;
+    LifeCycleState lifestate;
     Disposition disposition;
     Specie specie;
+
+    //Hunting State
+    size_t pid;
+    float targetangle;
 };
 
 }

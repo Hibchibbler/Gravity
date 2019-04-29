@@ -2,6 +2,7 @@
 #define AIDIRECTOR_H_
 
 #include "Entity.h"
+#include "Player.h"
 #include "Pathfinding.h"
 
 namespace bali
@@ -17,14 +18,99 @@ public:
     void
     update(
         sf::Time elapsed,
+        Vec<Player> & players,
         Vec<Entity> & entities,
         Vec<Waypoint> & waypoints
     );
 
-    void SeekEntity(Entity & from, Entity & to);
-    void SeekWaypoint(Entity & from, Waypoint & to);
-    void FoundWaypoint(Entity & entity);
-    void FoundEntity(Entity & entity);
+    bool
+    getNearestPlayer(
+        Vec<Player> & players,
+        sf::Vector2f mypos,
+        Player & player
+    );
+
+    void
+    godirection(
+        Entity & entity,
+        Entity* otherentity,
+        sf::Vector2f ngap,
+        float dist
+    );
+
+    bool
+    PopulateEntityPath(
+        std::vector<Waypoint> & waypoints,
+        Entity & entity,
+        uint32_t pathid
+    );
+
+    void
+        SetRailAndClickToNearestWaypoint(
+        Vec<Waypoint> & waypoints,
+        Entity & entity
+    );
+
+    void
+    SetRail(
+        Vec<Waypoint> & waypoints,
+        size_t wpi,
+        Entity & entity
+    );
+
+    bool
+    handleHunting(
+        Behavior::Disposition disp,
+        Vec<Waypoint> & waypoints,
+        Player & player,
+        Entity & entity
+    );
+
+    bool
+    handleSeeking(
+        Behavior::Disposition disp,
+        Vec<Waypoint> & waypoints,
+        Player & player,
+        Entity & entity
+    );
+
+    bool
+    handleWandering(
+        Behavior::Disposition disp,
+        Vec<Waypoint> & waypoints,
+        Entity & entity
+    );
+
+    bool
+    handleDispositions(
+        Vec<Waypoint> & waypoints,
+        Vec<Player> & players,
+        Entity & entity
+    );
+
+    bool
+    handleAlive(
+        Vec<Waypoint> & waypoints,
+        Vec<Player> & players,
+        Entity & entity
+    );
+
+    bool
+    handleBirth(
+        Vec<Waypoint> & waypoints,
+        Entity & entity
+    );
+
+    bool
+    handleDying(
+        Entity & entity
+    );
+
+
+    bool
+    handleDead(
+        Entity & entity
+    );
 
 
     std::vector<size_t> registeredentities;

@@ -5,7 +5,7 @@ namespace bali
 {
 
 void Controller::initialize(
-    Context* context,
+    Context*  context,
     KeyboardConfig config,
     KeyPressedEvent pressed,
     KeyDblPressedEvent dblpressed,
@@ -15,56 +15,56 @@ void Controller::initialize(
 {
     mk.Initialize();
     mk.setUserData(context);
-    mk.registerKeypress(context->keyboardConfig.JUMP_KEY,
-        context->keyboardConfig.JUMP_TIME,
+    mk.registerKeypress(config.JUMP_KEY,
+        config.JUMP_TIME,
         pressed,
         nullptr,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.RIGHT_KEY,
-        context->keyboardConfig.RIGHT_TIME,
+    mk.registerKeypress(config.RIGHT_KEY,
+        config.RIGHT_TIME,
         pressed,
         dblpressed,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.LEFT_KEY,
-        context->keyboardConfig.LEFT_TIME,
+    mk.registerKeypress(config.LEFT_KEY,
+        config.LEFT_TIME,
         pressed,
         dblpressed,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.DOWN_KEY,
-        context->keyboardConfig.DOWN_TIME,
+    mk.registerKeypress(config.DOWN_KEY,
+        config.DOWN_TIME,
         pressed,
         dblpressed,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.UP_KEY,
-        context->keyboardConfig.UP_TIME,
+    mk.registerKeypress(config.UP_KEY,
+        config.UP_TIME,
         pressed,
         dblpressed,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.ROTATE_RIGHT_KEY,
-        context->keyboardConfig.ROTATE_RIGHT_TIME,
+    mk.registerKeypress(config.ROTATE_RIGHT_KEY,
+        config.ROTATE_RIGHT_TIME,
         pressed,
         nullptr,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.ROTATE_LEFT_KEY,
-        context->keyboardConfig.ROTATE_LEFT_TIME,
+    mk.registerKeypress(config.ROTATE_LEFT_KEY,
+        config.ROTATE_LEFT_TIME,
         pressed,
         nullptr,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.ATTACK_KEY,
-        context->keyboardConfig.ATTACK_TIME,
+    mk.registerKeypress(config.ATTACK_KEY,
+        config.ATTACK_TIME,
         pressed,
         nullptr,
         held,
         released);
-    mk.registerKeypress(context->keyboardConfig.HARPOON_KEY,
-        context->keyboardConfig.HARPOON_TIME,
+    mk.registerKeypress(config.HARPOON_KEY,
+        config.HARPOON_TIME,
         pressed,
         nullptr,
         held,

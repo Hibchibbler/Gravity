@@ -112,6 +112,9 @@ namespace bali
     }
     bool Game::nextStage() 
     {
+        //
+        // One time through, then done..
+        //
         mCurStageIndex++;
         if (mCurStageIndex < gameStages.size()) {
             return true;
@@ -120,6 +123,13 @@ namespace bali
         // Game is done because there are no more stages
         done();
         return false;
+
+
+        ////
+        //// Repeat. go back to beginning, when done with last
+        ////
+        //mCurStageIndex = (mCurStageIndex + 1) % gameStages.size();
+        //return true;
     }
 
     void Game::done() 

@@ -45,16 +45,16 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
-void 
+void
 loadTexture(
     Texture         &t,
     TMX::Map::Ptr   map,
-    std::string     tilesetname,
+    TMX::Tileset::Ptr & tsb,
     sf::Color       c
 )
 {
-    TMX::Tileset::Ptr tileset = map->getTileset(tilesetname);
-    t.img.loadFromFile("assets\\" + tileset->images.back()->source);
+    //TMX::Tileset::Ptr tileset = map->getTileset(tilesetname);
+    t.img.loadFromFile("assets\\" + tsb->images.back()->source);
     t.img.createMaskFromColor(c);//transparent is black...
     t.tex.loadFromImage(t.img);
 }
@@ -101,6 +101,52 @@ assignProto(
     return false;
 }
 
+bool GetTMXPropertyInt(TMX::Property::Vec & properties, std::string name, int & val)
+{
+    for (auto p : properties)
+    {
+        if (p->type == "int")
+        {
+            if (p->name == name)
+            {
+                val = std::strtol(p->value.c_str(), NULL, 16);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool GetTMXPropertyFloat(TMX::Property::Vec & properties, std::string name, float & val)
+{
+    for (auto p : properties)
+    {
+        if (p->type == "float")
+        {
+            if (p->name == name)
+            {
+                val = std::strtof(p->value.c_str(), NULL);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool GetTMXPropertyString(TMX::Property::Vec & properties, std::string name, std::string & val)
+{
+    for (auto p : properties)
+    {
+        if (p->type == "float")
+        {
+            if (p->name == name)
+            {
+                val = p->value;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool
 buildWaypoints10(
     Vec<Waypoint> & waypoints,
@@ -114,28 +160,39 @@ buildWaypoints10(
         //std::unordered_map<sf::Vector2f, Waypoint> wpoints;
         bool status = false;
         std::vector<std::string> pairs;
-        if ((*obj)->polyline != nullptr)
-        {
+        // if polyline, then waypoint system is a one way rail. if not polyline, 
+        // it is a loop. we will reverse the ai paths of one way rails.
+        bool ispolyline = false;
+        if ((*obj)->polyline != nullptr) {
             pairs = split((*obj)->polyline->points, ' ');
         }
-        else if ((*obj)->polygon != nullptr)
-        {
+        else if ((*obj)->polygon != nullptr) {
             pairs = split((*obj)->polygon->points, ' ');
+            ispolyline = true;
         }
-        size_t id = 9999999999;
+        int id = 9999999999;
         uint32_t flags = 0;
         size_t weight = 0;
-        for (auto h : (*obj)->properties)
+        if (!GetTMXPropertyInt((*obj)->properties, "id", id))
         {
-            if (h->name == "id")
-            {
-                id = std::strtol(h->value.c_str(), NULL, 10);
-            }
-            if (h->name == "flags")
-            {
-                flags = std::strtol(h->value.c_str(), NULL, 16);
-            }
+            std::cout << "A Waypoint path does not have an 'id' property" << std::endl;
         }
+
+        if (!GetTMXPropertyInt((*obj)->properties, "flags", id))
+        {
+            std::cout << "A Waypoint path does not have an 'flags' property" << std::endl;
+        }
+        //for (auto h : (*obj)->properties)
+        //{
+        //    if (h->name == "id")
+        //    {
+        //        id = std::strtol(h->value.c_str(), NULL, 10);
+        //    }
+        //    if (h->name == "flags")
+        //    {
+        //        flags = std::strtol(h->value.c_str(), NULL, 16);
+        //    }
+        //}
 
             
         assert(id != 9999999999);
@@ -143,14 +200,18 @@ buildWaypoints10(
         std::vector<Waypoint> allwaypoints; // After processing, should contain all unique waypoints, and their neighbors.
         std::vector<PathSegment> segments;      // Contains all segments for all polylines.
         assert(pairs.size() > 1);
+
+        polyline1.pathid = id;
+        polyline1.flags = flags;
+        polyline1.looped = ispolyline;
         for (auto p = 0; p < pairs.size();p++)
         {
             std::vector<std::string> comp1 = split(pairs[p], ',');
             float x1 = atol(comp1[0].c_str()) + (*obj)->x;
             float y1 = atol(comp1[1].c_str()) + (*obj)->y;
-
-            polyline1.flags = flags;
             polyline1.points.push_back(sf::Vector2f(x1, y1));
+
+            // We loop it back around
             if ((*obj)->polygon && p == pairs.size() - 1) {
                 polyline1.points.push_back(polyline1.points.front());
             }
@@ -706,6 +767,7 @@ addEntity(
     {
         std::string pid;
         uint32_t mass;
+        uint32_t pathid;
         for (auto p : (*o).properties)
         {
             if (p->name == "pid")
@@ -716,6 +778,10 @@ addEntity(
             {
                 mass = std::strtol(p->value.c_str(), NULL, 10);
             }
+            else if (p->name == "pathid")
+            {
+                pathid = std::strtol(p->value.c_str(), NULL, 10);
+            }
         }
 
         entities.push_back(Entity());
@@ -723,6 +789,7 @@ addEntity(
         // make this entity from that proto.
         assignProto(protos, pid, entities.back().proto);
 
+        entities.back().pathid = pathid;
         entities.back().moving = moving;
         entities.back().registerwithaidirector = registerwithaidirector;
         entities.back().ignoreentitycollision = ignoreentitycollision;

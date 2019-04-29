@@ -10,6 +10,8 @@ namespace bali
 class PolylineDescriptor
 {
 public:
+    bool looped;
+    uint32_t pathid;
     uint32_t flags;
     std::vector<sf::Vector2f> points;
 };
@@ -22,17 +24,21 @@ public:
         weight = 1;
     }
 
-    Waypoint(size_t weight, size_t x, size_t y, uint32_t flags)
+    Waypoint(uint32_t pathid, uint32_t flags, bool looped, size_t weight, size_t x, size_t y)
     {
         this->weight = weight;
         location.x = x;
         location.y = y;
         this->flags = flags;
+        this->pathid = pathid;
+        this->looped = looped;
     }
     size_t weight;
+    uint32_t pathid;
     size_t id;
     uint32_t flags;
     sf::Vector2f  location;
+    bool looped;
 
     // Shall be the same size
     std::vector<size_t> neighborindices;
@@ -52,6 +58,8 @@ public:
     sf::Vector2f s;// Start endpoint
     sf::Vector2f e;// End endpoint
     size_t flags;
+    uint32_t pathid;
+    bool looped;
 };
 void
 AddPolyline(

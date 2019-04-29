@@ -24,7 +24,7 @@ void Animation::update(sf::Time ftime)
     if (state == Animation::State::STARTED)
     {
         elapsed += ftime;
-        if (elapsed > sf::seconds(0.1f))
+        if (elapsed > sf::seconds(0.05f))
         {
             if ((celid + 1) % sequence.cels.size() == 0)
             {
