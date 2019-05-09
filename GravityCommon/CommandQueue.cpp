@@ -39,6 +39,7 @@ void CommandQueue::postModifyAcceleration(RigidBody & rb, sf::Vector2f a, uint32
     newCmd.accel.accel = a;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postModifyVelocity(RigidBody & rb, sf::Vector2f v, uint32_t set)
@@ -51,6 +52,7 @@ void CommandQueue::postModifyVelocity(RigidBody & rb, sf::Vector2f v, uint32_t s
     newCmd.vel.vel = v;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postModifyPosition(RigidBody & rb, sf::Vector2f p, uint32_t set)
@@ -63,6 +65,7 @@ void CommandQueue::postModifyPosition(RigidBody & rb, sf::Vector2f p, uint32_t s
     newCmd.pos.pos = p;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postModifyAngle(RigidBody & rb, float ta, uint32_t set)
@@ -75,6 +78,7 @@ void CommandQueue::postModifyAngle(RigidBody & rb, float ta, uint32_t set)
     newCmd.ang.angle = ta;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postMove(RigidBody & rb, float str, sf::Vector2f dir, bool grounded)
@@ -88,6 +92,7 @@ void CommandQueue::postMove(RigidBody & rb, float str, sf::Vector2f dir, bool gr
     newCmd.mov.gnd = grounded;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postCharge(RigidBody & rb, float str, sf::Vector2f dir, bool grounded)
@@ -101,6 +106,7 @@ void CommandQueue::postCharge(RigidBody & rb, float str, sf::Vector2f dir, bool 
     newCmd.mov.gnd = grounded;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 void CommandQueue::postJump(RigidBody & rb, float str, sf::Vector2f dir)
@@ -113,6 +119,7 @@ void CommandQueue::postJump(RigidBody & rb, float str, sf::Vector2f dir)
     newCmd.jmp.dir = dir;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 
@@ -126,6 +133,7 @@ void CommandQueue::postModifyGravity(RigidBody & rb, float str, sf::Vector2f dir
     newCmd.grv.dir = dir;
 
     rb.cmdqueue.cmds.push(newCmd);
+    //rb.cmdqueue.cmdhist.push(newCmd);
 }
 
 

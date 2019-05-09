@@ -23,22 +23,29 @@ class Proto
 {
 public:
     typedef Proto* Ptr;
-    enum class Type {
+    enum class ProtoType {
         PLAYER,
         CONSUMABLE,
         MONSTER,
-        STATIC
+        STATIC,
+        BULLET
     };
 
-    Type        type;
-    std::string pid;
-    Vec<Shape>  shapes;
-    RigidBody   body;
-    std::string spritesheetname;
-    ASE::SpriteSheet spritesheet;
+    enum class ProtoShape {
+        POLYGON,
+        RECTANGLE,
+        CIRCLE
+    };
+
+    RigidBody           body;
+    ProtoType           type;
+    std::string         pid;
+    Vec<Shape>          shapes;
+    std::string         spritesheetname;
+    ASE::SpriteSheet    spritesheet;
     std::map<std::string, Sequence> sequences;
     bali::Wardrobe      wardrobe;
-    uint32_t tiledid;
+    uint32_t            tiledid;
     std::shared_ptr<Texture> sstex; // Sprite Sheet Texture
 };
 

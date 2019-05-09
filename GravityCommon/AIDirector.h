@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "Player.h"
 #include "Pathfinding.h"
+#include "ConfigLoader.h"
 
 namespace bali
 {
@@ -20,7 +21,8 @@ public:
         sf::Time elapsed,
         Vec<Player> & players,
         Vec<Entity> & entities,
-        Vec<Waypoint> & waypoints
+        Vec<Waypoint> & waypoints,
+        GeneralConfig & settings
     );
 
     bool
@@ -70,6 +72,7 @@ public:
     handleSeeking(
         Behavior::Disposition disp,
         Vec<Waypoint> & waypoints,
+        GeneralConfig & settings,
         Player & player,
         Entity & entity
     );
@@ -78,6 +81,7 @@ public:
     handleWandering(
         Behavior::Disposition disp,
         Vec<Waypoint> & waypoints,
+        GeneralConfig & settings,
         Entity & entity
     );
 
@@ -85,6 +89,7 @@ public:
     handleDispositions(
         Vec<Waypoint> & waypoints,
         Vec<Player> & players,
+        GeneralConfig & settings,
         Entity & entity
     );
 
@@ -92,6 +97,7 @@ public:
     handleAlive(
         Vec<Waypoint> & waypoints,
         Vec<Player> & players,
+        GeneralConfig & settings,
         Entity & entity
     );
 

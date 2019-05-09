@@ -45,12 +45,6 @@ public:
     std::vector<sf::Vector2f> neighborlocations;
 };
 
-#define SEGMENT_FLAGS_WALK      0
-#define SEGMENT_FLAGS_JUMP_UP   1
-#define SEGMENT_FLAGS_JUMP_OVER 2
-#define SEGMENT_FLAGS_STOP      3
-
-
 
 class PathSegment
 {

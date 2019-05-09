@@ -143,6 +143,7 @@
     <ClInclude Include="AIDirector.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Aseprite.h" />
+    <ClInclude Include="Bullet.h" />
     <ClInclude Include="Pathfinding.h" />
     <ClInclude Include="Behavior.h" />
     <ClInclude Include="Builders.h" />
@@ -158,12 +159,12 @@
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="MouseKeyboard.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Proto.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Sequence.h" />
-    <ClInclude Include="Settings.h" />
     <ClInclude Include="SpatialBuckets.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Texture.h" />

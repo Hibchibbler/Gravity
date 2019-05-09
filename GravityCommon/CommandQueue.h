@@ -25,6 +25,7 @@ public:
     static void postModifyGravity(RigidBody & rb, float str, sf::Vector2f dir);
     bool nextCommand(RigidBody & ph, Command & c);
 
+    std::vector<Command> execseq;
 private:
     struct CompareCommandPriority {
         bool operator()(Command const & p1, Command const & p2) {
@@ -33,6 +34,8 @@ private:
         }
     };
     std::priority_queue<Command, std::vector<Command>, CompareCommandPriority>  cmds;
+    std::priority_queue<Command, std::vector<Command>, CompareCommandPriority>  cmdhist;
+
 };
 
 }

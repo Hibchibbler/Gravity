@@ -152,4 +152,69 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
 }
 
 
+GeneralConfig bali::loadGeneralConfig(std::string filename)
+{
+    GeneralConfig c;
+    // Set Defaults
+    c.SHOW_OBSTRUCTION_POLYGON = 1;
+    c.SHOW_ENTITY_POLYGON = 0;
+    c.SHOW_WAYPOINTS = 0;
+    c.AUTO_GRAVITY_PLAYERS = 1;
+    c.AUTO_GRAVITY_ENTITIES = 1;
+    c.DISABLE_MOUSE_GRAVITY = 0;
+    c.SHOW_ENTITY_CENTROID = 0;
+    c.ENABLE_HEAD_BUMP_GRAVITY = 1;
+    c.HUNT_THRESHOLD = 64.f;
+    c.SEEK_THRESHOLD = 512.f;
+    c.ARRIVED_THRESHOLD = 64.f;
+    c.SHOW_ENTITY_PATHS = 1;
+
+    std::ifstream configIn(filename);
+    if (configIn.is_open())
+    {
+        //std::istringstream is_file(configIn.get);
+
+        typedef std::map<std::string, std::string> ConfigInfo;
+        ConfigInfo configValues;
+        std::string line;
+        while (std::getline(configIn, line))
+        {
+            std::istringstream is_line(line);
+            std::string key;
+            if (std::getline(is_line, key, '='))
+            {
+                std::string value;
+                if (key[0] == '#')
+                    continue;
+
+                if (std::getline(is_line, value))
+                {
+                    configValues[key] = value;
+                    //cout << "config[\"" << key << "\"] = " << value << endl;
+                }
+            }
+        }
+
+        // Set from config file
+        c.SHOW_OBSTRUCTION_POLYGON = std::stol(configValues["SHOW_OBSTRUCTION_POLYGON"]);
+        c.SHOW_ENTITY_POLYGON = std::stol(configValues["SHOW_ENTITY_POLYGON"]);
+        c.SHOW_ENTITY_PATHS = std::stol(configValues["SHOW_ENTITY_PATHS"]);
+        c.SHOW_WAYPOINTS = std::stol(configValues["SHOW_WAYPOINTS"]);
+        c.AUTO_GRAVITY_PLAYERS = std::stol(configValues["AUTO_GRAVITY_PLAYERS"]);
+        c.AUTO_GRAVITY_ENTITIES = std::stol(configValues["AUTO_GRAVITY_ENTITIES"]);
+        c.DISABLE_MOUSE_GRAVITY = std::stol(configValues["DISABLE_MOUSE_GRAVITY"]);
+        c.SHOW_ENTITY_CENTROID = std::stol(configValues["SHOW_ENTITY_CENTROID"]);
+        c.ENABLE_HEAD_BUMP_GRAVITY = std::stol(configValues["ENABLE_HEAD_BUMP_GRAVITY"]);
+        c.HUNT_THRESHOLD = std::stof(configValues["HUNT_THRESHOLD"]);
+        c.ARRIVED_THRESHOLD = std::stof(configValues["ARRIVED_THRESHOLD"]);
+        c.SEEK_THRESHOLD = std::stof(configValues["SEEK_THRESHOLD"]);
+    }
+    else
+    {
+        cout << "Unable to load General Configuration file!" << endl;
+    }
+    return c;
+}
+
+
 

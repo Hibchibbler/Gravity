@@ -95,7 +95,6 @@ addQuad(
 void
 loadTexture(
     Texture         &t,
-    TMX::Map::Ptr   map,
     TMX::Tileset::Ptr & tsb,
     sf::Color       c
 );
@@ -118,37 +117,12 @@ buildPolygon(
     TMX::Object::Ptr obj
 );
 
-bool
-buildPolyline(
-    Shape & s,
-    TMX::Object::Ptr obj
-);
-
-//uint32_t
-//loadPoints(Vec<Waypoint> & waypoints,
-//    TMX::Objectgroup::Ptr & objectGroup
-//);
-//
-//bool
-//buildPoint(Shape & s, TMX::Object::Ptr obj);
-
-//bool
-//buildWaypoints(
-//    Vec<Waypoint> & waypoints,
-//    TMX::Objectgroup::Ptr & objectGroup
-//);
 
 bool
 buildWaypoints10(
     Vec<Waypoint> & waypoints,
     TMX::Objectgroup::Ptr & objectGroup
 );
-
-//Proto
-//getCopyOfProto(
-//    Vec<Proto> & protos,
-//    uint32_t id
-//);
 
 uint32_t 
 loadPolygons(

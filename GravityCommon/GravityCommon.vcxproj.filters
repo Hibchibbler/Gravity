@@ -109,10 +109,13 @@
     <ClInclude Include="TimedAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Settings.h">
+    <ClInclude Include="WellnessBar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WellnessBar.h">
+    <ClInclude Include="Projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bullet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -41,7 +41,7 @@ void cleanup()
 }
 
 
-sf::Vector2f physics::ReflectUnitVector(sf::Vector2f d, sf::Vector2f n)
+sf::Vector2f ReflectUnitVector(sf::Vector2f d, sf::Vector2f n)
 {
     sf::Vector2f v;
     v = d - 2 * (vec::dot(d, n))*n;
@@ -62,7 +62,7 @@ bool CorrectPosition(
 
 
 sf::Vector2f
-physics::CollisionResponseEntity(
+CollisionResponseEntity(
     RigidBody & rb,
     RigidBody & orb,
     sf::Vector2f cn,
@@ -102,7 +102,7 @@ ApplyImpulse(
 }
 
 sf::Vector2f
-physics::CollisionResponseWall(
+CollisionResponseWall(
     RigidBody & rb,
     float omass,
     sf::Vector2f ovel,
@@ -174,8 +174,6 @@ GetEntityEntityContacts(
 {
     for (int j = 0; j < entities.size(); j++)
     {
-        if (entities[j].ignoreentitycollision)
-            continue;
         for (int e = 0; e < entities[j].collisionentities.size(); e++)
         {
             std::vector<SAT::ContactInfo> tempContacts;
@@ -211,9 +209,15 @@ GetEntityWallContacts(
                                       collisionshapes[index],
                                       tempContacts))
             {
-                tempContacts.back().thisindex = j;
-                tempContacts.back().thatindex = -1;
-                contacts.push_back(tempContacts.back());
+                /*sf::Vector2f seg = tempContacts.back().seg.end - tempContacts.back().seg.start;
+                float mag = vec::dot(seg, downVector(entities[j].proto.body.angle));
+                if (mag )*/
+                //if (abs(tempContacts.back().overlap) > 0.9f)
+                //{
+                    tempContacts.back().thisindex = j;
+                    tempContacts.back().thatindex = -1;
+                    contacts.push_back(tempContacts.back());
+                //}
             }
         }
     }
@@ -256,6 +260,10 @@ ProcessAllContacts(
         float overlap;
         if (contact.thatindex != -1)
         {
+            if (thisEntity->ignoreentitycollision) {
+                continue;
+            }
+
             Entity* thatEntity = &entities[contact.thatindex];
             thatmass = thatEntity->proto.body.mass;
             thatvel = thatEntity->proto.body.vel;
@@ -264,7 +272,7 @@ ProcessAllContacts(
         else
         {
             thatmass = 0.0f;
-            overlap = contact.overlap*1.2f;
+            overlap = contact.overlap*1.0f;
         }
         posDelta = contact.normal * overlap;
         sf::Vector2f velDelta = CollisionResponseWall(thisEntity->proto.body,
@@ -321,24 +329,11 @@ ResolveAllCollisions(
 {
     bool collision = false;
     bool done = false;
+    bool integrated = false;
     int iter = 0;
     std::vector<SAT::ContactInfo> entityContacts;
     std::vector<SAT::ContactInfo> wallContacts;
     sf::Time framequant = context->frameacc + context->frametime;
-
-    //for (int e = 0; e < context->entities.size(); e++)
-    //{
-    //    sf::Vector2f newpos = context->entities[e].proto.body.pos;
-    //    sf::Vector2f vel = context->entities[e].proto.body.vel;
-    //    sf::Vector2f next = newpos;
-    //    //if (conteaxt->frameacc < sf::seconds(context->physicsConfig.FIXED_DELTA))
-    //    //assert(context->frametime < sf::seconds(context->physicsConfig.FIXED_DELTA));
-    //    next = physics::lerp(newpos, vel, context->frametime.asSeconds());
-    //    //else
-    //    //    next = newpos;
-    //        //(context->frameacc.asSeconds() + context->frametime.asSeconds()) * context->physicsConfig.FIXED_DELTA);
-    //    context->entities[e].proto.shapes[0].setPosition(next);
-    //}
 
     while (framequant >= sf::seconds(pc.FIXED_DELTA) && !context->paused)
     {
@@ -348,41 +343,9 @@ ResolveAllCollisions(
             std::cout << "Death Spiral Detected!" << std::endl;
         }
         framequant -= sf::seconds(pc.FIXED_DELTA);
-
+        integrated = true;
         for (int e = 0; e < context->entities.size(); e++)
         {
-
-            ////////////////////////////////////////////////////////////////////////////
-            //if (&entity != &ctx->entities[0])
-            {//why isn't this being run
-                //Entity & entity = context->entities[e];
-                //if (entity.collider.surfaceNormal != vec::Zero())
-                //{
-                //    sf::Vector2f d = physics::downVector(entity.proto.body.angle);
-                //    //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
-                //    {
-                //        /*float newangle = acos(vec::dot(d, normal));
-                //        entity.proto.body.angle  =  (newangle * (180.f / PI)) / 25.0f;*/
-                //        float newangle;
-                //        newangle = atan2(entity.collider.surfaceNormal.y, entity.collider.surfaceNormal.x) - atan2(d.y, d.x);
-
-                //        newangle *= (180.f / PI);
-                //        if (newangle < 0) { newangle += 180.0f; }
-                //        else { newangle -= 180.0f; }
-
-
-                //        float oldangle = entity.proto.body.angle;
-                //        //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
-                //        //entity.proto.body.angle += newangle;
-                //        for (size_t e = 0; e < context->entities.size(); e++)
-                //        {
-                //            context->entities[e].proto.body.angle += newangle; // = entity.proto.body.angle;
-                //        }
-                //    }
-                //}
-            }
-            ////////////////////////////////////////////////////////////////////////////
-
             /////////// Integrate ///////////
             updateRigidBodyInternal(context->entities[e].proto.body, pc);
             //if (e == 0)
@@ -396,7 +359,7 @@ ResolveAllCollisions(
             sf::Vector2f newpos = context->entities[e].proto.body.pos;
             context->entities[e].proto.shapes[0].setPosition(newpos);
         }
-        uint32_t maxiters = 3;
+        uint32_t maxiters = 2;
         uint32_t curiters = 0;
         do {
             // Reinitialize 1 pass global structures
@@ -446,14 +409,18 @@ ResolveAllCollisions(
         } while (context->allcontacts.size() > 0 && curiters < maxiters);
     }
     context->frameacc = framequant; // store the left over time for next iteration.
-
-
-    for (Entity & e : context->entities)
+    if (integrated)
     {
-        /////////////////
-        sf::Vector2f newpos = e.proto.body.pos;
-        newpos = physics::lerp(newpos, e.proto.body.vel, pc.FIXED_DELTA);
-        e.proto.shapes[0].setPosition(newpos);
+        context->shadowcopy = context->entities;
+    }
+    else
+    {
+        for (Entity & e : context->shadowcopy)
+        {
+            /////////////////
+            e.proto.body.pos = physics::lerp(e.proto.body.pos, e.proto.body.vel, context->frametime.asSeconds());
+            e.proto.shapes[0].setPosition(e.proto.body.pos);
+        }
     }
     return true;
 }
@@ -502,7 +469,13 @@ updateRigidBodyInternal(
             }
             break;
         case Command::Code::ANGLE:
-            rb.angle = cmd.ang.angle;
+            if (cmd.set)
+            {
+                rb.angle = cmd.ang.angle;
+            }
+            else {
+                rb.angle += cmd.ang.angle;
+            }
             break;
         case Command::Code::MOVE:
             rb.vel += physics::ApplyMove(cmd.mov, rb, pc.MOVE_STRENGTH, pc.FREEFALL_MOVE_STRENGTH, pc.MOVE_VELOCITY_MAX);
@@ -514,7 +487,10 @@ updateRigidBodyInternal(
             rb.vel += physics::ApplyJump(cmd.jmp, rb, pc.JUMP_STRENGTH, pc.JUMP_VELOCITY_MAX);
             break;
         }// end switch
+        //rb.cmdqueue.execseq.push_back(cmd);
     }
+
+    rb.lerppos = rb.pos;
 }
 
 /*
@@ -579,8 +555,8 @@ integrateEuler(
     rb.vel.x = vx;
     rb.vel.y = vy;*/
 #include <math.h>
-    rb.vel.x = roundf(rb.vel.x);
-    rb.vel.y = roundf(rb.vel.y);
+    rb.vel.x = ceilf(rb.vel.x);
+    rb.vel.y = ceilf(rb.vel.y);
 
     rb.pos += rb.vel * pc.FIXED_DELTA;
     //rb.pos.x = roundf(rb.pos.x);
@@ -588,7 +564,7 @@ integrateEuler(
 
 }
 
-void physics::ClampUpperVector(sf::Vector2f & vel, float max)
+void ClampUpperVector(sf::Vector2f & vel, float max)
 {
     //
     // Limit Velocity
@@ -624,7 +600,7 @@ void physics::ClampUpperVector(sf::Vector2f & vel, float max)
 //    segment = Segment(rayPoint, rayPoint, rayPoint);
 //}
 
-sf::Vector2f physics::rotVector(float angle)
+sf::Vector2f rotVector(float angle)
 {
     float a = DEG_TO_RAD(angle);
     sf::Vector2f v(0.f, 1.f);
@@ -647,7 +623,7 @@ sf::Vector2f rotVector(float angle, sf::Vector2f v)
     return v;
 }
 
-sf::Vector2f physics::upVector(float angle)
+sf::Vector2f upVector(float angle)
 {
     float a = DEG_TO_RAD(angle - 90.f);
     sf::Vector2f v(0, 1.f);
@@ -659,7 +635,7 @@ sf::Vector2f physics::upVector(float angle)
     return v;
 }
 
-sf::Vector2f physics::leftVector(float angle)
+sf::Vector2f leftVector(float angle)
 {
     //float a = DEG_TO_RAD(angle - 180 - LEFTUP);
     float a = DEG_TO_RAD(angle - 180.f);
@@ -672,7 +648,7 @@ sf::Vector2f physics::leftVector(float angle)
     return v;
 }
 
-sf::Vector2f physics::downVector(float angle)
+sf::Vector2f downVector(float angle)
 {
     float a = DEG_TO_RAD(angle - 270.f);
     sf::Vector2f v(0.f, 1.f);
@@ -684,7 +660,7 @@ sf::Vector2f physics::downVector(float angle)
     return v;
 }
 
-sf::Vector2f physics::rightVector(float angle)
+sf::Vector2f rightVector(float angle)
 {
     //float a = DEG_TO_RAD(angle - 360 + LEFTUP);
     float a = DEG_TO_RAD(angle - 360.f);
@@ -698,7 +674,7 @@ sf::Vector2f physics::rightVector(float angle)
 }
 
 sf::Vector2f
-physics::ApplyDrag(RigidBody & phy, float drag_coefficient)
+ApplyDrag(RigidBody & phy, float drag_coefficient)
 {
     sf::Vector2f draglateral;
     sf::Vector2f lv = leftVector(phy.angle);
@@ -723,7 +699,7 @@ physics::ApplyDrag(RigidBody & phy, float drag_coefficient)
 }
 
 sf::Vector2f
-physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
+ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
 {
     sf::Vector2f u;
     sf::Vector2f up = upVector(phy.angle) * 0.90f;
@@ -739,7 +715,7 @@ physics::ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, floa
 }
 
 sf::Vector2f
-physics::ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max)
+ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_strength, float charge_velocity_max)
 {
     sf::Vector2f dir = vec::norm(chg.dir);
     sf::Vector2f m = dir * chg.str * charge_strength;
@@ -753,7 +729,7 @@ physics::ApplyCharge(Command::Charge & chg, RigidBody & phy, float charge_streng
 }
 
 sf::Vector2f
-physics::ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
+ApplyMove(Command::Move & mov, RigidBody & phy, float move_strength, float freefall_move_strength, float move_velocity_max)
 {
     sf::Vector2f m;
     if (!mov.gnd)

@@ -6,6 +6,7 @@
 #include "SATAlgo\SATAlgo.h"//TODO: don't include this!!! jeezzuz
 #include "Behavior.h"
 #include "Animation.h"
+#include "Bullet.h"
 
 namespace bali
 {
@@ -14,19 +15,10 @@ class Entity
 {
 public:
     typedef Entity* Ptr;
-    enum class InputState
-    {
-        INIT,
-        IDLING,  
-        MOVING,  
-        JUMPING, 
-        FALLING, 
-        CHARGING
-    };
+
 
     Entity()
     {
-        istate = InputState::INIT;
         moving = false;
         jumping = false;
         charging = false;
@@ -35,7 +27,6 @@ public:
 
     void initialize(Proto & p) {
         proto = p;
-        istate = InputState::IDLING;
         moving = false;
         jumping = false;
         charging = false;
@@ -49,7 +40,6 @@ public:
         stamina = 100;
     }
 
-    InputState          istate;
     Behavior            behavior;
     Proto               proto;
     Collider            collider;
@@ -87,6 +77,8 @@ public:
 
     uint32_t health;
     uint32_t stamina;
+
+    Vec<Bullet> bullets;
 
 };
 

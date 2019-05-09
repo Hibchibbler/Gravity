@@ -48,6 +48,8 @@ uint32_t StageInit::initialize()
     //
     context->physicsConfig = loadPhysicsConfig("assets\\physics.config.txt");
     context->keyboardConfig = loadKeyboardConfig("assets\\keyboard.config.txt");
+    context->generalConfig= loadGeneralConfig("assets\\general.config.txt");
+    //context->aiConfig = loadAIConfig("assets\\ai.config.txt");//TODO
 
     //
     // Load Fonts
@@ -85,6 +87,10 @@ uint32_t StageInit::initialize()
             context->protos.back().pid = s;
             context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
         }
+        else
+        {
+            std::cout << "ObjectGroup " << s << " doesn't exist\n";
+        }
     }
     //context->player0spritesheet.img.loadFromFile("assets\\evilman.png");
     //context->player0spritesheet.tex.loadFromImage(context->player0spritesheet.img);
@@ -119,6 +125,10 @@ uint32_t StageInit::initialize()
             (*proto.sstex).img.loadFromFile(proto.spritesheet.meta.image);
             (*proto.sstex).tex.loadFromImage((*proto.sstex).img);
         }
+        else
+        {
+            std::cout << "Proto Id=" << proto.tiledid << " doesn't have the property 'spritesheetname'\n";
+        }
     }
 
     //
@@ -152,7 +162,7 @@ uint32_t StageInit::initialize()
                       ogptr);
         }
     }
-
+    context->shadowcopy = context->entities;
 
     //
     // Waypoints
@@ -193,9 +203,8 @@ uint32_t StageInit::initialize()
                       tsb,
                       context->map->getLayer("BackgroundLayer"));
         loadTexture(context->backgroundtilesettexture,
-            context->map,
-            tsb,
-            sf::Color::Blue);
+                    tsb,
+                    sf::Color::Magenta);
     }
     else
     {
@@ -209,9 +218,8 @@ uint32_t StageInit::initialize()
                       tsf,
                       context->map->getLayer("ForegroundLayer"));
         loadTexture(context->foregroundtilesettexture,
-            context->map,
-            tsf,
-            sf::Color::Blue);
+                    tsf,
+                    sf::Color::Black);
     }
     else
     {
@@ -222,18 +230,10 @@ uint32_t StageInit::initialize()
     // Put the tiles in a quad tree
     //
     uint32_t dimx = context->map->width * context->map->tilewidth;
-    //uint32_t gx =         dimx / 
-    /*
-
-    context->map->width * context->map->tilewidth
-
-    */
-        
-
     uint32_t dimy = context->map->height * context->map->tileheight;
 
-    context->entitybuckets.initialize(0, 0, dimx, dimy, 64,64);
-    context->cpolybuckets.initialize(0, 0, dimx, dimy, 12,12);// context->map->width / 2.0f, context->map->height / 2.0f);
+    context->entitybuckets.initialize(0, 0, dimx, dimy, dimx/32, dimy/32);
+    context->cpolybuckets.initialize(0, 0, dimx, dimy, dimx/200,dimy/200);// context->map->width / 2.0f, context->map->height / 2.0f);
 
     CreateCPolyBucket(context->allcollisionshapes,
                       context->cpolybuckets);
@@ -285,8 +285,8 @@ uint32_t StageInit::initialize()
     context->camera.center = sf::Vector2f(32.f * (75.f / 2.f), 
                                           32.f * (75.f / 2.f));
     context->camera.view = sf::View(context->camera.center, 
-                                    sf::Vector2f(4000,4000));
-
+                                    sf::Vector2f(1000,1000));
+    context->mainZoomFactor = 1.f;
     //
     //
     // Last things? 
@@ -340,21 +340,14 @@ uint32_t StageInit::doDraw()
 {
     context->gameWindow.window.clear(sf::Color::Black);
     ImGui::Begin("Configuration");
-        /*ImGui::Button("Button 1");
-        ImGui::Button("Button 2");
-        ImGui::Button("Button C");*/
-        
-        ImGui::Checkbox("Show Wall Poly", &context->settings.SHOW_OBSTRUCTION_POLYGON);
+        ImGui::Checkbox("Show Wall Poly", (bool*)&context->generalConfig.SHOW_OBSTRUCTION_POLYGON);
         ImGui::SameLine();
-        ImGui::Checkbox("Show Entity Poly", &context->settings.SHOW_ENTITY_POLYGON);
-
-        ImGui::Checkbox("Show Waypoints", &context->settings.SHOW_WAYPOINTS);
-        ImGui::Checkbox("Show Centroids", &context->settings.SHOW_ENTITY_CENTROID);
-        
-        ImGui::Checkbox("Auto Gravity Entities", &context->settings.AUTO_GRAVITY_ENTITIES);
+        ImGui::Checkbox("Show Entity Poly", (bool*)&context->generalConfig.SHOW_ENTITY_POLYGON);
+        ImGui::Checkbox("Show Waypoints", (bool*)&context->generalConfig.SHOW_WAYPOINTS);
+        ImGui::Checkbox("Show Centroids", (bool*)&context->generalConfig.SHOW_ENTITY_CENTROID);
+        ImGui::Checkbox("Auto Gravity Entities", (bool*)&context->generalConfig.AUTO_GRAVITY_ENTITIES);
         ImGui::SameLine();
-        ImGui::Checkbox("Auto Gravity Player", &context->settings.AUTO_GRAVITY_PLAYERS);
-
+        ImGui::Checkbox("Auto Gravity Player", (bool*)&context->generalConfig.AUTO_GRAVITY_PLAYERS);
         ImGui::SliderFloat("FIXED_DELTA", &context->physicsConfig.FIXED_DELTA, 0.001f, 0.03f);
         ImGui::SliderFloat("GRAVITY_CONSTANT", &context->physicsConfig.GRAVITY_CONSTANT, 100.f, 10000.f);
         ImGui::SliderFloat("MOVE_STRENGTH", &context->physicsConfig.MOVE_STRENGTH, 1.f, 500.f);
@@ -366,12 +359,6 @@ uint32_t StageInit::doDraw()
         ImGui::SliderFloat("DRAG_CONSTANT", &context->physicsConfig.DRAG_CONSTANT, 0.f, 1.0f);
         ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 2500.0f);
         ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 1.0f);
-        //ImGui::SliderFloat("SLOW_THRESHOLD", &context->physicsConfig.SLOW_THRESHOLD, 0.f, 2500.0f);
-        //ImGui::SliderFloat("STATIC_FRICTION_VELOCITY_MAX", &context->physicsConfig.STATIC_FRICTION_VELOCITY_MAX, 0.f, 2500.0f);
-        //ImGui::SliderFloat("FAST_JUMP_THRESHOLD", &context->physicsConfig.FAST_JUMP_THRESHOLD, 0.f, 1.0f);
-        //ImGui::SliderFloat("JUMP_VELOCITY_MAX", &context->physicsConfig.JUMP_VELOCITY_MAX, 0.f, 2500.0f);
-        //ImGui::SliderFloat("MOVE_VELOCITY_MAX", &context->physicsConfig.MOVE_VELOCITY_MAX, 0.f, 2500.0f);
-        //ImGui::SliderFloat("CHARGE_VELOCITY_MAX", &context->physicsConfig.CHARGE_VELOCITY_MAX, 0.f, 2500.0f);
     ImGui::End();
     ImGui::SFML::Render(context->gameWindow.window);
 

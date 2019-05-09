@@ -25,7 +25,7 @@ public:
         pos = vec::Zero();
         vel = vec::Zero();
         accel = vec::Zero();
-        mass = 1.0;
+        mass = 1;
         angle = 0.0f;
         eid = 0;
     }
@@ -33,6 +33,7 @@ public:
     sf::Vector2f impulse(sf::Vector2f force);
 
     sf::Vector2f pos;
+    sf::Vector2f lerppos;
     sf::Vector2f vel;
     sf::Vector2f accel;
     uint32_t     mass;

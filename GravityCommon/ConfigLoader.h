@@ -53,6 +53,22 @@ struct KeyboardConfig
     uint32_t UP_TIME;
 };
 
+struct GeneralConfig
+{
+    uint32_t SHOW_OBSTRUCTION_POLYGON;
+    uint32_t SHOW_ENTITY_POLYGON;
+    uint32_t SHOW_WAYPOINTS;
+    uint32_t SHOW_ENTITY_CENTROID;
+    uint32_t SHOW_ENTITY_PATHS;
+    uint32_t AUTO_GRAVITY_PLAYERS;
+    uint32_t AUTO_GRAVITY_ENTITIES;
+    uint32_t DISABLE_MOUSE_GRAVITY;
+    uint32_t ENABLE_HEAD_BUMP_GRAVITY;
+    float    HUNT_THRESHOLD;
+    float    SEEK_THRESHOLD;
+    float    ARRIVED_THRESHOLD;
+};
+
 struct AnimationConfig
 {
 
@@ -60,6 +76,7 @@ struct AnimationConfig
 
 PhysicsConfig loadPhysicsConfig(std::string filename);
 KeyboardConfig loadKeyboardConfig(std::string filename);
+GeneralConfig loadGeneralConfig(std::string filename);
 
 }
 

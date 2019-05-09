@@ -48,7 +48,6 @@ std::vector<std::string> split(const std::string &s, char delim) {
 void
 loadTexture(
     Texture         &t,
-    TMX::Map::Ptr   map,
     TMX::Tileset::Ptr & tsb,
     sf::Color       c
 )
@@ -135,7 +134,7 @@ bool GetTMXPropertyString(TMX::Property::Vec & properties, std::string name, std
 {
     for (auto p : properties)
     {
-        if (p->type == "float")
+        if (p->type == "") // Type is empty when it is a string
         {
             if (p->name == name)
             {
@@ -173,35 +172,19 @@ buildWaypoints10(
         int id = 9999999999;
         uint32_t flags = 0;
         size_t weight = 0;
-        if (!GetTMXPropertyInt((*obj)->properties, "id", id))
-        {
-            std::cout << "A Waypoint path does not have an 'id' property" << std::endl;
-        }
+
 
         if (!GetTMXPropertyInt((*obj)->properties, "flags", id))
         {
             std::cout << "A Waypoint path does not have an 'flags' property" << std::endl;
         }
-        //for (auto h : (*obj)->properties)
-        //{
-        //    if (h->name == "id")
-        //    {
-        //        id = std::strtol(h->value.c_str(), NULL, 10);
-        //    }
-        //    if (h->name == "flags")
-        //    {
-        //        flags = std::strtol(h->value.c_str(), NULL, 16);
-        //    }
-        //}
 
-            
-        assert(id != 9999999999);
         PolylineDescriptor polyline1;
         std::vector<Waypoint> allwaypoints; // After processing, should contain all unique waypoints, and their neighbors.
         std::vector<PathSegment> segments;      // Contains all segments for all polylines.
         assert(pairs.size() > 1);
 
-        polyline1.pathid = id;
+        polyline1.pathid = (*obj)->id;
         polyline1.flags = flags;
         polyline1.looped = ispolyline;
         for (auto p = 0; p < pairs.size();p++)
@@ -237,63 +220,53 @@ loadPrototype(Proto & proto,
     //
     // First load up the properties
     //
-    for (auto prop = objectGroup->properties.begin(); prop != objectGroup->properties.end(); prop++)
+    int mass;
+    std::string pt;
+    if (GetTMXPropertyInt(objectGroup->properties, "mass", mass))
     {
-        if ((*prop)->type == "int")
-        {
-            if ((*prop)->name == "mass")
-            {
-                int mass = std::atoi((*prop)->value.c_str());
-                proto.body.mass = mass;
-            }
-        }
-        else if ((*prop)->type == "float")
-        {
-            /*char* end;
-            int mass = std::strtof((*prop)->value.c_str(), &end);
-            entities.back().body.mass = mass;*/
-        }
-        else if ((*prop)->type == "bool")
-        {
+        proto.body.mass = mass;
+    }
+    else
+    {
+        std::cout << "A Prototype ["<< objectGroup->name << "] does not have an 'mass' property" << std::endl;
+    }
 
-        }
-        else if ((*prop)->type == "color")
+    if (GetTMXPropertyString(objectGroup->properties, "prototype", pt))
+    {
+        if (pt == "player")
         {
-
+            proto.type = Proto::ProtoType::PLAYER;
         }
-        else if ((*prop)->type == "file")
+        else if (pt == "monster")
         {
-
+            proto.type = Proto::ProtoType::MONSTER;
         }
-        else// string is default
+        else if (pt == "consumable")
         {
-            if ((*prop)->name == "prototype")
-            {
-                if ((*prop)->value == "player")
-                {
-                    proto.type = Proto::Type::PLAYER;
-                }
-                else if ((*prop)->value == "monster")
-                {
-                    proto.type = Proto::Type::MONSTER;
-                }
-                else if ((*prop)->value == "consumable")
-                {
-                    proto.type = Proto::Type::CONSUMABLE;
-                }
-                else if ((*prop)->value == "static")
-                {
-                    proto.type = Proto::Type::STATIC;
-                }
-            }
+            proto.type = Proto::ProtoType::CONSUMABLE;
+        }
+        else if (pt == "static")
+        {
+            proto.type = Proto::ProtoType::STATIC;
+        }
+        else if (pt == "bullet")
+        {
+            proto.type = Proto::ProtoType::BULLET;
         }
     }
+    else
+    {
+        std::cout << "A Prototype [" << objectGroup->name << "] does not have an 'prototype' property" << std::endl;
+    }
+
 
     //
     // Then, load up the objects (aka geometry)
     //
     for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
     {
+        std::string ssn;
+
         if ((*obj)->polygon != nullptr)
         {
             proto.shapes.push_back(Shape());
@@ -306,25 +279,24 @@ loadPrototype(Proto & proto,
             buildPolygon(proto.shapes.back(), *obj);
             //buildPolygon(proto.shapes.back(), *obj);
         }
-        //else if ((*obj)->point != nullptr)
-        //{
-        //    proto.shapes.push_back(Shape());
-        //    buildPoint(proto.shapes.back(), *obj);//Can't do this here.
-        //    //point is not a shape, it is a sf::Vector2f
-        //}
+        else if ((*obj)->ellipse != nullptr)
+        {
+        }
         else
         {//a rectangle
             proto.shapes.push_back(Shape());
             buildRectangle(proto.shapes.back(), *obj);
         }
-        for (auto p : (*obj)->properties)
+
+        if (GetTMXPropertyString((*obj)->properties, "spritesheetname", ssn))
         {
-            if (p->name == "spritesheetname")
-            {
-                proto.spritesheetname = p->value;
-                //proto.img0.loadFromFile(proto.spritesheetname);
-            }
+            proto.spritesheetname = ssn;
         }
+        else
+        {
+            std::cout << "A Prototype [" << (*obj)->name << "] does not have an 'spritesheetname' property" << std::endl;
+        }
+
         /*
         <object id="2132" x="944" y="248">
             <properties>
@@ -337,11 +309,6 @@ loadPrototype(Proto & proto,
         proto.tiledid = (*obj)->id;
     }
 
-    //for (auto obj :  objectGroup->objects)
-    //{
-
-    //}
-
     return 0;
 }
 uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
@@ -351,13 +318,6 @@ uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
         if ((*obj)->polygon != nullptr)
         {
             shapes.push_back(Shape());
-            buildPolygon(shapes.back(), *obj);
-        }
-        else if ((*obj)->polyline != nullptr)
-        {//NOTE: discard last point, engine assume last point is same as first.
-         // TMX format is explicit about first and last point. even though they will always be the same.
-            shapes.push_back(Shape());
-            //buildPolyline(shapes.back(), *obj);
             buildPolygon(shapes.back(), *obj);
         }
         else
@@ -460,65 +420,6 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
                 i++;
             }
         }
-    }
-    return status;
-}
-
-
-//
-// buildPolyline stores the object offset in the position of the Shape.
-// That is to say, the vertices that make up the shape are not translated.
-//
-bool buildPolyline(Shape & s, TMX::Object::Ptr obj)
-{
-    assert(false);// we don't use this function anymore
-    bool status = false;
-    if (obj->polyline != nullptr)
-    {
-        std::vector<std::string> pairs = split(obj->polyline->points, ' ');
-
-        size_t max = pairs.size() -1;
-        s.setPointCount(max);
-        s.setPosition(sf::Vector2f(obj->x, obj->y));
-
-        if (obj->rotation == 0)
-        {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
-            {
-                if (i == max)
-                    break;
-                std::vector<std::string> comp = split((*p), ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
-            }
-        }
-        else
-        {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
-            {
-                if (i == max)
-                    break;
-                std::vector<std::string> comp = split(*p, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                for (int u = 0; u < obj->rotation; u += 90)
-                {
-                    float temp = x1;
-                    x1 = -(y1);
-                    y1 = (temp);
-                }
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
-            }
-        }
-
-        status = true;
     }
     return status;
 }

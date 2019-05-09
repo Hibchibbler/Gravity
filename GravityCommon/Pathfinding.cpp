@@ -192,6 +192,7 @@ GetClosestWaypoint(
     sf::Vector2f pos
 )
 {
+    bool found = false;
     size_t thereid;
     float mindist = 999999999999999999.f;
     //        //sf::Vector2f here = entity.proto.body.pos;
@@ -203,8 +204,10 @@ GetClosestWaypoint(
         {
             mindist = dist;
             thereid = w.id;
+            found = true;
         }
     }
+    assert(found == true);
     GetClosestWaypointResult gcwr;
     gcwr.distance = mindist;
     gcwr.wpi = thereid;

@@ -68,13 +68,13 @@ AIDirector::godirection(
     //// This flips them around if/when they overshoot their mark.
     //if (vec::dot(entity.proto.body.vel, ngap) < 0.0f)
     //{
-    //    //entity.proto.body.vel /= 2.f;
+    //    entity.proto.body.vel /= 2.f;
     //}
 
     if (vec::mag(entity.proto.body.vel) > 275)
     {
         // We need to slow this guy down so he doesn't get ejected into orbit.
-        CommandQueue::postModifyVelocity(entity.proto.body, entity.proto.body.vel / 2.0f, true);
+        CommandQueue::postModifyVelocity(entity.proto.body, entity.proto.body.vel / 4.0f, true);
     }
 
     if (vec::mag(entity.collider.surfaceNormal) > 0.0)
@@ -97,7 +97,9 @@ AIDirector::godirection(
             {
                 CommandQueue::postJump(entity.proto.body, 1.0f, ngap);
                 float delta = rotateTowards(physics::downVector(entity.proto.body.angle), ngap);
-                entity.proto.body.angle += delta;
+                //entity.proto.body.angle += delta;
+                CommandQueue::postModifyAngle(entity.proto.body, delta, false);
+                
             }
         }
     }
@@ -106,7 +108,8 @@ AIDirector::godirection(
         if (otherentity != NULL)
         {
             //float delta = rotateTowards(physics::downVector(entity.proto.body.angle), ngap);
-            entity.proto.body.angle = otherentity->proto.body.angle;
+            //entity.proto.body.angle = otherentity->proto.body.angle;
+            CommandQueue::postModifyAngle(entity.proto.body, otherentity->proto.body.angle, true);
         }
     }
 }
@@ -123,6 +126,8 @@ AIDirector::handleHunting(
     {
         std::cout << "Changed to HUNTING\n";
         entity.waypointpath.clear();
+        entity.currentwaypoint = 0;
+        entity.seekwaypoint = 1;
     }
 
     sf::Vector2f gap = GetCentroid(player.entity->proto.shapes[0]) - GetCentroid(entity.proto.shapes[0]);// +physics::downVector(entity.proto.body.angle) * entity.proto.shapes[0].getGlobalBounds().height / 2.f);
@@ -143,6 +148,9 @@ createPath(
 {
     GetClosestWaypointResult res1 = GetClosestWaypoint(waypoints, p1);
     GetClosestWaypointResult res2 = GetClosestWaypoint(waypoints, p2);
+    if (res1.wpi == res2.wpi)
+        return false;
+
     std::vector<size_t> wpis = searchastar(waypoints, res1.wpi, res2.wpi);
     entity.waypointpath.clear();
     entity.waypointpath.assign(wpis.begin(), wpis.end());
@@ -151,11 +159,12 @@ createPath(
     entity.currentwaypoint = 0;
     return true;
 }
-#define WAYPOINT_ARRIVED_THRESHOLD 64.f
+
 bool
 AIDirector::handleSeeking(
     Behavior::Disposition disp,
     Vec<Waypoint> & waypoints,
+    GeneralConfig & settings,
     Player & player,
     Entity & entity
 )
@@ -163,31 +172,36 @@ AIDirector::handleSeeking(
     if (disp != Behavior::Disposition::SEEKING)
     {
         std::cout << "Changed to Seeking\n";
-        createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity);
+        if (!createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity))
+            return false;
     }
 
-
-    size_t wpi = entity.waypointpath[entity.seekwaypoint];
-    sf::Vector2f gap = waypoints[wpi].location - entity.proto.body.pos;
-    sf::Vector2f ngap = vec::norm(gap);
-    float mgap = vec::mag(gap);
-
-    if (mgap < WAYPOINT_ARRIVED_THRESHOLD)
+    if (entity.waypointpath.size() > 0)
     {
-        //entity.currentwaypoint = entity.seekwaypoint;
-        //entity.seekwaypoint = (entity.seekwaypoint + 1) % entity.waypointpath.size();
+        assert(entity.seekwaypoint < entity.waypointpath.size());
+        size_t wpi = entity.waypointpath[entity.seekwaypoint];
+        sf::Vector2f gap = waypoints[wpi].location - entity.proto.body.pos;
+        sf::Vector2f ngap = vec::norm(gap);
+        float mgap = vec::mag(gap);
 
-        // Every waypoint, recaculate path
-        createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity);
+        if (mgap < settings.ARRIVED_THRESHOLD)
+        {
+            //entity.currentwaypoint = entity.seekwaypoint;
+            //entity.seekwaypoint = (entity.seekwaypoint + 1) % entity.waypointpath.size();
+
+            // Every waypoint, recaculate path
+            if (!createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity))
+                return false;
+        }
+
+        // Since we may have arrived, recalc gaps.
+        wpi = entity.waypointpath[entity.seekwaypoint];
+        gap = waypoints[wpi].location - GetCentroid(entity.proto.shapes[0]);
+        ngap = vec::norm(gap);
+        mgap = vec::mag(gap);
+
+        godirection(entity, NULL, ngap, mgap);
     }
-
-    // Since we may have arrived, recalc gaps.
-    wpi = entity.waypointpath[entity.seekwaypoint];
-    gap = waypoints[wpi].location - GetCentroid(entity.proto.shapes[0]);
-    ngap = vec::norm(gap);
-    mgap = vec::mag(gap);
-
-    godirection(entity, NULL, ngap, mgap);
     return true;
 }
 
@@ -197,6 +211,7 @@ bool
 AIDirector::handleWandering(
     Behavior::Disposition disp,
     Vec<Waypoint> & waypoints,
+    GeneralConfig & settings,
     Entity & entity
 )
 {
@@ -211,7 +226,7 @@ AIDirector::handleWandering(
     sf::Vector2f ngap = vec::norm(gap);
     float mgap = vec::mag(gap);
 
-    if (mgap < WAYPOINT_ARRIVED_THRESHOLD)
+    if (mgap < settings.ARRIVED_THRESHOLD)
     {
         entity.currentwaypoint = entity.seekwaypoint;
         entity.seekwaypoint = (entity.seekwaypoint + 1) % entity.waypointpath.size();
@@ -235,14 +250,11 @@ AIDirector::handleWandering(
     return true;
 }
 
-
-#define PLAYER_FAR_THRESHOLD 256
-#define PLAYER_NEAR_THRESHOLD 64
-
 bool
 AIDirector::handleDispositions(
     Vec<Waypoint> & waypoints,
     Vec<Player> & players,
+    GeneralConfig & settings,
     Entity & entity
 )
 {
@@ -256,11 +268,11 @@ AIDirector::handleDispositions(
         sf::Vector2f toplayer = player.entity->proto.body.pos - entity.proto.body.pos;
         float mtoplayer = vec::mag(toplayer);
 
-        if (mtoplayer < PLAYER_NEAR_THRESHOLD)
+        if (mtoplayer < settings.HUNT_THRESHOLD)
         {
             modDisp = Behavior::Disposition::HUNTING;
         }
-        else if (mtoplayer < PLAYER_FAR_THRESHOLD * (orgDisp == Behavior::Disposition::SEEKING ? 2 : 1))
+        else if (mtoplayer < settings.SEEK_THRESHOLD * (orgDisp == Behavior::Disposition::SEEKING ? 1.5f : 1.f))
         {
             modDisp = Behavior::Disposition::SEEKING;
         }
@@ -277,10 +289,10 @@ AIDirector::handleDispositions(
     switch (modDisp)
     {
     case Behavior::Disposition::WANDERING:
-        handleWandering(orgDisp, waypoints, entity);
+        handleWandering(orgDisp, waypoints, settings, entity);
         break;
     case Behavior::Disposition::SEEKING:
-        handleSeeking(orgDisp, waypoints, player, entity);
+        handleSeeking(orgDisp, waypoints, settings, player, entity);
         break;
     case Behavior::Disposition::HUNTING:
         handleHunting(orgDisp, waypoints, player, entity);
@@ -295,6 +307,7 @@ bool
 AIDirector::handleAlive(
     Vec<Waypoint> & waypoints,
     Vec<Player> & players,
+    GeneralConfig & settings,
     Entity & entity
 )
 {
@@ -304,7 +317,7 @@ AIDirector::handleAlive(
     }
     else
     {
-        handleDispositions(waypoints, players, entity);
+        handleDispositions(waypoints, players, settings, entity);
     }
 
     return false;
@@ -359,7 +372,8 @@ AIDirector::update(
     sf::Time elapsed,
     Vec<Player> & players,
     Vec<Entity> & entities,
-    Vec<Waypoint> & waypoints
+    Vec<Waypoint> & waypoints,
+    GeneralConfig & settings
 )
 {
     const float DETECT_WAYPOINT_RADIUS_PIXEL = 64.f;
@@ -378,7 +392,7 @@ AIDirector::update(
             {
             case Behavior::LifeCycleState::ALIVE:
             {
-                handleAlive(waypoints, players, entity);
+                handleAlive(waypoints, players, settings, entity);
                 break;
             }
             case Behavior::LifeCycleState::BIRTH:
@@ -410,6 +424,8 @@ AIDirector::PopulateEntityPath(
 )
 {
     entity.waypointpath.clear();
+    entity.currentwaypoint = 0;
+    entity.seekwaypoint = 1;
     for (size_t wi = 0;
         wi < waypoints.size();
         wi++)

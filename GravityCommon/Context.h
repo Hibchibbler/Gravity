@@ -19,17 +19,10 @@
 #include "SpatialBuckets.h"
 #include "Pathfinding.h"
 #include "AIDirector.h"
-#include "Settings.h"
+
 
 namespace bali 
 {
-
-//class Waypoint
-//{
-//public:
-//    size_t id;
-//    sf::Vector2f pos;
-//};
 
 //
 // Context is an abstract base class
@@ -52,6 +45,7 @@ public:
     GameWindow      gameWindow;
     KeyboardConfig  keyboardConfig;
     PhysicsConfig   physicsConfig;
+    GeneralConfig   generalConfig;
 
     TMX::Map::Ptr   map;
     sf::Font        systemfont;
@@ -59,7 +53,11 @@ public:
     Vec<Proto>      protos;        // stores the entity prototypes. entities refer to these prototypes
                                    // for their default information, and geometry
     Vec<Entity>     entities;      // stores entities that currently exist.
+    Vec<Entity>     shadowcopy;
+
     Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
+
+    
 
     Vec<Shape>      gravityzones;
     Vec<Waypoint>   waypoints;        // stores static prototypes.
@@ -99,7 +97,6 @@ public:
     sf::Time pausedftime;
 
     sf::Vector2f zaxpos;//for entity 0, hopefully local player.  hacky.
-    Settings settings;
 
 };
 
