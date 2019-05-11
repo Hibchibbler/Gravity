@@ -326,6 +326,88 @@ uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
             shapes.push_back(Shape());
             buildRectangle(shapes.back(), *obj);
         }
+
+        // Calculate shape meta
+        shapes.back().position = sf::Vector2f((*obj)->x, (*obj)->y);
+        shapes.back().bounds = GetBounds(shapes.back());
+        shapes.back().edges = calulateContactInfo(shapes.back());
+
+    }
+
+    // Calculate internal edges
+    class Edge {
+    public:
+        Edge() {
+            freq = 0;
+            s = sf::Vector2f(0, 0);
+            e = sf::Vector2f(0, 0);
+            off = sf::Vector2f(0, 0);
+        }
+        sf::Vector2f s;
+        sf::Vector2f e;
+        sf::Vector2f off;
+        uint64_t freq;
+    };
+
+    uint32_t ecnt = 0;
+    uint32_t scnt = 0;
+    Vec<Edge> edgehisto;
+    for (auto & shape : shapes)
+    {
+        scnt += shape.edges.size();
+        for (auto & edge : shape.edges)
+        {
+            // Is this edge in the histo ?
+            bool found = false;
+            for (auto & eh : edgehisto)
+            {
+                //if (eh.s == edge.p1 &&
+                //    eh.e == edge.p2 &&
+                //    eh.off == edge.off)
+                if (eh.s+ eh.off == edge.p1+edge.off &&
+                    eh.e+ eh.off == edge.p2+edge.off || 
+                    eh.e + eh.off == edge.p1 + edge.off &&
+                    eh.s + eh.off == edge.p2 + edge.off)
+                {
+                    eh.freq++;
+                    found = true;
+                }
+            }
+            if (!found)
+            {
+                edgehisto.push_back(Edge());
+                edgehisto.back().s = edge.p1;
+                edgehisto.back().e = edge.p2;
+                edgehisto.back().off = edge.off;
+                edgehisto.back().freq = 1;
+                ecnt++;
+            }
+        }
+    }
+
+    uint32_t sharedcnt = 0;
+    for (auto & eh : edgehisto)
+    {
+        if (eh.freq > 1)
+        {
+            for (auto & shape : shapes)
+            {
+                for (auto & edge : shape.edges)
+                {
+                    //if (eh.s == edge.p1 &&
+                    //    eh.e == edge.p2 &&
+                    //    eh.off == edge.off)
+                    if (eh.s + eh.off == edge.p1 + edge.off &&
+                        eh.e + eh.off == edge.p2 + edge.off ||
+                        eh.e + eh.off == edge.p1 + edge.off &&
+                        eh.s + eh.off == edge.p2 + edge.off)
+                    {
+                        edge.isinternal = 1;
+                        sharedcnt++;
+                    }
+                }
+            }
+        }
     }
 
     return 0;
@@ -378,14 +460,49 @@ uint32_t loadTileLayer(Vec<Tile> & tiles, TMX::Tileset::Ptr & tileset, TMX::Laye
     return 0;
 }
 
+Vec<ContactInfo>
+calulateContactInfo(Shape & shape)
+{
+    Vec<ContactInfo> edges;
+    // loop over the vertices
+    size_t pc = shape.points.size();
+    
+    for (int i = 0; i < pc; i++)
+    {
+        // get the current vertex
+        sf::Vector2f p1 = shape.points[i];
+
+        // get the next vertex
+        sf::Vector2f p2 = shape.points[(i + 1 == pc ? 0 : i + 1)];
+
+        // subtract the two to get the edge vector
+        sf::Vector2f edgeraw = p2 - p1;//.subtract(p1);
+
+                                    // get either normal vector
+        sf::Vector2f normal = vec::norm(vec::normal(edgeraw));
+
+        // the perp method is just (x, y) => (-y, x) or (y, -x)
+        ContactInfo ci;
+        ci.normal = normal;
+        ci.p1 = p1;// +shape.getPosition();
+        ci.p2 = p2;// +shape.getPosition();
+        ci.off = shape.position;
+        ci.isinternal = 0;
+        ci.overlap = 0;
+        ci.thatindex = -1;
+        ci.thisindex = -1;
+        edges.push_back(ci);
+    }
+    return edges;
+}
+
 bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
 {
     bool status = false;
 
     assert(obj->polygon != nullptr);
     std::vector<std::string> pairs = split(obj->polygon->points, ' ');
-    //s.setPointCount(pairs.size());
-    s.position = sf::Vector2f(obj->x, obj->y);
+
     std::cout << obj->id << std::endl;
     if (obj->rotation == 0)
     {
@@ -574,7 +691,7 @@ CreateCPolyBucket(
         qt::XY pt;
         pt.ti = tid;
         Shape & shape = cpolys[tid];
-        sf::FloatRect gb = GetBounds(shape);
+        sf::FloatRect gb = shape.bounds;//GetBounds(shape);
         pt.x = gb.left + (gb.width / 2.0f);
         pt.y = gb.top + (gb.height / 2.0f);
 

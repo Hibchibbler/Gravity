@@ -92,8 +92,7 @@ uint32_t StageInit::initialize()
             std::cout << "ObjectGroup " << s << " doesn't exist\n";
         }
     }
-    //context->player0spritesheet.img.loadFromFile("assets\\evilman.png");
-    //context->player0spritesheet.tex.loadFromImage(context->player0spritesheet.img);
+
     //
     // Map animation spritesheets to protos
     //

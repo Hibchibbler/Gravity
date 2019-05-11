@@ -6,6 +6,8 @@
 #include <list>
 #include <vector>
 #include <iterator>
+
+
 namespace bali {
 
 //
@@ -20,15 +22,20 @@ using Vec = std::vector<T>;
 template <typename T>
 using List = std::list<T>;
 
-//template <typename T>
-//using ListIter = std::list<T>::iterator;
-
-
-
-//template <typename T>
-//using VecIter = typename std::vector<T>::iterator;
-
 using Vertex = sf::Vertex;
+
+class ContactInfo
+{
+public:
+    sf::Vector2f p1;
+    sf::Vector2f p2;
+    sf::Vector2f off;
+    sf::Vector2f normal;
+    uint64_t     isinternal;
+    int64_t      thisindex;
+    int64_t      thatindex;
+    float        overlap;
+};
 
 class Shape
 {
@@ -46,7 +53,8 @@ public:
     sf::Vector2f      origin;
     sf::Vector2f      position;
     sf::FloatRect     bounds;
-    Vec<sf::Vector2f>       points;
+    Vec<sf::Vector2f> points;
+    std::vector<ContactInfo> edges;
 };
 
 sf::FloatRect
@@ -58,7 +66,7 @@ sf::Vector2f
 GetCentroid(
     Shape & shape
 );
-//using Shape = sf::VertexArray;//sf::ConvexShape;
+
 
 class Tile
 {

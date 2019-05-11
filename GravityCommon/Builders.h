@@ -156,6 +156,12 @@ addEntity(
     TMX::Objectgroup::Ptr & ogptr
 );
 
+Vec<ContactInfo>
+calulateContactInfo(
+    Shape & shape
+);
+
+
 }
 
 #endif

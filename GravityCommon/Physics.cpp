@@ -169,14 +169,14 @@ CollisionResponseWall(
 void
 GetEntityEntityContacts(
     Vec<Entity> & entities,
-    Vec<SAT::ContactInfo> & contacts
+    Vec<ContactInfo> & contacts
 )
 {
     for (int j = 0; j < entities.size(); j++)
     {
         for (int e = 0; e < entities[j].collisionentities.size(); e++)
         {
-            std::vector<SAT::ContactInfo> tempContacts;
+            std::vector<ContactInfo> tempContacts;
             size_t index = entities[j].collisionentities[e];
             if (j == index)
                 continue;
@@ -196,14 +196,14 @@ void
 GetEntityWallContacts(
     Vec<Entity> & entities,
     Vec<Shape> & collisionshapes,
-    Vec<SAT::ContactInfo> & contacts
+    Vec<ContactInfo> & contacts
 )
 {
     for (int j = 0; j < entities.size(); j++)
     {
         for (int p = 0; p < entities[j].collisionshapes.size(); p++)
         {
-            std::vector<SAT::ContactInfo> tempContacts;
+            std::vector<ContactInfo> tempContacts;
             size_t index = entities[j].collisionshapes[p];
             if (SAT::Collision::iscollided(entities[j].proto.shapes[0],
                                       collisionshapes[index],
@@ -214,16 +214,22 @@ GetEntityWallContacts(
                 if (mag )*/
                 //if (abs(tempContacts.back().overlap) > 0.9f)
                 //{
+                if (!tempContacts.back().isinternal)
+                {
                     tempContacts.back().thisindex = j;
                     tempContacts.back().thatindex = -1;
                     contacts.push_back(tempContacts.back());
-                //}
+                }
+                else
+                {
+                    //std::cout << "Veto ";
+                }
             }
         }
     }
 }
 
-bool GreatestOverlap(SAT::ContactInfo a, SAT::ContactInfo b)
+bool GreatestOverlap(ContactInfo a, ContactInfo b)
 {
     // descending order, largest to smallest.
     return a.overlap < b.overlap;
@@ -233,7 +239,7 @@ void
 ProcessAllContacts(
     Context* context,
     Vec<Entity> & entities,
-    Vec<SAT::ContactInfo> & contacts,
+    Vec<ContactInfo> & contacts,
     OnCollisionEvent onCollision,
     OnNonCollisionEvent onNonCollision,
     PhysicsConfig & pc
@@ -249,7 +255,7 @@ ProcessAllContacts(
 
     for (int j = 0; j < contacts.size(); j++)
     {
-        SAT::ContactInfo & contact = contacts[j];
+        ContactInfo & contact = contacts[j];
 
         if (contact.overlap < 0.01)
             contact.overlap = 0.f;
@@ -331,8 +337,8 @@ ResolveAllCollisions(
     bool done = false;
     bool integrated = false;
     int iter = 0;
-    std::vector<SAT::ContactInfo> entityContacts;
-    std::vector<SAT::ContactInfo> wallContacts;
+    std::vector<ContactInfo> entityContacts;
+    std::vector<ContactInfo> wallContacts;
     sf::Time framequant = context->frameacc + context->frametime;
 
     while (framequant >= sf::seconds(pc.FIXED_DELTA) && !context->paused)
@@ -555,12 +561,12 @@ integrateEuler(
     rb.vel.x = vx;
     rb.vel.y = vy;*/
 #include <math.h>
-    rb.vel.x = ceilf(rb.vel.x);
-    rb.vel.y = ceilf(rb.vel.y);
+    rb.vel.x = floorf(rb.vel.x);
+    rb.vel.y = floorf(rb.vel.y);
 
     rb.pos += rb.vel * pc.FIXED_DELTA;
-    //rb.pos.x = roundf(rb.pos.x);
-    //rb.pos.y = roundf(rb.pos.y);
+    //rb.pos.x = floorf(rb.pos.x);
+    //rb.pos.y = floorf(rb.pos.y);
 
 }
 

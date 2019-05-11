@@ -12,7 +12,6 @@
 #include <sstream>
 
 #include <SFML\System.hpp>
-//#include <SFML\Graphics\ConvexShape.hpp>
 #include "GravityCommon\Geometry.h"
 #include "GravityCommon\Vector2.h"
 
@@ -20,85 +19,6 @@ namespace bali
 {
 namespace SAT
 {
-class Segment
-{
-public:
-    typedef std::vector<Segment> Vec;
-    Segment()
-    {
-        start = sf::Vector2f(0.0, 0.0);
-        end = sf::Vector2f(0.0, 0.0);
-        off = sf::Vector2f(0.0, 0.0);
-    }
-
-    Segment(sf::Vector2f _off, sf::Vector2f p1, sf::Vector2f p2)//float offx, float offy, float x1, float y1, float x2, float y2)
-    {
-        off.x = _off.x;
-        off.y = _off.y;
-
-        start.x = p1.x;
-        start.y = p1.y;
-
-        end.x = p2.x;
-        end.y = p2.y;
-    }
-    bool isEqual(Segment & other)
-    {
-        if (start.x == other.start.x &&
-            start.y == other.start.y &&
-            end.x == other.end.x &&
-            end.y == other.end.y)
-        {
-            return true;
-        }
-        return false;
-    }
-
-    float getSlope()
-    {
-        return (end.y - start.y) / (end.x - start.x);
-    }
-
-    sf::Vector2f off;
-    sf::Vector2f start;
-    sf::Vector2f end;
-};
-
-class ContactInfo 
-{
-public:
-    typedef std::vector<ContactInfo> Vec;
-    ContactInfo()
-    {
-        normal = sf::Vector2f(0.0f, 0.0f);
-        overlap = 0.0f;
-    }
-
-    ContactInfo(float nx, float ny, float o)
-    {
-        normal.x = nx;
-        normal.y = ny;
-        overlap = o;
-    }
-
-    ContactInfo(const sf::Vector2f & n, float o)
-    {
-        normal = n;
-        overlap = o;
-    }
-
-    ContactInfo(const ContactInfo & ci)
-
-    {
-        *this = ci;
-    }
-
-    sf::Vector2f normal;
-    Segment seg;
-    float overlap;
-    int32_t thisindex;
-    int32_t thatindex;
-};
 
 typedef std::vector<ContactInfo> Axes;
 
@@ -161,54 +81,6 @@ public:
 class Collision
 {
 public:
-
-    //static Segment::Vec getSegments(sf::ConvexShape & shape)
-    //{
-    //    Segment::Vec segments;
-    //    size_t pc = shape.getPointCount();
-    //    for (int i = 0; i < pc; ++i)
-    //    {
-    //        // get the current vertex
-    //        sf::Vector2f p1 = shape.getPoint(i);// +shape.getPosition();
-
-    //        // get the next vertex
-    //        sf::Vector2f p2 = shape.getPoint(i + 1 == pc ? 0 : i + 1);// +shape.getPosition();
-
-    //        segments.push_back(Segment(shape.getPosition(), p1, p2));
-    //    }
-    //    return segments;
-    //}
-    static Axes getSeparatingAxes(Shape & shape)
-    {
-        Axes axes;
-        // loop over the vertices
-        size_t pc = shape.points.size();
-        axes.reserve(pc);
-        for (int i = 0; i < pc; i++)
-        {
-            // get the current vertex
-            sf::Vector2f p1 = shape.points[i];
-
-            // get the next vertex
-            sf::Vector2f p2 = shape.points[(i + 1 == pc ? 0 : i + 1)];
-
-            // subtract the two to get the edge vector
-            sf::Vector2f edge = p2 - p1;//.subtract(p1);
-
-            // get either normal vector
-            sf::Vector2f normal = vec::norm(vec::normal(edge));
-
-            // the perp method is just (x, y) => (-y, x) or (y, -x)
-            ContactInfo axis;
-            axis.normal = normal;
-            axis.seg.start = p1;// +shape.getPosition();
-            axis.seg.end = p2;// +shape.getPosition();
-            axis.seg.off = shape.position;
-            axes.push_back(axis);
-        }
-        return axes;
-    }
-
     static Projection project(Shape & shape, const ContactInfo & axis)
     {
         sf::Vector2f spos = shape.position;
@@ -263,6 +135,7 @@ public:
         return false;
     }
 
+
     static bool iscollided(
         Shape & shape,
         Shape & other,
@@ -271,17 +144,18 @@ public:
     {
         //hitInfo.clear();
 
-        Axes axes1 = getSeparatingAxes(shape);
-        Axes axes2 = getSeparatingAxes(other);
+        std::vector<ContactInfo> axes1 = shape.edges;
+        std::vector<ContactInfo> axes2 = other.edges;
 
         // loop over the axes1
         //cout << ">>>>>>>>>" << std::endl;
         std::stringstream ss;
         float minimumOverlap1 = 999999999.0f;
         ContactInfo mtv;
-        for (int i = 0; i < axes1.size(); i++)
+        for (int i = 0; i < shape.edges.size(); i++)
         {
-            ContactInfo axis = axes1[i];
+            ContactInfo axis = shape.edges[i];
+
             // project both shapes onto the axis
             Projection p1 = project(shape, axis);
             Projection p2 = project(other, axis);
@@ -301,15 +175,12 @@ public:
                 {
                     if (ismtvvalid(shape, other, axis.normal))
                     {
+                        mtv.isinternal = axis.isinternal;
                         mtv.normal = axis.normal;
                         mtv.overlap = o;
-                        mtv.seg = axis.seg;
+                        mtv.p1 = axis.p1;
+                        mtv.p2 = axis.p2;
                         minimumOverlap1 = o;
-                        axis.overlap = o;
-                        //if (o > 0.0f)
-                        //{
-                        //    //hitInfo.push_back(ContactInfo(axis));
-                        //}
                         //std::cout << " W[" << o << "]," << " G[" << minimumOverlap1 << "]," << std::endl; //<< (o < overlap ? "T" : "U") << " <" << axis.x << ", " << axis.y << ">" << std::endl;
                     }
                 }
@@ -318,9 +189,10 @@ public:
         }
         //cout << "-------" << std::endl;
         // loop over the axes2
-        for (int i = 0; i < axes2.size(); i++)
+        for (int i = 0; i < other.edges.size(); i++)
         {
-            ContactInfo axis = axes2[i];
+            ContactInfo axis = other.edges[i];
+
             // project both shapes onto the axis
             Projection p1 = project(shape, axis);
             Projection p2 = project(other, axis);
@@ -340,15 +212,12 @@ public:
                 {
                     if (ismtvvalid(shape, other, axis.normal))
                     {
+                        mtv.isinternal = axis.isinternal;
                         mtv.normal = axis.normal;
                         mtv.overlap = o;
-                        mtv.seg = axis.seg;
+                        mtv.p1 = axis.p1;
+                        mtv.p2 = axis.p2;
                         minimumOverlap1 = o;
-                        axis.overlap = o;
-                        //if (o > 0.0f)
-                        //{
-                        //    //hitInfo.push_back(ContactInfo(axis));
-                        //}
                         //std::cout << " W[" << o << "]," << " G[" << minimumOverlap1 << "]," << std::endl;
                     }
                 }
@@ -362,7 +231,6 @@ public:
             return true;
         }
         return false;
-        //return true;
     }
 };
 }

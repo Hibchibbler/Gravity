@@ -65,7 +65,7 @@ public:
 
     Vec<Tile>       backgroundtiles;
     Vec<Tile>       foregroundtiles;
-    Vec<SAT::ContactInfo> allcontacts;
+    Vec<ContactInfo> allcontacts;
 
     Vec<Vertex>     backgroundvertices; // these are updated each frame
     Vec<Vertex>     foregroundvertices;
