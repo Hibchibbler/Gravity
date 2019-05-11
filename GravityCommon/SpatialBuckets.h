@@ -51,9 +51,9 @@ public:
 
     void clear()
     {
-        for (int c = 0; c < this->numcols; c++)
+        for (uint32_t c = 0; c < this->numcols; c++)
         {
-            for (int r = 0; r < this->numrows; r++)
+            for (uint32_t r = 0; r < this->numrows; r++)
             {
                 bucketlist[r + (numcols * c)].locals.clear();
             }

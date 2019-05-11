@@ -180,7 +180,7 @@ GetEntityEntityContacts(
             size_t index = entities[j].collisionentities[e];
             if (j == index)
                 continue;
-            if (SAT::Shape::collision(entities[j].proto.shapes[0],
+            if (SAT::Collision::iscollided(entities[j].proto.shapes[0],
                 entities[index].proto.shapes[0],
                 tempContacts))
             {
@@ -205,7 +205,7 @@ GetEntityWallContacts(
         {
             std::vector<SAT::ContactInfo> tempContacts;
             size_t index = entities[j].collisionshapes[p];
-            if (SAT::Shape::collision(entities[j].proto.shapes[0],
+            if (SAT::Collision::iscollided(entities[j].proto.shapes[0],
                                       collisionshapes[index],
                                       tempContacts))
             {
@@ -301,7 +301,7 @@ ProcessAllContacts(
         //thisEntity->numForce++;
 
         physics::updateRigidBodyInternal(thisEntity->proto.body, pc);
-        thisEntity->proto.shapes[0].setPosition(thisEntity->proto.body.pos);
+        thisEntity->proto.shapes[0].position = thisEntity->proto.body.pos;
         //if (contact.thatindex == -1)
             onCollision(context, *thisEntity, contact.normal);
 
@@ -357,7 +357,7 @@ ResolveAllCollisions(
 
             /////////////////
             sf::Vector2f newpos = context->entities[e].proto.body.pos;
-            context->entities[e].proto.shapes[0].setPosition(newpos);
+            context->entities[e].proto.shapes[0].position = newpos;
         }
         uint32_t maxiters = 2;
         uint32_t curiters = 0;
@@ -419,7 +419,7 @@ ResolveAllCollisions(
         {
             /////////////////
             e.proto.body.pos = physics::lerp(e.proto.body.pos, e.proto.body.vel, context->frametime.asSeconds());
-            e.proto.shapes[0].setPosition(e.proto.body.pos);
+            e.proto.shapes[0].position = e.proto.body.pos;
         }
     }
     return true;

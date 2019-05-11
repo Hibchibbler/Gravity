@@ -3,7 +3,8 @@
 // 2018
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef SATAlgo_H_
+#define SATAlgo_H_
 
 #include <stdint.h>
 #include <vector>
@@ -11,7 +12,8 @@
 #include <sstream>
 
 #include <SFML\System.hpp>
-#include <SFML\Graphics\ConvexShape.hpp>
+//#include <SFML\Graphics\ConvexShape.hpp>
+#include "GravityCommon\Geometry.h"
 #include "GravityCommon\Vector2.h"
 
 namespace bali
@@ -156,7 +158,7 @@ public:
 };
 
 
-class Shape
+class Collision
 {
 public:
 
@@ -176,19 +178,19 @@ public:
     //    }
     //    return segments;
     //}
-    static Axes getSeparatingAxes(sf::ConvexShape & shape)
+    static Axes getSeparatingAxes(Shape & shape)
     {
         Axes axes;
         // loop over the vertices
-        size_t pc = shape.getPointCount();
+        size_t pc = shape.points.size();
         axes.reserve(pc);
         for (int i = 0; i < pc; i++)
         {
             // get the current vertex
-            sf::Vector2f p1 = shape.getPoint(i);
+            sf::Vector2f p1 = shape.points[i];
 
             // get the next vertex
-            sf::Vector2f p2 = shape.getPoint(i + 1 == pc ? 0 : i + 1);
+            sf::Vector2f p2 = shape.points[(i + 1 == pc ? 0 : i + 1)];
 
             // subtract the two to get the edge vector
             sf::Vector2f edge = p2 - p1;//.subtract(p1);
@@ -201,22 +203,22 @@ public:
             axis.normal = normal;
             axis.seg.start = p1;// +shape.getPosition();
             axis.seg.end = p2;// +shape.getPosition();
-            axis.seg.off = shape.getPosition();
+            axis.seg.off = shape.position;
             axes.push_back(axis);
         }
         return axes;
     }
 
-    static Projection project(sf::ConvexShape & shape, const ContactInfo & axis)
+    static Projection project(Shape & shape, const ContactInfo & axis)
     {
-        sf::Vector2f spos = shape.getPosition();
-        sf::Vector2f sorg = shape.getOrigin();
-        size_t numpts = shape.getPointCount();
-        float min = vec::dot(axis.normal, shape.getPoint(0) + (spos - sorg));
+        sf::Vector2f spos = shape.position;
+        sf::Vector2f sorg = shape.origin;
+        size_t numpts = shape.points.size();
+        float min = vec::dot(axis.normal, shape.points[0] + (spos - sorg));
         float max = min;
 
         for (int i = 1; i < numpts; i++) {
-            sf::Vector2f pean = shape.getPoint(i) + (spos - sorg);
+            sf::Vector2f pean = shape.points[i] + (spos - sorg);
 
             float p = vec::dot(axis.normal, pean);
             if (p <= min) {
@@ -231,21 +233,21 @@ public:
         return proj;
     }
 
-    static bool ismtvvalid(sf::ConvexShape & shape, sf::ConvexShape & other, sf::Vector2f mtv)
+    static bool ismtvvalid(Shape & shape, Shape & other, sf::Vector2f mtv)
     {
         vec::VECTOR2 c1, c2;
         vec::VECTOR2 dir;
-        for (int u = 0; u < shape.getPointCount(); u++)
+        for (int u = 0; u < shape.points.size(); u++)
         {
-            c1 = c1 + (shape.getPoint(u) + shape.getPosition());
+            c1 = c1 + (shape.points[u] + shape.position);
         }
-        c1 = c1 / (float)shape.getPointCount();
+        c1 = c1 / (float)shape.points.size();
 
-        for (int u = 0; u < other.getPointCount(); u++)
+        for (int u = 0; u < other.points.size(); u++)
         {
-            c2 = c2 + (other.getPoint(u) + other.getPosition());
+            c2 = c2 + (other.points[u] + other.position);
         }
-        c2 = c2 / (float)other.getPointCount();
+        c2 = c2 / (float)other.points.size();
 
         dir = c2 - c1;
         // HACK
@@ -261,9 +263,9 @@ public:
         return false;
     }
 
-    static bool collision(
-        sf::ConvexShape & shape,
-        sf::ConvexShape & other,
+    static bool iscollided(
+        Shape & shape,
+        Shape & other,
         std::vector<ContactInfo> & hitInfo
     )
     {
@@ -365,3 +367,5 @@ public:
 };
 }
 }
+
+#endif

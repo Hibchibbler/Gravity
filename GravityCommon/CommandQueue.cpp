@@ -18,7 +18,7 @@ bool CommandQueue::nextCommand(RigidBody & rb, Command & c)
 
 
 
-double CommandQueue::getTimestamp()
+uint64_t CommandQueue::getTimestamp()
 {
     FILETIME t;
     GetSystemTimePreciseAsFileTime(&t);

@@ -23,22 +23,8 @@ namespace bali
 
 sf::Color GetRandomColor(int k);
 
-
-//bool isSharedEdge(SAT::ContactInfo & ci, std::vector<SAT::Segment> & sharedEdges);
-//uint32_t buildSharedEdgesLayers(SAT::Segment::Vec & sharedEdges, TMX::Objectgroup::Vec & objectGroups);
-//sf::Vector2f rotatePoint(sf::Vector2f v, sf::Vector2f origin, float angle);
 sf::Vector2i GID2XY(int gid, int total_columns);
-//uint32_t addQuad(bali::QuadArray & v, sf::FloatRect c, sf::IntRect t, unsigned char flip);
-//uint32_t addRotQuad(sf::VertexArray & v, sf::FloatRect p, sf::IntRect t, float angle);
-//uint32_t addRotShape(bali::Shape & s, sf::FloatRect p, float angle);
 qt::AABB getSearchRegion(sf::Vector2f center, sf::Vector2f size, float zoom = 1.0f);
-//uint32_t buildTileLayer(Tile::Vec & tileLayer, const TMX::Tileset::Ptr tileset, const TMX::Layer::Ptr layer);
-//uint32_t buildTileLayers(Tile::VecVec & tileLayers, const TMX::Tileset::Ptr tileset, const TMX::Layer::Vec layer);
-//uint32_t buildQuadLayer(bali::QuadArray & quadLayer, Tile::Vec & tileLayer, uint32_t tileWidth, uint32_t tileHeight);
-//uint32_t buildShapes(Shapes & polygons, TMX::Objectgroup::Ptr & objectGroup);
-//uint32_t buildPlayerObjectLayers(Shapes & polygons, TMX::Objectgroup::Ptr & objectGroup);
-//uint32_t buildSearchLayer(qt::QuadTree::ShPtr & searchLayer, Vec<Shapes> & polygons);
-//uint32_t buildPlayerTransformedPolygon(RigidBody & phy, Shapes & pp, Shapes & pcp);
 
 //
 // TMX Level data starts life as a:

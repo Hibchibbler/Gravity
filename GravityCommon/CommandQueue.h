@@ -14,7 +14,7 @@ class RigidBody;
 class CommandQueue
 {
 public:
-    static double getTimestamp();
+    static uint64_t getTimestamp();
     static void postModifyAcceleration(RigidBody & rb, sf::Vector2f a, uint32_t set);
     static void postModifyVelocity(RigidBody & rb, sf::Vector2f v, uint32_t set);
     static void postModifyPosition(RigidBody & rb, sf::Vector2f p, uint32_t set);

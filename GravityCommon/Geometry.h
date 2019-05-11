@@ -29,7 +29,36 @@ using List = std::list<T>;
 //using VecIter = typename std::vector<T>::iterator;
 
 using Vertex = sf::Vertex;
-using Shape = sf::ConvexShape;
+
+class Shape
+{
+public:
+    enum class Type
+    {
+        POINT,
+        LINE,
+        TRIANGLE,
+        QUAD,
+        LINESTRIP,
+        CONVEX
+    };
+    Type              type;
+    sf::Vector2f      origin;
+    sf::Vector2f      position;
+    sf::FloatRect     bounds;
+    Vec<sf::Vector2f>       points;
+};
+
+sf::FloatRect
+GetBounds(
+    Shape & shape
+);
+
+sf::Vector2f
+GetCentroid(
+    Shape & shape
+);
+//using Shape = sf::VertexArray;//sf::ConvexShape;
 
 class Tile
 {

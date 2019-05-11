@@ -16,7 +16,7 @@ void Controller::initialize(
     mk.Initialize();
     mk.setUserData(context);
     mk.registerKeypress(config.JUMP_KEY,
-        config.JUMP_TIME,
+        (float)config.JUMP_TIME,
         pressed,
         nullptr,
         held,

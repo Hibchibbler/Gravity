@@ -27,8 +27,8 @@ public:
     Waypoint(uint32_t pathid, uint32_t flags, bool looped, size_t weight, size_t x, size_t y)
     {
         this->weight = weight;
-        location.x = x;
-        location.y = y;
+        location.x = (float)x;
+        location.y = (float)y;
         this->flags = flags;
         this->pathid = pathid;
         this->looped = looped;

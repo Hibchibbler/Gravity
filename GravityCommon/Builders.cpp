@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <unordered_map>
 
+
 #include "Pathfinding.h"
 namespace bali
 {
@@ -380,45 +381,44 @@ uint32_t loadTileLayer(Vec<Tile> & tiles, TMX::Tileset::Ptr & tileset, TMX::Laye
 bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
 {
     bool status = false;
-    if (obj->polygon != nullptr)
+
+    assert(obj->polygon != nullptr);
+    std::vector<std::string> pairs = split(obj->polygon->points, ' ');
+    //s.setPointCount(pairs.size());
+    s.position = sf::Vector2f(obj->x, obj->y);
+    std::cout << obj->id << std::endl;
+    if (obj->rotation == 0)
     {
-        std::vector<std::string> pairs = split(obj->polygon->points, ' ');
-        s.setPointCount(pairs.size());
-        s.setPosition(sf::Vector2f(obj->x, obj->y));
-        std::cout << obj->id << std::endl;
-        if (obj->rotation == 0)
+        int i = 0;
+        for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
         {
-            int i = 0;
-            for (auto pair = pairs.begin(); pair != pairs.end(); ++pair)
-            {
-                std::vector<std::string> comp = split(*pair, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
+            std::vector<std::string> comp = split(*pair, ',');
+            float x1, y1;
+            x1 = atol(comp[0].c_str());
+            y1 = atol(comp[1].c_str());
                 
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                ++i;
-            }
-            status = true;
+            s.points.push_back(sf::Vector2f(x1, y1));
+            ++i;
         }
-        else
+        status = true;
+    }
+    else
+    {
+        int i = 0;
+        for (auto p = pairs.begin(); p != pairs.end(); p++)
         {
-            int i = 0;
-            for (auto p = pairs.begin(); p != pairs.end(); p++)
+            std::vector<std::string> comp = split(*p, ',');
+            float x1, y1;
+            x1 = atol(comp[0].c_str());
+            y1 = atol(comp[1].c_str());
+            for (int u = 0; u < abs(obj->rotation); u += 90)
             {
-                std::vector<std::string> comp = split(*p, ',');
-                float x1, y1;
-                x1 = atol(comp[0].c_str());
-                y1 = atol(comp[1].c_str());
-                for (int u = 0; u < abs(obj->rotation); u += 90)
-                {
-                    float temp = x1;
-                    x1 = -y1;
-                    y1 = temp;
-                }
-                s.setPoint(i, sf::Vector2f(x1, y1));
-                i++;
+                float temp = x1;
+                x1 = -y1;
+                y1 = temp;
             }
+            s.points.push_back(sf::Vector2f(x1, y1));
+            i++;
         }
     }
     return status;
@@ -428,11 +428,11 @@ bool buildRectangle(Shape & s, TMX::Object::Ptr obj)
 {
     bool status = false;
 
-    s.setPointCount(4);
-    s.setPoint(0, sf::Vector2f(obj->x, obj->y));
-    s.setPoint(1, sf::Vector2f(obj->x + obj->width, obj->y));
-    s.setPoint(2, sf::Vector2f(obj->x + obj->width, obj->y + obj->height));
-    s.setPoint(3, sf::Vector2f(obj->x, obj->y + obj->height));
+    //s.setPointCount(4);
+    s.points.push_back(sf::Vector2f(obj->x, obj->y));
+    s.points.push_back(sf::Vector2f(obj->x + obj->width, obj->y));
+    s.points.push_back(sf::Vector2f(obj->x + obj->width, obj->y + obj->height));
+    s.points.push_back(sf::Vector2f(obj->x, obj->y + obj->height));
 
     return status;
 }
@@ -516,21 +516,7 @@ uint32_t createVertexLayer(Vec<Vertex> & vertices, Vec<Tile> & tileLayer, uint32
     return 0;
 }
 
-sf::Vector2f
-GetCentroid(
-    Shape & shape
-)
-{
-    sf::Vector2f c1;
-    sf::Vector2f dir;
-    for (int u = 0; u < shape.getPointCount(); u++)
-    {
-        c1 = c1 + (shape.getPoint(u) + shape.getPosition());
-    }
-    c1 = c1 / (float)shape.getPointCount();
-    return c1;
 
-}
 // Convert an index to x,y
 //  assuming an array contains a 2d spatial representation,
 //  this will convert the index into that array to the x and y 
@@ -587,11 +573,13 @@ CreateCPolyBucket(
     {
         qt::XY pt;
         pt.ti = tid;
-
-        sf::FloatRect gb = cpolys[tid].getGlobalBounds();
+        Shape & shape = cpolys[tid];
+        sf::FloatRect gb = GetBounds(shape);
         pt.x = gb.left + (gb.width / 2.0f);
         pt.y = gb.top + (gb.height / 2.0f);
 
+        pt.x = pt.x + shape.position.x;
+        pt.y = pt.y + shape.position.y;
         buckets.add(pt.x, pt.y, tid);
         cnt++;
     }

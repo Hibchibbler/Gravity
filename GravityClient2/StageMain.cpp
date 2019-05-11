@@ -154,15 +154,6 @@ void onNonCollision(void* context, Entity & entity)
     entity.collider.surfaceNormal = vec::Zero();
 }
 
-Shape GetTransformedShape(Shape & shape)
-{
-    Shape transformedShape = shape;
-    sf::Transform t = shape.getTransform();
-    for (int w = 0; w < shape.getPointCount(); w++) {
-        transformedShape.setPoint(w, t.transformPoint(shape.getPoint(w)));
-    }
-    return transformedShape;
-}
 uint32_t StageMain::doUpdate()
 {
     static std::list<sf::Vector2f> poshistory;
@@ -292,10 +283,26 @@ uint32_t StageMain::doDraw()
                 for (int si = 0; si < context->shadowcopy[h].collisionshapes.size(); si++)
                 {
                     states.texture = NULL;
-                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
+/*                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
                     context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setOutlineThickness(2);
-                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setOutlineColor(sf::Color::Red);
-                    context->canvas.draw(context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]], states);
+                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setOutlineColor(sf::Color::Red)*/;
+                    //context->canvas.draw(&context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].points[0], states);
+                    sf::ConvexShape cs;
+                    size_t id = 0;
+                    Vec<sf::Vector2f> & points = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].points;
+                    sf::Vector2f position = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].position;
+                    sf::Vector2f origin = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].origin;
+
+                    cs.setPointCount(points.size());
+                    cs.setFillColor(sf::Color::Transparent);
+                    cs.setOutlineColor(sf::Color::Red);
+                    cs.setOutlineThickness(2.f);
+                    for (auto p : points)
+                    {
+                        cs.setPoint(id++, p+position);
+                    }
+                    
+                    context->canvas.draw(cs);
                 }
             }
             //for (int si = 0; si < context->allcollisionshapes.size(); si++)
@@ -314,7 +321,7 @@ uint32_t StageMain::doDraw()
             for (int e = 0; e < context->shadowcopy.size(); e++)
             {
                 //rs.setTexture(context->player0spritesheet);
-                context->canvas.draw(context->shadowcopy[e].proto.shapes[0]);
+                //context->canvas.draw(context->shadowcopy[e].proto.shapes[0]);
             }
         }
 

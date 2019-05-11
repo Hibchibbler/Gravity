@@ -85,7 +85,7 @@ uint32_t StageInit::initialize()
             context->protos.push_back(Proto());
             loadPrototype(context->protos.back(), ogptr);
             context->protos.back().pid = s;
-            context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
+            //context->protos.back().shapes.back().setFillColor(GetRandomColor(0));
         }
         else
         {
@@ -186,11 +186,6 @@ uint32_t StageInit::initialize()
     else
     {
         std::cout << "ERROR: could not find Collision0 in tmx file" << std::endl;
-    }
-
-    if (context->map->getObjectGroup("GravityZones", ogptr))
-    {
-        loadPolygons(context->gravityzones, ogptr);
     }
 
     //

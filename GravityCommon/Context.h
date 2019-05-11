@@ -56,23 +56,19 @@ public:
     Vec<Entity>     shadowcopy;
 
     Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
-
-    
-
-    Vec<Shape>      gravityzones;
-    Vec<Waypoint>   waypoints;        // stores static prototypes.
+    Vec<Waypoint>   waypoints;     // stores static prototypes.
     SpatialBuckets  entitybuckets;
     SpatialBuckets  cpolybuckets;
 
     Vec<Shape>      allcollisionshapes;
+    Vec<Shape>      collisionshapesvisible;
+
     Vec<Tile>       backgroundtiles;
     Vec<Tile>       foregroundtiles;
     Vec<SAT::ContactInfo> allcontacts;
 
     Vec<Vertex>     backgroundvertices; // these are updated each frame
-    Vec<Vertex>     foregroundvertices; 
-    Vec<Shape>      collisionshapesvisible;
-    Vec<Shape>      collisionshapesvisibleTemp;
+    Vec<Vertex>     foregroundvertices;
 
     Texture         backgroundtilesettexture;
     Texture         foregroundtilesettexture;
@@ -93,10 +89,10 @@ public:
     AIDirector      AIDirector;
 
     bool            paused;
-    sf::Time pausedacc;
-    sf::Time pausedftime;
+    sf::Time        pausedacc;
+    sf::Time        pausedftime;
 
-    sf::Vector2f zaxpos;//for entity 0, hopefully local player.  hacky.
+    sf::Vector2f    zaxpos;//for entity 0, hopefully local player.  hacky.
 
 };
 
