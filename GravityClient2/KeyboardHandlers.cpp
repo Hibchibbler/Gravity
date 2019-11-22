@@ -23,27 +23,24 @@ void KeyPressedHandler(Keypress & kp, void* ud)
 {
     ClientContext::Ptr context = (ClientContext::Ptr)ud;
     Player & player = context->players[0];// Only local will have these handlers installed.
-    RigidBody & body = player.entity->proto.body;//context->entities[context->players[0].entityindex].body;
+    RigidBody & body = player.entity->proto.body;
 
     if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(-25.f, 0.f));
-        //body.pos += sf::Vector2f(25.f, 0.f);
         if (context->entities[0].collider.jumpNormal == vec::Zero())
         {
             // Character is in the air.
             // Jump upwards
-            //kp.nml = physics::upVector(context->entities[0].proto.body.angle);
-            //context->entities[0].jumping = true;
             KBH_DBG_PRINT("FJA");
         }
         // UpVector DOT SurfaceNormal > 0 == Not too steep
-        else if (vec::dot(physics::upVector(context->entities[0].proto.body.angle), context->entities[0].collider.surfaceNormal) > -0.01f)
+        else if (vec::dot(physics::upVector(context->entities[0].proto.body.angle), context->entities[0].collider.surfaceNormal) > -0.1f)
         {
             // Character is on the ground
             // Jump according to the angle of the ground
+
             kp.nml = context->entities[0].collider.jumpNormal;
-            
+
             context->entities[0].jumping = true;
             KBH_DBG_PRINT("FJS");
 
@@ -52,14 +49,11 @@ void KeyPressedHandler(Keypress & kp, void* ud)
             {
                 context->entities[0].collider.jumpNormal = vec::Zero();
                 context->entities[0].collider.jumpcount = 0;
-                //CommandQueue::postModifyVelocity(body,physics::upVector(context->entities[0].proto.body.angle) , false);
             }
 
-            float str = 1.0f;// *(context->entities[0].collider.jumpcount / 4.0f);
+            float str = 1.0f;
             assert(kp.nml != vec::Zero());
             CommandQueue::postJump(body, str, kp.nml);
-
-
         }
         else
         {
@@ -69,28 +63,21 @@ void KeyPressedHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(0.f, 25.f));
-        //body.pos += sf::Vector2f(0.f, 25.f);
         player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.LEFT_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(0.f, -25.f));
-        //body.pos += sf::Vector2f(0.f, -25.f);
         player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.DOWN_KEY)
     {
-        //player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.UP_KEY)
     {
-        //player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
         Entity & e = context->entities[0];
-        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         if (!context->generalConfig.DISABLE_MOUSE_GRAVITY)
         {
             e.proto.body.angle -= 45.f;
@@ -99,7 +86,6 @@ void KeyPressedHandler(Keypress & kp, void* ud)
     else if (kp.cc == context->keyboardConfig.ATTACK_KEY)
     {
         Entity & e = context->entities[0];
-        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
         if (!context->generalConfig.DISABLE_MOUSE_GRAVITY)
         {
             e.proto.body.angle += 45.f;
@@ -112,24 +98,18 @@ void KeyDblPressedHandler(Keypress & kp, void* ud)
 {
     ClientContext::Ptr context = (ClientContext::Ptr)ud;
     Player & player = context->players[0];// Only local will have these handlers installed.
-    RigidBody & body = player.entity->proto.body;//context->entities[context->players[0].entityindex].body;
+    RigidBody & body = player.entity->proto.body;
 
     if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(-25.f, 0.f));
-        //body.pos += sf::Vector2f(25.f, 0.f);
         context->entities[0].jumping = true;
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(0.f, 25.f));
-        //body.pos += sf::Vector2f(0.f, 25.f);
         player.entity->moving = true;
     }
     else if (kp.cc == context->keyboardConfig.LEFT_KEY)
     {
-        //context->camera.view.move(sf::Vector2f(0.f, -25.f));
-        //body.pos += sf::Vector2f(0.f, -25.f);
         player.entity->moving = true;
     }
     KBH_DBG_PRINT("DblPress ");
@@ -140,15 +120,10 @@ void KeyHeldHandler(Keypress & kp, void* ud)
     ClientContext::Ptr context = (ClientContext::Ptr)ud;
     Player & player = context->players[0];// Only local will have these handlers installed.
     Entity & entity = *player.entity;
-    RigidBody & body = player.entity->proto.body;//context->entities[context->players[0].entityindex].body;
+    RigidBody & body = player.entity->proto.body;
 
     if (kp.cc == context->keyboardConfig.ATTACK_KEY)
     {
-        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
-        //{
-        //    e->proto.body.angle += 5.0f;
-        //}
-
         //// Get mouse pixels
         //sf::Vector2i p = sf::Mouse::getPosition(context->gameWindow.window);
         ////Map Pixel to Coords:
@@ -161,18 +136,13 @@ void KeyHeldHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.HARPOON_KEY)
     {
-        //for (auto e = context->entities.begin(); e != context->entities.end(); e++)
-        //{
-        //    e->proto.body.angle -= 5.0f;
-        //}
+
     }
     else if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
         if (entity.jumping == true)
         {
-            //float str = 1.0f;
-            //assert(kp.nml != vec::Zero());
-            //CommandQueue::postJump(body, str, kp.nml);
+
         }
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
@@ -239,7 +209,6 @@ void KeyReleasedHandler(Keypress & kp, void* ud)
     if (kp.cc == context->keyboardConfig.JUMP_KEY)
     {
         context->players[0].entity->jumping = false;
-        //context->entities[0].collider.jumpNormal = vec::Zero();
     }
     else if (kp.cc == context->keyboardConfig.RIGHT_KEY)
     {
@@ -251,11 +220,9 @@ void KeyReleasedHandler(Keypress & kp, void* ud)
     }
     else if (kp.cc == context->keyboardConfig.DOWN_KEY)
     {
-        //context->players[0].entity->moving = false;
     }
     else if (kp.cc == context->keyboardConfig.UP_KEY)
     {
-        //context->players[0].entity->moving = false;
     }
     else if (kp.cc == context->keyboardConfig.ROTATE_RIGHT_KEY)
     {

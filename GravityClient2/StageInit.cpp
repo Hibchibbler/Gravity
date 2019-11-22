@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2019
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "StageInit.h"
@@ -221,7 +221,7 @@ uint32_t StageInit::initialize()
     }
 
     //
-    // Put the tiles in a quad tree
+    // Put the tiles into spatial buckets
     //
     uint32_t dimx = context->map->width * context->map->tilewidth;
     uint32_t dimy = context->map->height * context->map->tileheight;
@@ -279,7 +279,7 @@ uint32_t StageInit::initialize()
     context->camera.center = sf::Vector2f(32.f * (75.f / 2.f), 
                                           32.f * (75.f / 2.f));
     context->camera.view = sf::View(context->camera.center, 
-                                    sf::Vector2f(1000,1000));
+                                    sf::Vector2f(2000,2000));
     context->mainZoomFactor = 1.f;
     //
     //

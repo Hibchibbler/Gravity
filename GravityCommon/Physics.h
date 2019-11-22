@@ -52,14 +52,6 @@ typedef void(*OnCollisionEvent) (void* context, Entity & entity, sf::Vector2f co
 typedef void(*OnNonCollisionEvent) (void* context, Entity & entity);
 
 void
-updateRigidBody(
-    RigidBody & rb,
-    sf::Time elapsed,
-    PhysicsConfig & pc,
-    sf::Time & accumulator
-);
-
-void
 integrateEuler(
     RigidBody & rb,
     PhysicsConfig & pc

@@ -13,6 +13,24 @@ class Player
 public:
     Entity*         entity;
     Controller      controller;
+    std::string     name;
+    uint64_t        nid;
+
+    enum class LocalState {
+        DISCONNECT,
+        CONNECT,
+        READY,
+        START,
+        GO
+    };
+
+    enum class RemoteState {
+        CONNECTED,
+        DISCONNECTED
+    };
+
+    LocalState cstate;
+    RemoteState rstate;
 
 };
 

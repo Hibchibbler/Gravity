@@ -159,7 +159,6 @@
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="MouseKeyboard.h" />
-    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Proto.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Physics.h" />

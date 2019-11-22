@@ -18,6 +18,5 @@ int main()
     game->cleanup();
 
     return 0;
-
 }
 

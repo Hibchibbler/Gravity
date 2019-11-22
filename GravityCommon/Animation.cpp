@@ -101,10 +101,10 @@ bool Wardrobe::getSubRect(ASE::Cel & cell, sf::IntRect & subrect, bool hflip)
     sf::Vector2f bottomright = sf::Vector2f(cell.frame.position.x + cell.frame.size.w, cell.frame.position.y + cell.frame.size.h);
     sf::Vector2f bottomleft = sf::Vector2f(cell.frame.position.x, cell.frame.position.y + cell.frame.size.h);
 
-    subrect.left = cell.frame.position.x;
-    subrect.top = cell.frame.position.y;
-    subrect.width = cell.frame.size.w;
-    subrect.height = cell.frame.size.h;
+    subrect.left = static_cast<int>(cell.frame.position.x);
+    subrect.top = static_cast<int>(cell.frame.position.y);
+    subrect.width = static_cast<int>(cell.frame.size.w);
+    subrect.height = static_cast<int>(cell.frame.size.h);
 
     if (!hflip)
     {
@@ -112,8 +112,8 @@ bool Wardrobe::getSubRect(ASE::Cel & cell, sf::IntRect & subrect, bool hflip)
     }
     else
     {
-        subrect.left = cell.frame.position.x + cell.frame.size.w;
-        subrect.width = -cell.frame.size.w;
+        subrect.left = static_cast<int>(cell.frame.position.x + cell.frame.size.w);
+        subrect.width = static_cast<int>(-cell.frame.size.w);
     }
     return true;
 }

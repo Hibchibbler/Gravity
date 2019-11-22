@@ -21,6 +21,45 @@ Network::~Network()
 
 }
 
+Network::Result Network::shutdownWorkerThreads()
+{
+    Network::Result result(Network::ResultType::SUCCESS);
+    for (auto t = threads.begin(); t != threads.end(); ++t)
+    {
+        PostQueuedCompletionStatus(getIOCPort(), 0, COMPLETION_KEY_SHUTDOWN, NULL);
+    }
+
+    uint32_t threadsdone = 0;
+    while (threads.size() > threadsdone)
+    {
+        for (auto t = threads.begin(); t != threads.end(); ++t)
+        {
+            if (t->started)
+            {
+                DWORD ret = WaitForSingleObject(t->handle, 100);
+                if (ret == WAIT_OBJECT_0)
+                {
+                    t->started = 0;
+                    threadsdone++;
+                    std::cout << "Thread joined\n";
+                }
+                else if (ret == WAIT_TIMEOUT)
+                {
+                    std::cout << "Still Waiting\n";
+                }
+                else
+                {
+                    std::cout << "WEIRD shutdownworkerthreads\n";
+                }
+            }
+        }
+    }
+
+
+    
+    return result;
+}
+
 Network::Result Network::initialize(uint32_t maxThreads, uint16_t port, IOHandler ioHandler)
 {
     Network::Result result(Network::ResultType::SUCCESS);
@@ -45,7 +84,7 @@ Network::Result Network::cleanup()
     // Clean up and exit.
     CloseHandle(ioPort);
 
-    wprintf(L"Exiting.\n");
+    wprintf(L"Cleanup.\n");
     WSACleanup();
     return result;
 }
@@ -84,6 +123,7 @@ Network::Result Network::startWorkerThreads()
             result.code = GetLastError();
             break;
         }
+        t->started = true;
     }
 
     // Kick off the perpetual reads
@@ -173,19 +213,18 @@ Network::Result Network::write(Socket & s, Data & data)
         memcpy(&o->remote.addr, &data.remote.addr, sizeof(SOCKADDR_STORAGE));
         o->remote.len = data.remote.len;
 
-        WSABUF wsaBuf;
-        wsaBuf.buf = (CHAR*)&data.payload;
-        wsaBuf.len = min(data.size, MAX_PACKET_SIZE);// Shit gets Truncated here.
+        o->wsabuf.buf = (CHAR*)&data.payload;
+        o->wsabuf.len = min(data.size, MAX_PACKET_SIZE);// Shit gets Truncated here.
         ret =
             WSASendTo(
                 s.handle,
-                &wsaBuf,
+                &o->wsabuf,
                 1,
                 NULL,
                 flags,
                 (SOCKADDR*)&o->remote.addr,
                 o->remote.len,
-                o,
+                (OVERLAPPED*)o,
                 NULL);
         if (ret == 0)
         {//Good
@@ -229,21 +268,20 @@ Network::Result Network::read(Socket & s)
     if (s.overlapPool.acquire(&o))
     {
         o->ioType = Overlapped::IOType::READ;
-        WSABUF wsaBuf;
-        wsaBuf.buf = (CHAR*)&o->buffer;
-        wsaBuf.len = MAX_PACKET_SIZE;
+        o->wsabuf.buf = (CHAR*)&o->buffer;
+        o->wsabuf.len = MAX_PACKET_SIZE;
 
         DWORD flags = 0;
         int ret = 0;
         ret =
             WSARecvFrom(s.handle,
-                &wsaBuf,
+                &o->wsabuf,
                 1,
                 NULL,//&o->bytesReceived,// This can be NULL because lpOverlapped parameter is not NULL.
                 &flags,
                 (SOCKADDR*)&o->remote.addr,
                 &o->remote.len,
-                o,
+                (OVERLAPPED*)o,
                 NULL);
         if (ret == 0)
         {
@@ -306,16 +344,16 @@ void* Network::WorkerThread(Network* context)
         BOOL ret = GetQueuedCompletionStatus(context->ioPort, &bytesTrans, &ckey, (LPOVERLAPPED*)&pOver, INFINITE);
         if (ret == TRUE)
         {// Ok
-            assert(pOver != NULL);
-            if (pOver != NULL)
+            if (ckey == COMPLETION_KEY_IO)
             {
-                Overlapped* overlapped = reinterpret_cast<Overlapped*>(pOver);
-                if (ckey == COMPLETION_KEY_IO)
+                assert(pOver != NULL);
+                if (pOver != NULL)
                 {
+                    Overlapped* overlapped = reinterpret_cast<Overlapped*>(pOver);
                     // Capture all the packet information
                     Data data(bytesTrans, overlapped->buffer, overlapped->remote.addr, overlapped->remote.len);
                     Overlapped::IOType ioType = overlapped->ioType;
- 
+
                     if (ioType == Overlapped::IOType::READ)
                     {
                         // relinquish this overlapped structure
@@ -326,24 +364,29 @@ void* Network::WorkerThread(Network* context)
                         // reqlinquish this overlapped structure
                         context->writerSocket->overlapPool.release(overlapped->index);
                     }
- 
+
                     //Notify the user
                     // nothing is locked, data is copied, 
                     // alls we're doin' now is 
-                    context->ioHandler(data, ioType, id);
 
+                    context->ioHandler(data, ioType, id);
                 }
-                else if (ckey == COMPLETION_KEY_SHUTDOWN)
-                {
-                }
+            }
+            else if (ckey == COMPLETION_KEY_SHUTDOWN)
+            {
+                std::cout << "Worker: Shutdown Request Received!\n";
+                done = true;
+                continue;
             }
         }
         else
         {
             // Problem
+            std::cout << "Worker: ERROR GetQueuedCompletionStatus()\n";
             return NULL;
         }
     }
+    std::cout << "Worker: Shutdown Complete\n";
     return NULL;
 }
 

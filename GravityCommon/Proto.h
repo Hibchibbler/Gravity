@@ -41,6 +41,8 @@ public:
     ProtoType           type;
     std::string         pid;
     Vec<Shape>          shapes;
+
+
     std::string         spritesheetname;
     ASE::SpriteSheet    spritesheet;
     std::map<std::string, Sequence> sequences;

@@ -324,6 +324,24 @@ lerp(
     return start + (end * t);
 }
 
+/*
+The main idea here is we increment the physics at fixed time deltas.
+Mostly, we should only be performing 1 fixed delta per update.
+But if for some reason we get temporary local lag,
+our accumulator will help us get the physics engine
+caught back up because it tells us how many fixed deltas
+we are behind by. Fixed delta is important because while updating stuff..
+we are always multiplying a fixed number that will be the same on all machines..
+THis means our physics simulation can reproduce the same results on different machines.
+this is also important when networking comes into play. If we give everybodies machines
+a known set of inputs... then their machines should all end up computing the same result.
+we know it wn't be perfect, since each machine does floating point stuff differently,
+but it should be damn close. close enough for our purposes.
+
+Each entity has a Command queue that is populated from various sources (keyboard input, collision response, etc)
+The commands in this queue are applied to the target entity here.
+*/
+
 
 bool
 ResolveAllCollisions(
@@ -499,39 +517,6 @@ updateRigidBodyInternal(
     rb.lerppos = rb.pos;
 }
 
-/*
-The main idea here is we increment the physics at fixed time deltas.
-Mostly, we should only be performing 1 fixed delta per update.
-But if for some reason we get temporary local lag,
-our accumulator will help us get the physics engine
-caught back up because it tells us how many fixed deltas
-we are behind by.
-
-
-Each entity has a Command queue that is populated from various sources (keyboard input, collision response, etc)
-The commands in this queue are applied to the target entity here.
-*/
-void
-updateRigidBody(
-    RigidBody & rb,
-    sf::Time elapsed,
-    PhysicsConfig & pc,
-    sf::Time & accumulator
-)
-{
-
-    //accumulator += elapsed;
-
-    while (accumulator.asMilliseconds() > pc.FIXED_DELTA)
-    {
-        accumulator -= sf::seconds(pc.FIXED_DELTA);
-
-        updateRigidBodyInternal(rb, pc);
-
-        integrateEuler(rb, pc);
-
-    }
-}
 
 void
 integrateEuler(
@@ -543,8 +528,6 @@ integrateEuler(
     // Apply drag if physical is airborne.
     // But, only apply drag in the lateral directions.
     //
-    //if (rb.vel != vec::Zero())
-
     //if (!rb.collider.isCollided[0] && !rb.collider.isCollided[1]) {
     //    //rb.vel -= physics::ApplyDrag(rb, pc.DRAG_CONSTANT);
     //}
@@ -554,15 +537,22 @@ integrateEuler(
     //
     rb.accel = (physics::downVector(rb.angle) * pc.GRAVITY_CONSTANT);
     rb.vel += (rb.accel * pc.FIXED_DELTA) * (float)rb.mass;
+#include <math.h>
+    rb.vel.x = floorf(rb.vel.x);
+    rb.vel.y = floorf(rb.vel.y);
+    
     ClampUpperVector(rb.vel, pc.VELOCITY_MAX);
 
+
+    // Messin' around with rounding...addresses jitter.
+    //
     /*int64_t vx = (int64_t )rb.vel.x;
     int64_t vy = (int64_t )rb.vel.y;
     rb.vel.x = vx;
     rb.vel.y = vy;*/
-#include <math.h>
-    rb.vel.x = floorf(rb.vel.x);
-    rb.vel.y = floorf(rb.vel.y);
+//#include <math.h>
+//    rb.vel.x = floorf(rb.vel.x);
+//    rb.vel.y = floorf(rb.vel.y);
 
     rb.pos += rb.vel * pc.FIXED_DELTA;
     //rb.pos.x = floorf(rb.pos.x);
@@ -575,25 +565,10 @@ void ClampUpperVector(sf::Vector2f & vel, float max)
     //
     // Limit Velocity
     //
-    if (vel.x > max)
-    {
-        vel.x = max;
-    }
-
-    if (vel.x < -max)
-    {
-        vel.x = -max;
-    }
-
-    if (vel.y > max)
-    {
-        vel.y = max;
-    }
-
-    if (vel.y < -max)
-    {
-        vel.y = -max;
-    }
+    if (vel.x > max) { vel.x = max; }
+    if (vel.x < -max) { vel.x = -max; }
+    if (vel.y > max) { vel.y = max; }
+    if (vel.y < -max) { vel.y = -max; }
 }
 
 //physics::Intersection::Intersection()

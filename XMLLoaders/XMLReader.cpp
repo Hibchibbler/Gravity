@@ -27,7 +27,7 @@ namespace bali {
             return false;
         }
         fin.seekg(0, fin.end);
-        int length = fin.tellg();
+        int length = (int)fin.tellg();
         fin.seekg(0, fin.beg);
 
         xmlBuffer = new char[length + 1];

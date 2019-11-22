@@ -170,11 +170,9 @@ buildWaypoints10(
             pairs = split((*obj)->polygon->points, ' ');
             ispolyline = true;
         }
-        int id = 9999999999;
+        int id;
         uint32_t flags = 0;
         size_t weight = 0;
-
-
         if (!GetTMXPropertyInt((*obj)->properties, "flags", id))
         {
             std::cout << "A Waypoint path does not have an 'flags' property" << std::endl;
@@ -191,8 +189,8 @@ buildWaypoints10(
         for (auto p = 0; p < pairs.size();p++)
         {
             std::vector<std::string> comp1 = split(pairs[p], ',');
-            float x1 = atol(comp1[0].c_str()) + (*obj)->x;
-            float y1 = atol(comp1[1].c_str()) + (*obj)->y;
+            float x1 = strtof(comp1[0].c_str(), NULL) + (*obj)->x;
+            float y1 = strtof(comp1[1].c_str(), NULL) + (*obj)->y;
             polyline1.points.push_back(sf::Vector2f(x1, y1));
 
             // We loop it back around
@@ -276,9 +274,7 @@ loadPrototype(Proto & proto,
         else if ((*obj)->polyline != nullptr)
         {
             proto.shapes.push_back(Shape());
-            //buildPolyline(proto.shapes.back(), *obj);
             buildPolygon(proto.shapes.back(), *obj);
-            //buildPolygon(proto.shapes.back(), *obj);
         }
         else if ((*obj)->ellipse != nullptr)
         {
@@ -328,7 +324,7 @@ uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
         }
 
         // Calculate shape meta
-        shapes.back().position = sf::Vector2f((*obj)->x, (*obj)->y);
+        shapes.back().position = sf::Vector2f((float)(*obj)->x, (float)(*obj)->y);
         shapes.back().bounds = GetBounds(shapes.back());
         shapes.back().edges = calulateContactInfo(shapes.back());
 
@@ -350,7 +346,7 @@ uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
     };
 
     uint32_t ecnt = 0;
-    uint32_t scnt = 0;
+    size_t scnt = 0;
     Vec<Edge> edgehisto;
     for (auto & shape : shapes)
     {
@@ -511,8 +507,8 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
         {
             std::vector<std::string> comp = split(*pair, ',');
             float x1, y1;
-            x1 = atol(comp[0].c_str());
-            y1 = atol(comp[1].c_str());
+            x1 = strtof(comp[0].c_str(), NULL);
+            y1 = strtof(comp[1].c_str(), NULL);
                 
             s.points.push_back(sf::Vector2f(x1, y1));
             ++i;
@@ -526,8 +522,8 @@ bool buildPolygon(Shape & s, TMX::Object::Ptr obj)
         {
             std::vector<std::string> comp = split(*p, ',');
             float x1, y1;
-            x1 = atol(comp[0].c_str());
-            y1 = atol(comp[1].c_str());
+            x1 = strtof(comp[0].c_str(), NULL);
+            y1 = strtof(comp[1].c_str(), NULL);
             for (int u = 0; u < abs(obj->rotation); u += 90)
             {
                 float temp = x1;
@@ -546,10 +542,10 @@ bool buildRectangle(Shape & s, TMX::Object::Ptr obj)
     bool status = false;
 
     //s.setPointCount(4);
-    s.points.push_back(sf::Vector2f(obj->x, obj->y));
-    s.points.push_back(sf::Vector2f(obj->x + obj->width, obj->y));
-    s.points.push_back(sf::Vector2f(obj->x + obj->width, obj->y + obj->height));
-    s.points.push_back(sf::Vector2f(obj->x, obj->y + obj->height));
+    s.points.push_back(sf::Vector2f((float)obj->x, (float)obj->y));
+    s.points.push_back(sf::Vector2f((float)(obj->x + obj->width), (float)obj->y));
+    s.points.push_back(sf::Vector2f((float)(obj->x + obj->width), (float)(obj->y + obj->height)));
+    s.points.push_back(sf::Vector2f((float)obj->x, (float)(obj->y + obj->height)));
 
     return status;
 }
@@ -568,10 +564,10 @@ uint32_t addQuad(Vec<Vertex> & v, sf::FloatRect c, sf::IntRect t, unsigned char 
     //  4 *---*    
     //        3    
     //             
-    sf::Vector2f topleft = sf::Vector2f(t.left, t.top);
-    sf::Vector2f topright = sf::Vector2f(t.left + t.width, t.top);
-    sf::Vector2f bottomright = sf::Vector2f(t.left + t.width, t.top + t.height);
-    sf::Vector2f bottomleft = sf::Vector2f(t.left, t.top + t.height);
+    sf::Vector2f topleft = sf::Vector2f((float)t.left, (float)t.top);
+    sf::Vector2f topright = sf::Vector2f((float)(t.left + t.width), (float)t.top);
+    sf::Vector2f bottomright = sf::Vector2f((float)(t.left + t.width), (float)(t.top + t.height));
+    sf::Vector2f bottomleft = sf::Vector2f((float)t.left, (float)(t.top + t.height));
 
     bool dflip = ((flip & FLIPPED_DIAGONALLY_FLAG) > 0 ? true : false);
     bool hflip = ((flip & FLIPPED_HORIZONTALLY_FLAG) > 0 ? true : false);
@@ -670,12 +666,12 @@ CreateEntityBucket(
     SpatialBuckets & buckets
 )
 {
-    for (uint64_t e = 0; e < entities.size(); e++)
+    for (uint32_t e = 0; e < entities.size(); e++)
     {
         sf::Vector2f newpos = GetCentroid(entities[e].proto.shapes[0]);
 
-        buckets.add(newpos.x,
-                    newpos.y,// Change it also in StageMain.cpp
+        buckets.add((uint32_t)newpos.x,
+                    (uint32_t)newpos.y,// Change it also in StageMain.cpp
                     e);
     }
 }
@@ -686,7 +682,7 @@ CreateCPolyBucket(
 )
 {
     uint32_t cnt = 0;
-    for (uint64_t tid = 0; tid < cpolys.size(); tid++)
+    for (uint32_t tid = 0; tid < cpolys.size(); tid++)
     {
         qt::XY pt;
         pt.ti = tid;
@@ -697,7 +693,7 @@ CreateCPolyBucket(
 
         pt.x = pt.x + shape.position.x;
         pt.y = pt.y + shape.position.y;
-        buckets.add(pt.x, pt.y, tid);
+        buckets.add((uint32_t)pt.x, (uint32_t)pt.y, tid);
         cnt++;
     }
 }
@@ -711,8 +707,8 @@ GetEntityNeighbors(
     for (int e = 0; e < entities.size(); e++)
     {
         std::vector<size_t> nays;
-        buckets.getneighbors(entities[e].proto.body.pos.x,
-                             entities[e].proto.body.pos.y,
+        buckets.getneighbors((uint32_t)entities[e].proto.body.pos.x,
+                             (uint32_t)entities[e].proto.body.pos.y,
                              nays);
         entities[e].collisionentities.insert(entities[e].collisionentities.end(),
                                              nays.begin(),
@@ -732,8 +728,8 @@ GetCPolyNeighbors(
         entities[e].collisionshapes.clear();
 
         std::vector<size_t> nays;
-        buckets.getneighbors(entities[e].proto.body.pos.x,
-                             entities[e].proto.body.pos.y,
+        buckets.getneighbors((uint32_t)entities[e].proto.body.pos.x,
+                             (uint32_t)entities[e].proto.body.pos.y,
                              nays);
         entities[e].collisionshapes.insert(entities[e].collisionshapes.end(),
                                            nays.begin(),
@@ -772,23 +768,23 @@ addEntity(
     for (auto o : ogptr->objects)
     {
         std::string pid;
-        uint32_t mass;
-        uint32_t pathid;
-        for (auto p : (*o).properties)
+        int mass;
+        int pathid;
+        if (!GetTMXPropertyInt(o->properties, "mass", mass))
         {
-            if (p->name == "pid")
-            {
-                pid = p->value;
-            }
-            else if (p->name == "mass")
-            {
-                mass = std::strtol(p->value.c_str(), NULL, 10);
-            }
-            else if (p->name == "pathid")
-            {
-                pathid = std::strtol(p->value.c_str(), NULL, 10);
-            }
+            std::cout << "A Entity [" << o->name << "] does not have an 'mass' property" << std::endl;
         }
+
+        if (!GetTMXPropertyString(o->properties, "pid", pid))
+        {
+            std::cout << "A Entity [" << o->name << "] does not have an 'pid' property" << std::endl;
+        }
+
+        if (!GetTMXPropertyInt(o->properties, "pathid", pathid))
+        {
+            std::cout << "A Entity [" << o->name << "] does not have an 'pathid' property" << std::endl;
+        }
+
 
         entities.push_back(Entity());
         // Find proto with matching pid
@@ -800,8 +796,8 @@ addEntity(
         entities.back().registerwithaidirector = registerwithaidirector;
         entities.back().ignoreentitycollision = ignoreentitycollision;
 
-        float x = (*o).x;
-        float y = (*o).y;
+        float x = (float)(*o).x;
+        float y = (float)(*o).y;
         entities.back().proto.body.pos = sf::Vector2f(x, y);
         //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
     }

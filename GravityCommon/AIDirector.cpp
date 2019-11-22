@@ -384,7 +384,7 @@ AIDirector::update(
 
     if (timeaccumulator.asSeconds() > 0)//0.01)
     {
-        timeaccumulator -= sf::seconds(0.05);
+        timeaccumulator -= sf::seconds(0.05f);
         for (auto ei : registeredentities)
         {
             Entity & entity = entities[ei];

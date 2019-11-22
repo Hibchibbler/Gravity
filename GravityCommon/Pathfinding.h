@@ -24,7 +24,7 @@ public:
         weight = 1;
     }
 
-    Waypoint(uint32_t pathid, uint32_t flags, bool looped, size_t weight, size_t x, size_t y)
+    Waypoint(uint32_t pathid, uint32_t flags, bool looped, uint32_t weight, uint32_t x, uint32_t y)
     {
         this->weight = weight;
         location.x = (float)x;
@@ -33,7 +33,7 @@ public:
         this->pathid = pathid;
         this->looped = looped;
     }
-    size_t weight;
+    uint32_t weight;
     uint32_t pathid;
     size_t id;
     uint32_t flags;
@@ -51,7 +51,7 @@ class PathSegment
 public:
     sf::Vector2f s;// Start endpoint
     sf::Vector2f e;// End endpoint
-    size_t flags;
+    uint32_t flags;
     uint32_t pathid;
     bool looped;
 };

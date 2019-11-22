@@ -73,7 +73,9 @@ namespace bali
     public:
         HANDLE handle;
         DWORD id;
+        DWORD started;
     };
+
     class Address
     {
     public:
@@ -85,7 +87,8 @@ namespace bali
         SOCKADDR_STORAGE    addr;
         INT                 len;
     };
-    class Overlapped : public WSAOVERLAPPED
+
+    class Overlapped
     {
     public:
         enum IOType
@@ -96,25 +99,27 @@ namespace bali
 
         Overlapped()
         {
-            this->Internal = 0;
-            this->InternalHigh = 0;
-            this->Offset = 0;
-            this->OffsetHigh = 0;
-            this->hEvent = 0;
+            this->wsaoverlapped.Internal = 0;
+            this->wsaoverlapped.InternalHigh = 0;
+            this->wsaoverlapped.Offset = 0;
+            this->wsaoverlapped.OffsetHigh = 0;
+            this->wsaoverlapped.hEvent = 0;
             inuse = NOT_INUSE;
         }
-
+        // WSAOVERLAPPED must be first member
+        WSAOVERLAPPED       wsaoverlapped;
         Address             remote;
         IOType              ioType;
         uint32_t            index;
         UCHAR               inuse;
+        WSABUF              wsabuf;
         UCHAR               buffer[MAX_PACKET_SIZE];
         
     };
     class OverlapPool
     {
     public:
-#define JACK 8
+#define JACK 16
         uint32_t index;
         Overlapped pool[JACK];
 
@@ -212,7 +217,7 @@ namespace bali
         }
         Address remote;
         uint32_t size;
-        uint8_t payload[1024];
+        uint8_t payload[1024];n
     };
     class Network
     {
@@ -250,6 +255,8 @@ namespace bali
             uint32_t code;
         };
         typedef void(*IOHandler)(Data &data, Overlapped::IOType ioType, uint64_t id);
+
+        Network::Result shutdownWorkerThreads();
 
         Network::Result initialize(uint32_t maxThreads, uint16_t port, IOHandler handler);
         Network::Result cleanup();

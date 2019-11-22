@@ -14,8 +14,8 @@ heuristic(
     size_t goal
 )
 {
-    size_t dx = waypoints[goal].location.x - waypoints[start].location.x;
-    size_t dy = waypoints[goal].location.y - waypoints[start].location.y;
+    size_t dx = static_cast<size_t>(waypoints[goal].location.x - waypoints[start].location.x);
+    size_t dy = static_cast<size_t>(waypoints[goal].location.y - waypoints[start].location.y);
     return std::abs((long)dx) + std::abs((long)dy);
 }
 
@@ -140,8 +140,8 @@ CreateGraph(
     size_t id = 0;
     for (auto seg : segments)
     {
-        Waypoint wp1(seg.pathid, seg.flags,seg.looped, 1, seg.s.x, seg.s.y);
-        Waypoint wp2(seg.pathid, seg.flags, seg.looped, 1, seg.e.x, seg.e.y);
+        Waypoint wp1(seg.pathid, seg.flags,seg.looped, 1, (uint32_t)seg.s.x, (uint32_t)seg.s.y);
+        Waypoint wp2(seg.pathid, seg.flags, seg.looped, 1, (uint32_t)seg.e.x, (uint32_t)seg.e.y);
 
         for (auto oseg : segments)
         {
