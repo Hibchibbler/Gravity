@@ -82,7 +82,6 @@ sf::Color GetRandomColor(int k = 0)
     }
 }
 
-
 bool
 assignProto(
     std::vector<Proto> & protos,
@@ -100,7 +99,21 @@ assignProto(
     }
     return false;
 }
-
+bool GetTMXPropertyBool(TMX::Property::Vec & properties, std::string name, bool & val)
+{
+    for (auto p : properties)
+    {
+        if (p->type == "bool")
+        {
+            if (p->name == name)
+            {
+                val =  (p->value == "true" ? true : false);
+                return true;
+            }
+        }
+    }
+    return false;
+}
 bool GetTMXPropertyInt(TMX::Property::Vec & properties, std::string name, int & val)
 {
     for (auto p : properties)
@@ -183,6 +196,7 @@ buildWaypoints10(
         std::vector<PathSegment> segments;      // Contains all segments for all polylines.
         assert(pairs.size() > 1);
 
+        //
         polyline1.pathid = (*obj)->id;
         polyline1.flags = flags;
         polyline1.looped = ispolyline;
@@ -278,6 +292,8 @@ loadPrototype(Proto & proto,
         }
         else if ((*obj)->ellipse != nullptr)
         {
+            proto.shapes.push_back(Shape());
+            proto.shapes.back().type = Shape::Type::ELLIPSE;//TODO
         }
         else
         {//a rectangle
@@ -310,12 +326,27 @@ loadPrototype(Proto & proto,
 }
 uint32_t loadPolygons(Vec<Shape> & shapes, TMX::Objectgroup::Ptr & objectGroup)
 {
+
     for (auto obj = objectGroup->objects.begin(); obj != objectGroup->objects.end(); ++obj)
     {
         if ((*obj)->polygon != nullptr)
         {
             shapes.push_back(Shape());
             buildPolygon(shapes.back(), *obj);
+
+            //
+            // What type of polygon? AutpGravity?
+            //
+            bool AutoGravity = false;
+            
+            if (GetTMXPropertyBool((*obj)->properties, "AutoGravity", AutoGravity))
+            {
+                shapes.back().AutoGravity = AutoGravity;
+            }
+            else
+            {
+                std::cout << "A Polygon [" << objectGroup->name << "] does not have an 'AutoGravity' property" << std::endl;
+            }
         }
         else
         {//a rectangle

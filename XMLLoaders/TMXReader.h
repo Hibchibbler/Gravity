@@ -99,6 +99,9 @@ namespace bali {
                 Map::Ptr ptr = ctx->map;
                 for (size_t i = 0; attribute[i]; i += 2)
                 {
+                    ASSIGNIFMATCHESINT("infinite", ptr->infinite);
+                    ASSIGNIFMATCHESINT("nextlayerid", ptr->nextlayerid);
+                    ASSIGNIFMATCHESSTR("tiledversion", ptr->tiledversion);
                     ASSIGNIFMATCHESSTR("version", ptr->version);
                     ASSIGNIFMATCHESSTR("orientation", ptr->orientation);
                     ASSIGNIFMATCHESSTR("renderorder", ptr->renderorder);
@@ -324,6 +327,7 @@ namespace bali {
                 Layer::Ptr ptr = make_shared<Layer>();
                 for (size_t i = 0; attribute[i]; i += 2)
                 {
+                    ASSIGNIFMATCHESINT("id", ptr->id);
                     ASSIGNIFMATCHESSTR("name", ptr->name);
                     ASSIGNIFMATCHESINT("x", ptr->x);
                     ASSIGNIFMATCHESINT("y", ptr->y);
@@ -387,6 +391,7 @@ namespace bali {
                 Objectgroup::Ptr ptr = make_shared<Objectgroup>();
                 for (size_t i = 0; attribute[i]; i += 2)
                 {
+                    ASSIGNIFMATCHESINT("id", ptr->id);
                     ASSIGNIFMATCHESSTR("name", ptr->name);
                     ASSIGNIFMATCHESSTR("color", ptr->color);
                     ASSIGNIFMATCHESFLT("opacity", ptr->opacity);
@@ -454,10 +459,20 @@ namespace bali {
 
             }
             else if (state == "map objectgroup object ellipse")
-            {//case MapContext::LoadState::MAP_OBJECTGROUP_OBJECT_ELLIPSE: {
+            {
                 Ellipse::Ptr ptr = make_shared<Ellipse>();
                 ctx->map->objectgroups.back()->objects.back()->ellipse = ptr;
+                ctx->map->objectgroups.back()->objects.back()->ellipse->x = 
+                    ctx->map->objectgroups.back()->objects.back()->x;
 
+                ctx->map->objectgroups.back()->objects.back()->ellipse->y =
+                    ctx->map->objectgroups.back()->objects.back()->y;
+
+                ctx->map->objectgroups.back()->objects.back()->ellipse->width =
+                    ctx->map->objectgroups.back()->objects.back()->width;
+
+                ctx->map->objectgroups.back()->objects.back()->ellipse->height =
+                    ctx->map->objectgroups.back()->objects.back()->height;
             }
             else if (state == "map objectgroup object polygon")
             {//case MapContext::LoadState::MAP_OBJECTGROUP_OBJECT_POLYGON: {

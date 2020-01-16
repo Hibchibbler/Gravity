@@ -1,47 +1,50 @@
-#include "GameServer.h"
-#include "Stage00Server.h"
+//#include <SFML/Graphics.hpp>
 #include <memory>
+#include <iostream>
+#include "GameServer.h"
+#include "StageOne.h"
+
 
 namespace bali
 {
-GameServer::GameServer(Context::Ptr c)
-    : Game(c)
-{
 
-}
+    GameServer::GameServer(std::unique_ptr<Context> c)
+        : Game(std::move(c))
+    {
 
-uint32_t GameServer::initialize()
-{
-    GameServerContext::Ptr ctx = (GameServerContext::Ptr)context;
-    //ctx->owner = this;
-    //ctx->screenWidth = 900;
-    //ctx->screenHeight = 900;
-    //ctx->window.create(sf::VideoMode(ctx->screenWidth, ctx->screenHeight), "Gravity");
+    }
 
-    Stage::ShPtr newStage = std::make_shared<Stage00Server>();
-    addStage(newStage);
+    uint32_t GameServer::initialize()
+    {
+        context->gameWindow.screenWidth = 700;
+        context->gameWindow.screenHeight = 700;
+        context->gameWindow.window.create(sf::VideoMode(context->gameWindow.screenWidth, context->gameWindow.screenHeight), "Gravity");
+        //ctx->window.setVerticalSyncEnabled(false);
 
-    // Last thing
-    Game::initialize();
-    return 0;
-}
+        std::unique_ptr<Stage> stage1 = std::make_unique<StageOne>(context.get());
+        gameStages.push_back(std::move(stage1));
 
-uint32_t GameServer::doProcessing()
-{
-    GameServerContext::Ptr ctx = (GameServerContext::Ptr)context;
 
-    // Last thing
-    Game::doProcessing();
-    return 0;
-}
+        // Last thing
+        Game::initialize();
+        return 0;
+    }
 
-uint32_t GameServer::cleanup()
-{
-    GameServerContext::Ptr ctx = (GameServerContext::Ptr)context;
+    uint32_t GameServer::doProcessing()
+    {
+        //
 
-    // Last thing
-    Game::cleanup();
-    return 0;
-}
+        // Last thing
+        Game::doProcessing();
+        return 0;
+    }
 
+    uint32_t GameServer::cleanup()
+    {
+        //
+
+        // Last thing
+        Game::cleanup();
+        return 0;
+    }
 }

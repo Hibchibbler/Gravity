@@ -2,50 +2,21 @@
 #include <memory>
 
 #include "GameServer.h"
-#include "GameServerContext.h"
-#include "Network/Network.h"
-
-bali::Network net;
-bali::Socket readerSocket;
-bali::Socket writerSocket;
-
-void IOHandler(bali::Data & data, bali::Overlapped::IOType ioType, uint64_t id)
-{
-    bali::Network::Result result(bali::Network::ResultType::SUCCESS);
-    if (ioType == bali::Overlapped::IOType::READ)
-    {
-    }
-    else
-    {
-    }
-}
+#include "ServerContext.h"
+#include <memory>
 
 int main()
 {
-    bali::Network::Result result(bali::Network::ResultType::SUCCESS);
-    bali::GameServerContext gsc;
-    bali::GameServer game(&gsc);
+    std::unique_ptr<bali::ServerContext> gcc = std::make_unique<bali::ServerContext>();
+    std::unique_ptr<bali::GameServer>  game = std::make_unique<bali::GameServer>(std::move(gcc));
 
-    result = net.initialize(8, 8967, IOHandler); 
-    result = net.createPort(net.getIOCPort());
-    result = net.createWorkerThreads();
-    result = net.createSocket(writerSocket, COMPLETION_KEY_IO);
-    result = net.createSocket(readerSocket, COMPLETION_KEY_IO);
-    result = net.bindSocket(readerSocket);
-    result = net.associateSocketWithIOCPort(net.getIOCPort(), writerSocket);
-    result = net.associateSocketWithIOCPort(net.getIOCPort(), readerSocket);
-    result = net.registerReaderSocket(readerSocket);
-    result = net.registerWriterSocket(writerSocket);
-    result = net.startWorkerThreads();
-
-    bali::Game* pGame = &game;
-    pGame->initialize();
-    while (!pGame->isDone())
+    game->initialize();
+    while (!game->isDone())
     {
-        pGame->doProcessing();
+        game->doProcessing();
     }
-    pGame->cleanup();
-    net.cleanup();
+    game->cleanup();
+
     return 0;
 }
 

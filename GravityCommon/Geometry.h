@@ -47,7 +47,8 @@ public:
         TRIANGLE,
         QUAD,
         LINESTRIP,
-        CONVEX
+        CONVEX,
+        ELLIPSE
     };
     Type              type;
     sf::Vector2f      origin;
@@ -55,6 +56,11 @@ public:
     sf::FloatRect     bounds;
     Vec<sf::Vector2f> points;
     std::vector<ContactInfo> edges;
+
+    //
+    // Properties
+    //
+    bool AutoGravity;
 };
 
 sf::FloatRect

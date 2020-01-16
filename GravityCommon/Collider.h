@@ -38,7 +38,7 @@ public:
     sf::Vector2f        surfaceNormal;  // This is set on any contact
     sf::Vector2f        jumpNormal;  // This is set on any contact that is feasible for jumping from
     uint64_t            flags;
-    bool                isCollided[2];  // 
+    bool                isCollided[2];  // TODO: can't have this. there isn't a deep copy on this class..
     bool                autogravitated;
     uint32_t            jumpcount;
 

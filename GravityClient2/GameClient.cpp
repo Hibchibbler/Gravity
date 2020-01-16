@@ -16,8 +16,8 @@ GameClient::GameClient(std::unique_ptr<Context> c)
 
 uint32_t GameClient::initialize()
 {
-    context->gameWindow.screenWidth = 700;
-    context->gameWindow.screenHeight = 700;
+    context->gameWindow.screenWidth = 1300;
+    context->gameWindow.screenHeight = 1300;
     context->gameWindow.window.create(sf::VideoMode(context->gameWindow.screenWidth, context->gameWindow.screenHeight), "Gravity");
     //ctx->window.setVerticalSyncEnabled(false);
 

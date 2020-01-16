@@ -45,7 +45,7 @@ uint32_t StageMain::doWindowEvent(sf::Event & event)
     case sf::Event::GainedFocus:
         break;
     case sf::Event::MouseWheelScrolled: {
-        context->mainZoomFactor += (event.mouseWheel.delta >0 ? 0.1f : -0.1f);        
+        context->mainZoomFactor += (event.mouseWheel.delta >0 ? 0.1f : -0.1f);
         break;
     }case sf::Event::Resized: {
         break;
@@ -66,22 +66,6 @@ uint32_t StageMain::doWindowEvent(sf::Event & event)
                 context->frametime = this->context->pausedftime;
             }
         }
-        //if (event.key.code == sf::Keyboard::Right)
-        //{
-        //    context->camera.view.move(sf::Vector2f(10,0));
-        //}
-        //else if (event.key.code == sf::Keyboard::Left)
-        //{
-        //    context->camera.view.move(sf::Vector2f(-10, 0));
-        //}
-        //else if (event.key.code == sf::Keyboard::Up)
-        //{
-        //    context->camera.view.move(sf::Vector2f(0, 10));
-        //}
-        //else if (event.key.code == sf::Keyboard::Down)
-        //{
-        //    context->camera.view.move(sf::Vector2f(0, -10));
-        //}
 
         break;
     case sf::Event::KeyReleased:
@@ -112,37 +96,25 @@ void onCollision(void* context_, Entity & entity, sf::Vector2f normal)
     //Entity & entity = context->entities[e];
     
 
-        if (&entity == &context->entities[0] && !context->generalConfig.AUTO_GRAVITY_PLAYERS)
-            return;
-        if (!context->generalConfig.AUTO_GRAVITY_ENTITIES)
-            return;
-
-        if (entity.collider.surfaceNormal != vec::Zero())
-        {
-            if (context->generalConfig.ENABLE_HEAD_BUMP_GRAVITY ||
-                vec::dot(physics::upVector(entity.proto.body.angle), entity.collider.surfaceNormal) > -0.1)
-                //if (&entity != &context->entities[0])
-            {
-                entity.collider.autogravitated = true;
-                sf::Vector2f d = physics::downVector(entity.proto.body.angle);
-                //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
-                {
-                    float newangle;
-                    newangle = atan2(entity.collider.surfaceNormal.y, entity.collider.surfaceNormal.x) - atan2(d.y, d.x);
-
-                    newangle *= (180.f / PI);
-                    if (newangle < 0) { newangle += 180.0f; }
-                    else { newangle -= 180.0f; }
+    if (&entity == &context->entities[0] && !entity.isWpressed)
+    {
+        return;
+    }
 
 
-                    float oldangle = entity.proto.body.angle;
-                    //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
-                    CommandQueue::postModifyAngle(entity.proto.body, newangle, false);
-                    //entity.proto.body.angle += newangle;
-                }
-            }
-        }
-        
+    sf::Vector2f d = physics::downVector(entity.proto.body.angle);
+    //if (vec::dot(d, normal) < -0.4f && vec::dot(d, normal) > -0.7f)
+
+    float newangle;
+    newangle = atan2(entity.collider.surfaceNormal.y, entity.collider.surfaceNormal.x) - atan2(d.y, d.x);
+
+    newangle *= (180.f / PI);
+    if (newangle < 0) { newangle += 180.0f; }
+    else { newangle -= 180.0f; }
+
+    float oldangle = entity.proto.body.angle;
+    //std::cout << oldangle << " --> " << newangle<< "  " << std::endl;
+    CommandQueue::postModifyAngle(entity.proto.body, newangle, false);
 
 }
 
@@ -170,8 +142,10 @@ uint32_t StageMain::doUpdate()
     //
     //
     //
-    context->AIDirector.update(context->frametime, context->players, context->entities, context->waypoints, context->generalConfig);
-
+    if (context->waypoints.size() > 0)
+    {
+        context->AIDirector.update(context->frametime, context->players, context->entities, context->waypoints, context->generalConfig);
+    }
     //
     //
     //

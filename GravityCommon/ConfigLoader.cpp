@@ -142,6 +142,8 @@ KeyboardConfig bali::loadKeyboardConfig(std::string filename)
         c.DOWN_TIME = std::stoi(configValues["DOWN_TIME"]);
         c.UP_KEY = std::strtoul(configValues["UP_KEY"].c_str(), NULL, 0);
         c.UP_TIME = std::stoi(configValues["UP_TIME"]);
+        c.RESET_KEY = std::strtoul(configValues["RESET_KEY"].c_str(), NULL, 0);
+        c.RESET_TIME = std::stoi(configValues["RESET_TIME"]);
 
     }
     else

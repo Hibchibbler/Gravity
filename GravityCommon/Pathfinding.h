@@ -34,7 +34,7 @@ public:
         this->looped = looped;
     }
     uint32_t weight;
-    uint32_t pathid;
+    uint32_t pathid;// This is derived from the generic object id field in the TMX file. no user intervention required.
     size_t id;
     uint32_t flags;
     sf::Vector2f  location;

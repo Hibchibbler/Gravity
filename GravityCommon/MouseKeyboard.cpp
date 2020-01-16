@@ -9,6 +9,56 @@
 #include <assert.h>
 
 using namespace bali;
+Keypress::Keypress (
+)
+{
+}
+
+Keypress::Keypress (
+    uint32_t cc,
+    sf::Keyboard::Key k,
+    float duration,
+    KeyPressedEvent pressed,
+    KeyDblPressedEvent dblpressed,
+    KeyHeldEvent held,
+    KeyReleasedEvent released
+)
+{
+    this->pressed = pressed;
+    this->dblpressed = dblpressed;
+    this->held = held;
+    this->released = released;
+    pre = cur = exp = false;
+    elp = sf::Time::Zero;
+    nml = vec::Zero();
+    mouse = false;
+    key = k;
+    dur = duration;
+    this->cc = cc;
+}
+
+Keypress::Keypress(
+    uint32_t cc,
+    sf::Mouse::Button b,
+    float duration,
+    KeyPressedEvent pressed,
+    KeyHeldEvent held,
+    KeyReleasedEvent released
+)
+{
+    this->pressed = pressed;
+    this->dblpressed = nullptr;
+    this->held = held;
+    this->released = released;
+    pre = cur = exp = false;
+    elp = sf::Time::Zero;
+    nml = vec::Zero();
+    mouse = true;
+    btn = b;
+    dur = duration;
+    this->cc = cc;
+    tor = sf::Time::Zero;
+}
 
 Keypress & MouseKeyboard::getKeypress(sf::Keyboard::Key k)
 {

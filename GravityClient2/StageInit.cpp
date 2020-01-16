@@ -60,7 +60,7 @@ uint32_t StageInit::initialize()
     // Load TMX from file, into map
     //
     context->map = std::make_shared<bali::TMX::Map>();
-    TMX::TMXReader::load("assets\\level_test6.tmx", context->map);
+    TMX::TMXReader::load("assets\\level_test8_matt.tmx", context->map);
 
 
     
@@ -269,6 +269,7 @@ uint32_t StageInit::initialize()
     context->players.reserve(10);
     context->players.push_back(Player()); // Local player, or 0th entity
     context->players[0].entity = &context->entities[0];// Player0 is Local Player
+    context->players[0].entity->proto.body.angle = 359.f;
     context->players[0].controller.initialize(context,
                                               context->keyboardConfig,
                                               KeyPressedHandler, 
@@ -280,7 +281,7 @@ uint32_t StageInit::initialize()
                                           32.f * (75.f / 2.f));
     context->camera.view = sf::View(context->camera.center, 
                                     sf::Vector2f(2000,2000));
-    context->mainZoomFactor = 1.f;
+    context->mainZoomFactor = 3.f;
     //
     //
     // Last things? 
@@ -339,20 +340,18 @@ uint32_t StageInit::doDraw()
         ImGui::Checkbox("Show Entity Poly", (bool*)&context->generalConfig.SHOW_ENTITY_POLYGON);
         ImGui::Checkbox("Show Waypoints", (bool*)&context->generalConfig.SHOW_WAYPOINTS);
         ImGui::Checkbox("Show Centroids", (bool*)&context->generalConfig.SHOW_ENTITY_CENTROID);
-        ImGui::Checkbox("Auto Gravity Entities", (bool*)&context->generalConfig.AUTO_GRAVITY_ENTITIES);
         ImGui::SameLine();
-        ImGui::Checkbox("Auto Gravity Player", (bool*)&context->generalConfig.AUTO_GRAVITY_PLAYERS);
         ImGui::SliderFloat("FIXED_DELTA", &context->physicsConfig.FIXED_DELTA, 0.001f, 0.03f);
         ImGui::SliderFloat("GRAVITY_CONSTANT", &context->physicsConfig.GRAVITY_CONSTANT, 100.f, 10000.f);
         ImGui::SliderFloat("MOVE_STRENGTH", &context->physicsConfig.MOVE_STRENGTH, 1.f, 500.f);
         ImGui::SliderFloat("JUMP_STRENGTH", &context->physicsConfig.JUMP_STRENGTH, 1.f, 10000.f);
         ImGui::SliderInt("JUMP_COUNT (Additional Jumps)", (int*)&(context->physicsConfig.JUMP_COUNT), 0.f, 10.0f);
         ImGui::SliderFloat("FREEFALL_MOVE_STRENGTH", &context->physicsConfig.FREEFALL_MOVE_STRENGTH, 0.f, 500.0f);
-        ImGui::SliderFloat("VELOCITY_MAX", &context->physicsConfig.VELOCITY_MAX, 0.f, 2500.0f);
-        ImGui::SliderFloat("RESTITUTION", &context->physicsConfig.RESTITUTION, 0.f, 1.0f);
+        ImGui::SliderFloat("VELOCITY_MAX", &context->physicsConfig.VELOCITY_MAX, 0.f, 5000.0f);
+        ImGui::SliderFloat("RESTITUTION", &context->physicsConfig.RESTITUTION, 0.f, 1.5f);
         ImGui::SliderFloat("DRAG_CONSTANT", &context->physicsConfig.DRAG_CONSTANT, 0.f, 1.0f);
-        ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 2500.0f);
-        ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 1.0f);
+        ImGui::SliderFloat("STATIC_FRICTION", &context->physicsConfig.STATIC_FRICTION, 0.f, 25.0f);
+        ImGui::SliderFloat("DYNAMIC_FRICTION", &context->physicsConfig.DYNAMIC_FRICTION, 0.f, 25.0f);
     ImGui::End();
     ImGui::SFML::Render(context->gameWindow.window);
 

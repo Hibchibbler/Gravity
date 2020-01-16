@@ -69,6 +69,12 @@ void Controller::initialize(
         nullptr,
         held,
         released);
+    mk.registerKeypress(config.RESET_KEY,
+        (float)config.RESET_TIME,
+        pressed,
+        nullptr,
+        held,
+        released);
 }
 
 }

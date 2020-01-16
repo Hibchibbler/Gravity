@@ -19,7 +19,7 @@
 #include "SpatialBuckets.h"
 #include "Pathfinding.h"
 #include "AIDirector.h"
-
+#include "Networking\ConnMan.h"
 
 namespace bali 
 {
@@ -41,6 +41,7 @@ public:
         REMOTE3,
         REMOTE4
     };
+    ConnMan         cm;
     Camera          camera;
     GameWindow      gameWindow;
     KeyboardConfig  keyboardConfig;

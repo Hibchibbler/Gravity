@@ -51,6 +51,9 @@ struct KeyboardConfig
     uint32_t DOWN_TIME;
     uint32_t UP_KEY;//='W'
     uint32_t UP_TIME;
+    uint32_t RESET_KEY;//='W'
+    uint32_t RESET_TIME;
+
 };
 
 struct GeneralConfig

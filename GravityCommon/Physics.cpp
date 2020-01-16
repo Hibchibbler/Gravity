@@ -214,6 +214,12 @@ GetEntityWallContacts(
                 if (mag )*/
                 //if (abs(tempContacts.back().overlap) > 0.9f)
                 //{
+                
+                //if (collisionshapes[entities[j].collisionshapes[p]].AutoGravity)
+                {
+                    entities[j].collider.autogravitated = collisionshapes[entities[j].collisionshapes[p]].AutoGravity;
+                    //std::cout << "AZX: " << entities[j].collider.autogravitated << std::endl;
+                }
                 if (!tempContacts.back().isinternal)
                 {
                     tempContacts.back().thisindex = j;
@@ -528,9 +534,12 @@ integrateEuler(
     // Apply drag if physical is airborne.
     // But, only apply drag in the lateral directions.
     //
-    //if (!rb.collider.isCollided[0] && !rb.collider.isCollided[1]) {
-    //    //rb.vel -= physics::ApplyDrag(rb, pc.DRAG_CONSTANT);
-    //}
+    if (rb.collider.surfaceNormal == sf::Vector2f(0,0)){//!rb.collider..isCollided[0] && !rb.collider.isCollided[1]) {
+        if (vec::mag(rb.vel) > 0)
+        {
+            rb.vel -= physics::ApplyDrag(rb, pc.DRAG_CONSTANT);
+        }
+    }
 
     //
     // semi-implicit euler
@@ -683,16 +692,17 @@ sf::Vector2f
 ApplyJump(Command::Jump & j, RigidBody & phy, float jump_strength, float jump_velocity_max)
 {
     sf::Vector2f u;
-    sf::Vector2f up = upVector(phy.angle) * 0.90f;
+    sf::Vector2f up = upVector(phy.angle);// * 0.90f;
     if (j.dir != vec::Zero())
     {
         u = vec::norm(j.dir) * jump_strength;
         if (vec::dot(up, phy.vel) < 0)
         {
-            u = u - phy.vel;
+            u = u;//% - phy.vel;
         }
     }
-    return u;
+    //return u;
+    return up * jump_strength;
 }
 
 sf::Vector2f

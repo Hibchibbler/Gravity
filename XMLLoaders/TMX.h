@@ -64,7 +64,10 @@ namespace bali {
         public:
             Ellipse() {}
         public:
-            int32_t             unused;
+            int32_t             x;      // These values
+            int32_t             y;      // are copied/obtained from
+            int32_t             width;  // parent object
+            int32_t             height; // 
         };
 
         class Polygon
@@ -192,6 +195,7 @@ namespace bali {
                 visible         = true;
             }
         public:
+            uint32_t            id;
             std::string         name;
             std::string         color;
             int32_t             x; // Deprec8ed - always 0
@@ -352,6 +356,7 @@ namespace bali {
             }
 
         public:
+            uint32_t            id;
             std::string         name;
             int32_t             x; // Deprec8ed - always 0
             int32_t             y; // Deprec8ed - always 0
@@ -462,6 +467,9 @@ namespace bali {
                 return nullptr;
             }
         public:
+            uint32_t            infinite;
+            uint32_t            nextlayerid;
+            std::string         tiledversion;
             std::string         version;
             std::string         orientation;
             std::string         renderorder;

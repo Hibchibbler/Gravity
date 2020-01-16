@@ -23,6 +23,7 @@ public:
         jumping = false;
         charging = false;
         health = stamina = 100;
+        isWpressed = false;
     }
 
     void initialize(Proto & p) {
@@ -38,6 +39,7 @@ public:
 
         health = 100;
         stamina = 100;
+        isWpressed = false;
     }
 
     Behavior            behavior;
@@ -79,6 +81,8 @@ public:
     uint32_t stamina;
 
     Vec<Bullet> bullets;
+
+    bool   isWpressed;
 
 };
 
