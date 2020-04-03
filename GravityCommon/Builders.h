@@ -161,6 +161,15 @@ calulateContactInfo(
     Shape & shape
 );
 
+bool
+CreateEntity(
+    TMX::Object::Ptr obj,
+    bool registerwithaidirector,
+    bool ignoreentitycollision,
+    bool moving,
+    Vec<Proto> & protos,
+    Entity & entity
+);
 
 }
 

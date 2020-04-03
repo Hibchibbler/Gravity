@@ -28,7 +28,8 @@ public:
     bool
     getNearestPlayer(
         Vec<Player> & players,
-        sf::Vector2f mypos,
+        Vec<Entity> & entities,
+        uint32_t eid,
         Player & player
     );
 
@@ -65,7 +66,8 @@ public:
         Behavior::Disposition disp,
         Vec<Waypoint> & waypoints,
         Player & player,
-        Entity & entity
+        Vec<Entity> & entities,
+        uint32_t eid
     );
 
     bool
@@ -74,7 +76,8 @@ public:
         Vec<Waypoint> & waypoints,
         GeneralConfig & settings,
         Player & player,
-        Entity & entity
+        Vec<Entity> & entities,
+        uint32_t eid
     );
 
     bool
@@ -89,16 +92,18 @@ public:
     handleDispositions(
         Vec<Waypoint> & waypoints,
         Vec<Player> & players,
-        GeneralConfig & settings,
-        Entity & entity
+        Vec<Entity> & entities,
+        uint32_t eid,   // Current Entity Id
+        GeneralConfig & settings
     );
 
     bool
     handleAlive(
         Vec<Waypoint> & waypoints,
         Vec<Player> & players,
-        GeneralConfig & settings,
-        Entity & entity
+        Vec<Entity> & entities,
+        uint32_t eid,   // Current Entity Id
+        GeneralConfig & settings
     );
 
     bool

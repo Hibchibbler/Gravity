@@ -119,22 +119,25 @@ AIDirector::handleHunting(
     Behavior::Disposition disp,
     Vec<Waypoint> & waypoints,
     Player & player,
-    Entity & entity
+    Vec<Entity> & entities,
+    uint32_t eid
 )
 {
+    Entity & npc = entities[eid];
+    Entity & pc = entities[player.eid];
     if (disp != Behavior::Disposition::HUNTING)
     {
         std::cout << "Changed to HUNTING\n";
-        entity.waypointpath.clear();
-        entity.currentwaypoint = 0;
-        entity.seekwaypoint = 1;
+        npc.waypointpath.clear();
+        npc.currentwaypoint = 0;
+        npc.seekwaypoint = 1;
     }
 
-    sf::Vector2f gap = GetCentroid(player.entity->proto.shapes[0]) - GetCentroid(entity.proto.shapes[0]);// +physics::downVector(entity.proto.body.angle) * entity.proto.shapes[0].getGlobalBounds().height / 2.f);
+    sf::Vector2f gap = GetCentroid(pc.proto.shapes[0]) - GetCentroid(npc.proto.shapes[0]);// +physics::downVector(entity.proto.body.angle) * entity.proto.shapes[0].getGlobalBounds().height / 2.f);
     sf::Vector2f ngap = vec::norm(gap);
     float mgap= vec::mag(gap);
 
-    godirection(entity, player.entity, ngap, mgap);
+    godirection(npc, &pc, ngap, mgap);
     return true;
 }
 
@@ -166,21 +169,25 @@ AIDirector::handleSeeking(
     Vec<Waypoint> & waypoints,
     GeneralConfig & settings,
     Player & player,
-    Entity & entity
+    Vec<Entity> & entities,
+    uint32_t eid
 )
 {
+    Entity & npc = entities[eid];
+    Entity & pc = entities[player.eid];
+
     if (disp != Behavior::Disposition::SEEKING)
     {
         std::cout << "Changed to Seeking\n";
-        if (!createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity))
+        if (!createPath(npc.proto.body.pos, pc.proto.body.pos, waypoints, npc))
             return false;
     }
 
-    if (entity.waypointpath.size() > 0)
+    if (npc.waypointpath.size() > 0)
     {
-        assert(entity.seekwaypoint < entity.waypointpath.size());
-        size_t wpi = entity.waypointpath[entity.seekwaypoint];
-        sf::Vector2f gap = waypoints[wpi].location - entity.proto.body.pos;
+        assert(npc.seekwaypoint < npc.waypointpath.size());
+        size_t wpi = npc.waypointpath[npc.seekwaypoint];
+        sf::Vector2f gap = waypoints[wpi].location - npc.proto.body.pos;
         sf::Vector2f ngap = vec::norm(gap);
         float mgap = vec::mag(gap);
 
@@ -190,17 +197,17 @@ AIDirector::handleSeeking(
             //entity.seekwaypoint = (entity.seekwaypoint + 1) % entity.waypointpath.size();
 
             // Every waypoint, recaculate path
-            if (!createPath(entity.proto.body.pos, player.entity->proto.body.pos, waypoints, entity))
+            if (!createPath(npc.proto.body.pos, pc.proto.body.pos, waypoints, npc))
                 return false;
         }
 
         // Since we may have arrived, recalc gaps.
-        wpi = entity.waypointpath[entity.seekwaypoint];
-        gap = waypoints[wpi].location - GetCentroid(entity.proto.shapes[0]);
+        wpi = npc.waypointpath[npc.seekwaypoint];
+        gap = waypoints[wpi].location - GetCentroid(npc.proto.shapes[0]);
         ngap = vec::norm(gap);
         mgap = vec::mag(gap);
 
-        godirection(entity, NULL, ngap, mgap);
+        godirection(npc, NULL, ngap, mgap);
     }
     return true;
 }
@@ -254,18 +261,21 @@ bool
 AIDirector::handleDispositions(
     Vec<Waypoint> & waypoints,
     Vec<Player> & players,
-    GeneralConfig & settings,
-    Entity & entity
+    Vec<Entity> & entities,
+    uint32_t eid,   // Current Entity Id
+    GeneralConfig & settings
 )
 {
     Player player;
     Behavior::Disposition orgDisp;
     Behavior::Disposition modDisp;
-    modDisp = orgDisp = entity.behavior.disposition;
+    Entity & npc = entities[eid];
+    modDisp = orgDisp = npc.behavior.disposition;
     
-    if (getNearestPlayer(players, entity.proto.body.pos, player))
+    if (getNearestPlayer(players, entities, eid, player))
     {
-        sf::Vector2f toplayer = player.entity->proto.body.pos - entity.proto.body.pos;
+        Entity& pc = entities[player.eid];
+        sf::Vector2f toplayer = pc.proto.body.pos - npc.proto.body.pos;
         float mtoplayer = vec::mag(toplayer);
 
         if (mtoplayer < settings.HUNT_THRESHOLD)
@@ -289,16 +299,16 @@ AIDirector::handleDispositions(
     switch (modDisp)
     {
     case Behavior::Disposition::WANDERING:
-        handleWandering(orgDisp, waypoints, settings, entity);
+        handleWandering(orgDisp, waypoints, settings, npc);
         break;
     case Behavior::Disposition::SEEKING:
-        handleSeeking(orgDisp, waypoints, settings, player, entity);
+        handleSeeking(orgDisp, waypoints, settings, player,entities, eid);
         break;
     case Behavior::Disposition::HUNTING:
-        handleHunting(orgDisp, waypoints, player, entity);
+        handleHunting(orgDisp, waypoints, player, entities, eid);
         break;
     }
-    entity.behavior.disposition = modDisp;
+    npc.behavior.disposition = modDisp;
 
     return false;
 }
@@ -307,17 +317,19 @@ bool
 AIDirector::handleAlive(
     Vec<Waypoint> & waypoints,
     Vec<Player> & players,
-    GeneralConfig & settings,
-    Entity & entity
+    Vec<Entity> & entities,
+    uint32_t eid,   // Current Entity Id
+    GeneralConfig & settings
 )
 {
+    Entity& entity = entities[eid];
     // Zero Health?
     if (entity.health <= 0) {
         entity.behavior.lifestate = Behavior::LifeCycleState::DYING;
     }
     else
     {
-        handleDispositions(waypoints, players, settings, entity);
+        handleDispositions(waypoints, players, entities, eid, settings);
     }
 
     return false;
@@ -392,7 +404,7 @@ AIDirector::update(
             {
             case Behavior::LifeCycleState::ALIVE:
             {
-                handleAlive(waypoints, players, settings, entity);
+                handleAlive(waypoints, players, entities, ei, settings);
                 break;
             }
             case Behavior::LifeCycleState::BIRTH:
@@ -486,24 +498,29 @@ AIDirector::SetRailAndClickToNearestWaypoint(
 
 
 
-sf::Vector2f GetDistance(Player & player, sf::Vector2f curpos)
+sf::Vector2f GetDistance(Entity& entity, sf::Vector2f curpos)
 {
-    sf::Vector2f d = GetCentroid(player.entity->proto.shapes[0]) - curpos;
+    sf::Vector2f d = GetCentroid(entity.proto.shapes[0]) - curpos;
     return d;
 }
 
 bool 
-AIDirector::getNearestPlayer(Vec<Player> & players, sf::Vector2f mypos, Player & player)
+AIDirector::getNearestPlayer(
+    Vec<Player> & players,
+    Vec<Entity> & entities,
+    uint32_t eid,
+    Player & player
+)
 {
     float minmag = 9999999.f;
     sf::Vector2f mind;
     bool found = false;
     for (auto & p : players)
     {
-        if (!p.entity->huntable)
+        if (!entities[p.eid].huntable)
             continue;
 
-        sf::Vector2f d = GetCentroid(p.entity->proto.shapes[0]) - mypos;
+        sf::Vector2f d = GetCentroid(entities[p.eid].proto.shapes[0]) - entities[eid].proto.body.pos;
         float mag = vec::mag(d);
         if (mag < minmag)
         {

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Daniel J Ferguson
-// 2017
+// 2020
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef StageMainClient_h_
@@ -22,6 +22,7 @@ public:
     uint32_t doUpdate();
     uint32_t doDraw();
     uint32_t cleanup();
+
 private:
     sf::View mainView;
     sf::Clock localInputClock;

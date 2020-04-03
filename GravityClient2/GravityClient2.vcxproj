@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);D:\MyProjects\GravityClone\GravityClient2\imgui;D:\MyProjects\Networking;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration);D:\MyProjects\GravityClone\GravityClient2\imgui;D:\MyProjects\Networking\x64\Debug</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);D:\MyProjects\GravityClone\GravityClient2\imgui;D:\MyProjects\Networking\;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration);D:\MyProjects\Networking\x64\Debug;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -83,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);D:\MyProjects\GravityClone\GravityClient2\imgui;D:\MyProjects\Networking\;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration);D:\MyProjects\Networking\x64\Debug;</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)$(Platform)\$(Configuration);D:\MyProjects\Networking\x64\Release;</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,6 +157,7 @@
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="KeyboardHandlers.h" />
     <ClInclude Include="StageInit.h" />
+    <ClInclude Include="StageLobby.h" />
     <ClInclude Include="StageMain.h" />
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +168,7 @@
     <ClCompile Include="KeyboardHandlers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="StageInit.cpp" />
+    <ClCompile Include="StageLobby.cpp" />
     <ClCompile Include="StageMain.cpp" />
   </ItemGroup>
   <ItemGroup>

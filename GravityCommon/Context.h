@@ -41,54 +41,60 @@ public:
         REMOTE3,
         REMOTE4
     };
+
+    // Networking
     ConnMan         cm;
+    bool            isServer;
+
     Camera          camera;
     GameWindow      gameWindow;
+
+    // Configuration files
     KeyboardConfig  keyboardConfig;
     PhysicsConfig   physicsConfig;
     GeneralConfig   generalConfig;
+    NetworkConfig   netConfig;
 
+    // External Resources
     TMX::Map::Ptr   map;
     sf::Font        systemfont;
 
-    Vec<Proto>      protos;        // stores the entity prototypes. entities refer to these prototypes
-                                   // for their default information, and geometry
-    Vec<Entity>     entities;      // stores entities that currently exist.
-    Vec<Entity>     shadowcopy;
+    // Principle state
+    Vec<Proto>      protos;        // stores the prototypes, which have geometry, and sprite sequences.
+    Vec<Entity>     entities;      // instances of things in the world ( monsters, items)
+    Vec<Player>     remoteplayers; // stores players that currently exist.
+    Player          localplayer;   // 
 
-    Vec<Player>     players;       // stores players that currently exist. players[Locality::LOCAL] always exists.
     Vec<Waypoint>   waypoints;     // stores static prototypes.
+    Vec<Shape>      allcollisionshapes;
+
+    // Per Frame Spatial partitions
     SpatialBuckets  entitybuckets;
     SpatialBuckets  cpolybuckets;
+    Vec<ContactInfo> allcontacts;  // TODO this shouldn't be here
 
-    Vec<Shape>      allcollisionshapes;
-    Vec<Shape>      collisionshapesvisible;
-
+    // Rendering data
     Vec<Tile>       backgroundtiles;
     Vec<Tile>       foregroundtiles;
-    Vec<ContactInfo> allcontacts;
-
     Vec<Vertex>     backgroundvertices; // these are updated each frame
     Vec<Vertex>     foregroundvertices;
 
     Texture         backgroundtilesettexture;
     Texture         foregroundtilesettexture;
-    Texture         player0spritesheet;
-
-    ASE::SpriteSheet spritesheet;
-    std::vector<bali::Sequence> sequences;
+    Texture         player0spritesheet;// TODO this isn't right
 
     sf::RenderTexture canvas;
 
+    // AI Facility
+    AIDirector      AIDirector;
+
+    // Crap
     bool            lostfocus;
     sf::Time        frametime;
     sf::Time        frameacc;
     float           mainZoomFactor;
     uint32_t        frames_since_jump;
     sf::Clock       clock;
-
-    AIDirector      AIDirector;
-
     bool            paused;
     sf::Time        pausedacc;
     sf::Time        pausedftime;

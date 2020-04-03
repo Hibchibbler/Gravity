@@ -12,10 +12,14 @@ namespace bali
 // We need something to tie local and remote inputs together
 // and submit the formed commands to the correct rigidbody
 //
+
+
+
 class Context;
 class Controller
 {
 public:
+    // Hook up a local keyboard
     void initialize(
         Context*  context,
         KeyboardConfig config,
@@ -23,6 +27,12 @@ public:
         KeyDblPressedEvent dblpressed,
         KeyHeldEvent held,
         KeyReleasedEvent released
+    );
+
+    // Hook up a remote connection
+    void initialize(
+        Context*  context,
+        uint32_t uid
     );
 
     MouseKeyboard   mk;

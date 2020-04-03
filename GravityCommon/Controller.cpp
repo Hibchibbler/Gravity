@@ -4,6 +4,15 @@
 namespace bali
 {
 
+
+void Controller::initialize(
+    Context*  context,
+    uint32_t uid
+)
+{
+
+}
+
 void Controller::initialize(
     Context*  context,
     KeyboardConfig config,

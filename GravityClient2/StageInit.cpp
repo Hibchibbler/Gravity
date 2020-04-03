@@ -144,7 +144,7 @@ uint32_t StageInit::initialize()
 
     EntitySetup isetup[] = {
         //name, registerwithaidirectory, ignoreentitycollision, disablefriction
-        { "PlayerInstances", false, true, false },
+        //{ "PlayerInstances", false, true, false },
         { "MonsterInstances", true, true , true },
         { "ConsumableInstances", false, true, false }
     };
@@ -161,7 +161,6 @@ uint32_t StageInit::initialize()
                       ogptr);
         }
     }
-    context->shadowcopy = context->entities;
 
     //
     // Waypoints
@@ -265,17 +264,20 @@ uint32_t StageInit::initialize()
     //
     // Register keys and buttons, associate handlers, for local player
     //
-    context->players.clear();
-    context->players.reserve(10);
-    context->players.push_back(Player()); // Local player, or 0th entity
-    context->players[0].entity = &context->entities[0];// Player0 is Local Player
-    context->players[0].entity->proto.body.angle = 359.f;
-    context->players[0].controller.initialize(context,
-                                              context->keyboardConfig,
-                                              KeyPressedHandler, 
-                                              KeyDblPressedHandler, 
-                                              KeyHeldHandler, 
-                                              KeyReleasedHandler);
+    context->entities.push_back(Entity());
+    context->map->getObjectGroup("PlayerInstances", ogptr);
+    CreateEntity(ogptr->objects.back(), false, true, false, context->protos, context->entities.back());
+
+    //entity.proto.body.angle = 0.f;
+    context->localplayer.eid = context->entities.size() - 1;
+
+    context->entities[context->localplayer.eid].etype = Entity::EntityType::LOCALPLAYER;
+    context->localplayer.controller.initialize(context,
+                                    context->keyboardConfig,
+                                    KeyPressedHandler, 
+                                    KeyDblPressedHandler, 
+                                    KeyHeldHandler, 
+                                    KeyReleasedHandler);
 
     context->camera.center = sf::Vector2f(32.f * (75.f / 2.f), 
                                           32.f * (75.f / 2.f));
@@ -326,7 +328,7 @@ uint32_t StageInit::doUpdate()
     //
     // Get User Input, and apply
     //
-    context->players.back().controller.mk.Update(context->frametime);
+    context->localplayer.controller.mk.Update(context->frametime);
 
     return 0;
 }
@@ -362,7 +364,7 @@ uint32_t StageInit::doDraw()
 uint32_t StageInit::cleanup()
 {
     ImGui::SFML::Shutdown();
-    context->players.back().controller.mk.Cleanup();
+    context->localplayer.controller.mk.Cleanup();
     return 0;
 }
 

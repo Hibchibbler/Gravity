@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="125" height="125" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#55aa7f" nextlayerid="33" nextobjectid="1328">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="125" height="125" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#55aa7f" nextlayerid="33" nextobjectid="1338">
  <tileset firstgid="1" name="tilesetBack" tilewidth="32" tileheight="32" tilecount="0" columns="12">
   <image source="BigStoneTiles.png" width="384" height="384"/>
  </tileset>
@@ -31276,7 +31276,7 @@
    <polygon points="-28,1.71875 28,1.71875 28,56.7188 -28,56.7188"/>
   </object>
  </objectgroup>
- <objectgroup color="#ffff00" id="4" name="Player0" visible="0">
+ <objectgroup color="#ffff00" id="4" name="Player0">
   <properties>
    <property name="mass" type="int" value="1"/>
    <property name="prototype" value="player"/>
@@ -31737,8 +31737,24 @@
    <polygon points="0,0 317,211 235,335 -78,124"/>
   </object>
  </objectgroup>
- <objectgroup color="#ffff00" id="6" name="Waypoints0" visible="0"/>
- <objectgroup id="8" name="PlayerInstances" visible="0">
+ <objectgroup color="#ffff00" id="6" name="Waypoints0">
+  <object id="1332" x="2848" y="1356">
+   <polyline points="0,0 -760,-4"/>
+  </object>
+  <object id="1333" x="1819" y="1524">
+   <polyline points="0,0 -333,11"/>
+  </object>
+  <object id="1334" x="581" y="1201">
+   <polyline points="0,0 392,-10 905,334"/>
+  </object>
+  <object id="1335" x="1819" y="1524">
+   <polyline points="0,0 269,-172"/>
+  </object>
+  <object id="1337" x="928" y="3085">
+   <polyline points="0,0 977,2 1035,2 1440,3 2143,1 2355,0"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="8" name="PlayerInstances">
   <object id="66" x="819" y="480">
    <properties>
     <property name="pathid" type="int" value="0"/>
@@ -31747,6 +31763,14 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup color="#55ff00" id="9" name="MonsterInstances" visible="0"/>
+ <objectgroup color="#55ff00" id="9" name="MonsterInstances">
+  <object id="1329" x="2255" y="1229">
+   <properties>
+    <property name="mass" type="int" value="1"/>
+    <property name="pid" value="Monster0"/>
+   </properties>
+   <point/>
+  </object>
+ </objectgroup>
  <objectgroup color="#0055ff" id="11" name="ConsumableInstances" visible="0"/>
 </map>

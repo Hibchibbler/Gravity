@@ -389,14 +389,13 @@ ResolveAllCollisions(
             sf::Vector2f newpos = context->entities[e].proto.body.pos;
             context->entities[e].proto.shapes[0].position = newpos;
         }
-        uint32_t maxiters = 2;
+        uint32_t maxiters = 1;
         uint32_t curiters = 0;
-        do {
+        //do {
             // Reinitialize 1 pass global structures
             context->allcontacts.clear();
             context->entitybuckets.clear();
 
-            //
             //
             // collect the collision polygons visible to each entity
             //
@@ -436,22 +435,22 @@ ResolveAllCollisions(
                 onCollision, onNonCollision,
                 pc);
             curiters++;
-        } while (context->allcontacts.size() > 0 && curiters < maxiters);
+        //} while (context->allcontacts.size() > 0 && curiters < maxiters);
     }
     context->frameacc = framequant; // store the left over time for next iteration.
-    if (integrated)
-    {
-        context->shadowcopy = context->entities;
-    }
-    else
-    {
-        for (Entity & e : context->shadowcopy)
-        {
-            /////////////////
-            e.proto.body.pos = physics::lerp(e.proto.body.pos, e.proto.body.vel, context->frametime.asSeconds());
-            e.proto.shapes[0].position = e.proto.body.pos;
-        }
-    }
+    //if (integrated)
+    //{
+    //    context->shadowcopy = context->entities;
+    //}
+    //else
+    //{
+    //    for (Entity & e : context->shadowcopy)
+    //    {
+    //        /////////////////
+    //        e.proto.body.pos = physics::lerp(e.proto.body.pos, e.proto.body.vel, context->frametime.asSeconds());
+    //        e.proto.shapes[0].position = e.proto.body.pos;
+    //    }
+    //}
     return true;
 }
 

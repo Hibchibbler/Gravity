@@ -2,6 +2,7 @@
 #include <memory>
 #include <iostream>
 #include "GameClient.h"
+#include "StageLobby.h"
 #include "StageInit.h"
 #include "StageMain.h"
 
@@ -16,16 +17,19 @@ GameClient::GameClient(std::unique_ptr<Context> c)
 
 uint32_t GameClient::initialize()
 {
-    context->gameWindow.screenWidth = 1300;
-    context->gameWindow.screenHeight = 1300;
+    context->gameWindow.screenWidth = 1000;
+    context->gameWindow.screenHeight = 1000;
     context->gameWindow.window.create(sf::VideoMode(context->gameWindow.screenWidth, context->gameWindow.screenHeight), "Gravity");
     //ctx->window.setVerticalSyncEnabled(false);
 
-    std::unique_ptr<Stage> stage0 = std::make_unique<StageInit>(context.get());
+    std::unique_ptr<Stage> stage0 = std::make_unique<StageLobby>(context.get());
     gameStages.push_back(std::move(stage0));
 
-    std::unique_ptr<Stage> stage1 = std::make_unique<StageMain>(context.get());
+    std::unique_ptr<Stage> stage1 = std::make_unique<StageInit>(context.get());
     gameStages.push_back(std::move(stage1));
+
+    std::unique_ptr<Stage> stage2 = std::make_unique<StageMain>(context.get());
+    gameStages.push_back(std::move(stage2));
 
     // Last thing
     Game::initialize();

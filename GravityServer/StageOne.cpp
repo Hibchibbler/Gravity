@@ -18,6 +18,63 @@
 #include <string>
 namespace bali
 {
+
+    void
+    StageOne::OnEvent(
+            void* context,
+            ConnManState::OnEventType t,
+            uint32_t uid,
+            Packet* packet
+        )
+    {
+        static bool timeout_seen = false;
+        SharedContext* pSharedContext = (SharedContext*)context;
+        ConnMan& cm = *pSharedContext->pConnMan;
+        Context* pContext = pSharedContext->pContext;
+
+        switch (t)
+        {
+        case ConnManState::OnEventType::MESSAGE_RECEIVED:
+            std::cout << "MESSAGE_RECIEVED" << std::endl;
+            break;
+        case ConnManState::OnEventType::CONNECTION_TIMEOUT:
+            std::cout << "CONNECTION_TIMEOUT: " << std::endl;
+            break;
+        case ConnManState::OnEventType::MESSAGE_ACK_TIMEOUT: {
+            MESG * m = (MESG*)packet->buffer;
+            std::cout << "MESSAGE_ACK_TIMEOUT: " << CodeName[m->header.code] << std::endl;
+            break;
+        }case ConnManState::OnEventType::MESSAGE_ACK_RECEIVED: {
+            MESG* m = (MESG*)packet->buffer;
+            std::cout << "MESSAGE_ACK_RECEIVED: " << CodeName[m->header.code] << std::endl;
+            break;
+        }case ConnManState::OnEventType::CONNECTION_HANDSHAKE_GRANTED:{
+            MESG* m = (MESG*)packet->buffer;
+            std::cout << "CONNECTION_HANDSHAKE_GRANTED: " << std::endl;
+            TMX::Objectgroup::Ptr ogptr;
+            TMX::Object::Ptr optr;
+            pContext->map->getObjectGroup("PlayerInstances", ogptr);
+            optr = ogptr->objects.back();
+
+            pContext->entities.push_back(Entity());
+            CreateEntity(optr, false, true, false, pContext->protos, pContext->entities.back());
+            pContext->remoteplayers.push_back(Player());
+            pContext->remoteplayers.back().eid = pContext->entities.size() - 1;
+            pContext->entities[pContext->entities.size() - 1].etype = Entity::EntityType::REMOTEPLAYER;
+            pContext->remoteplayers.back().controller.initialize(pContext, uid);// TODO: controller is network input
+            break;
+        }case ConnManState::OnEventType::CONNECTION_HANDSHAKE_DENIED:
+            std::cout << "CONNECTION_HANDSHAKE_DENIED: " << std::endl;
+            break;
+        case ConnManState::OnEventType::CONNECTION_HANDSHAKE_TIMEOUT:
+            std::cout << "CONNECTION_HANDSHAKE_TIMEOUT: " << std::endl;
+            break;
+        case ConnManState::OnEventType::CONNECTION_HANDSHAKE_TIMEOUT_NOGRACK:
+            std::cout << "CONNECTION_HANDSHAKE_TIMEOUT_NOGRACK: " << std::endl;
+            break;
+        }
+    }
+
     StageOne::StageOne(Context::Ptr context)
         : Stage(context)
     {
@@ -26,8 +83,6 @@ namespace bali
     StageOne::~StageOne()
     {
     }
-
-
 
     uint32_t StageOne::initialize()
     {
@@ -49,6 +104,7 @@ namespace bali
         context->physicsConfig = loadPhysicsConfig("assets\\physics.config.txt");
         context->keyboardConfig = loadKeyboardConfig("assets\\keyboard.config.txt");
         context->generalConfig = loadGeneralConfig("assets\\general.config.txt");
+        context->netConfig = LoadNetworkConfig("network.config.txt");
         //context->aiConfig = loadAIConfig("assets\\ai.config.txt");//TODO
 
         //
@@ -56,7 +112,6 @@ namespace bali
         //
         context->map = std::make_shared<bali::TMX::Map>();
         TMX::TMXReader::load("assets\\level_test8_matt.tmx", context->map);
-
 
 
         //TMX::Layer::Ptr layer = context->map->getLayer("BackgroundImage");
@@ -156,8 +211,15 @@ namespace bali
         //// Initialize Entity AI
         ////
         //context->AIDirector.initialize(context->entities);
-
-
+        OnEventContext.pConnMan = &context->cm;
+        OnEventContext.pContext = context;
+        context->cm.Initialize(
+            context->netConfig,
+            ConnManState::ConnManType::SERVER,
+            21025,
+            OnEvent,
+            &OnEventContext
+        );
         // Last things? 
         //
         ////
@@ -233,7 +295,7 @@ namespace bali
     uint32_t StageOne::cleanup()
     {
         ImGui::SFML::Shutdown();
-        context->players.back().controller.mk.Cleanup();
+
         return 0;
     }
 

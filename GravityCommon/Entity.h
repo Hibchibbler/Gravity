@@ -16,7 +16,12 @@ class Entity
 public:
     typedef Entity* Ptr;
 
-
+    enum class EntityType
+    {
+        LOCALPLAYER,
+        REMOTEPLAYER,
+        NPC
+    };
     Entity()
     {
         moving = false;
@@ -42,6 +47,7 @@ public:
         isWpressed = false;
     }
 
+    EntityType          etype;
     Behavior            behavior;
     Proto               proto;
     Collider            collider;

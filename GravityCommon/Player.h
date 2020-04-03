@@ -11,7 +11,7 @@ namespace bali
 class Player
 {
 public:
-    Entity*         entity;
+    uint32_t        eid;
     Controller      controller;
     std::string     name;
     uint64_t        nid;

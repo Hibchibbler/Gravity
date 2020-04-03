@@ -24,10 +24,27 @@ public:
     uint32_t doUpdate();
     uint32_t doDraw();
     uint32_t cleanup();
+
+    // Network stuff
+    struct SharedContext
+    {
+        ConnMan* pConnMan;
+        Context* pContext;
+    };
+
+    SharedContext OnEventContext;
+
+    static
+    void
+    OnEvent(
+        void* oecontext,
+        ConnManState::OnEventType t,
+        uint32_t uid,
+        Packet* packet
+    );
+
+
 private:
-    //sf::View mainView;
-    //sf::Clock localInputClock;
-    //uint32_t mouseInView = true;
 
 };
 

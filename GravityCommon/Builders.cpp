@@ -785,6 +785,51 @@ GetCPolyNeighbors(
     //    }
     //}
 }
+bool
+CreateEntity(
+    TMX::Object::Ptr obj,
+    bool registerwithaidirector,
+    bool ignoreentitycollision,
+    bool moving,
+    Vec<Proto> & protos,
+    Entity & entity
+)
+{
+    std::string pid;
+    int mass;
+    int pathid;
+    if (!GetTMXPropertyInt(obj->properties, "mass", mass))
+    {
+        std::cout << "A Entity [" << obj->name << "] does not have an 'mass' property" << std::endl;
+    }
+
+    if (!GetTMXPropertyString(obj->properties, "pid", pid))
+    {
+        std::cout << "A Entity [" << obj->name << "] does not have an 'pid' property" << std::endl;
+    }
+
+    if (!GetTMXPropertyInt(obj->properties, "pathid", pathid))
+    {
+        std::cout << "A Entity [" << obj->name << "] does not have an 'pathid' property" << std::endl;
+    }
+
+
+    //entities.push_back(Entity());
+    // Find proto with matching pid
+    // make this entity from that proto.
+    assignProto(protos, pid, entity.proto);
+
+    entity.pathid = pathid;
+    entity.moving = moving;
+    entity.registerwithaidirector = registerwithaidirector;
+    entity.ignoreentitycollision = ignoreentitycollision;
+
+    float x = (float)(*obj).x;
+    float y = (float)(*obj).y;
+    entity.proto.body.pos = sf::Vector2f(x, y);
+    //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
+    return true;
+}
 
 bool
 addEntity(
@@ -796,41 +841,10 @@ addEntity(
     TMX::Objectgroup::Ptr & ogptr
 )
 {
-    for (auto o : ogptr->objects)
+    for (auto obj : ogptr->objects)
     {
-        std::string pid;
-        int mass;
-        int pathid;
-        if (!GetTMXPropertyInt(o->properties, "mass", mass))
-        {
-            std::cout << "A Entity [" << o->name << "] does not have an 'mass' property" << std::endl;
-        }
-
-        if (!GetTMXPropertyString(o->properties, "pid", pid))
-        {
-            std::cout << "A Entity [" << o->name << "] does not have an 'pid' property" << std::endl;
-        }
-
-        if (!GetTMXPropertyInt(o->properties, "pathid", pathid))
-        {
-            std::cout << "A Entity [" << o->name << "] does not have an 'pathid' property" << std::endl;
-        }
-
-
         entities.push_back(Entity());
-        // Find proto with matching pid
-        // make this entity from that proto.
-        assignProto(protos, pid, entities.back().proto);
-
-        entities.back().pathid = pathid;
-        entities.back().moving = moving;
-        entities.back().registerwithaidirector = registerwithaidirector;
-        entities.back().ignoreentitycollision = ignoreentitycollision;
-
-        float x = (float)(*o).x;
-        float y = (float)(*o).y;
-        entities.back().proto.body.pos = sf::Vector2f(x, y);
-        //context->entities.back().proto.shapes[0].setPosition(sf::Vector2f(x, y));
+        CreateEntity(obj, registerwithaidirector, ignoreentitycollision, moving, protos, entities.back());
     }
     return true;
 }

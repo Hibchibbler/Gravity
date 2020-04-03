@@ -96,7 +96,7 @@ void onCollision(void* context_, Entity & entity, sf::Vector2f normal)
     //Entity & entity = context->entities[e];
     
 
-    if (&entity == &context->entities[0] && !entity.isWpressed)
+    if (entity.etype == Entity::EntityType::LOCALPLAYER && !entity.isWpressed)
     {
         return;
     }
@@ -126,26 +126,33 @@ void onNonCollision(void* context, Entity & entity)
     entity.collider.surfaceNormal = vec::Zero();
 }
 
+
+
 uint32_t StageMain::doUpdate()
 {
     static std::list<sf::Vector2f> poshistory;
     static std::list<float> anglehistory;
-    sf::Vector2f pos = context->players[0].entity->proto.body.pos;
-    float angle = context->players[0].entity->proto.body.angle;
+    Player & localplayer = context->localplayer;
+    Entity& entity = context->entities[localplayer.eid];
+    RigidBody& localBody = entity.proto.body;
+
+    sf::Vector2f pos = localBody.pos;
+    float angle = localBody.angle;
 
     ImGui::SFML::Update(context->gameWindow.window, context->frametime);
     //
     //
     //
-    context->players[0].controller.mk.Update(context->frametime);
+    context->localplayer.controller.mk.Update(context->frametime);
 
-    //
-    //
-    //
-    if (context->waypoints.size() > 0)
-    {
-        context->AIDirector.update(context->frametime, context->players, context->entities, context->waypoints, context->generalConfig);
-    }
+    ////
+    //// Need to revisit AI later, crashes and shit.
+    ////
+    //if (context->waypoints.size() > 0)
+    //{
+    //    context->AIDirector.update(context->frametime, context->localplayer, context->entities, context->waypoints, context->generalConfig);
+    //}
+
     //
     //
     //
@@ -158,6 +165,8 @@ uint32_t StageMain::doUpdate()
             a.second.update(context->frametime);
         }
     }
+
+
     //////
     float avgangle = 0.0f;
     sf::Vector2f avgpos;
@@ -175,9 +184,9 @@ uint32_t StageMain::doUpdate()
     }
     avgangle /= poscnt;
     ///////
-    if (poshistory.size() > 5)
+    if (poshistory.size() > 50)
         poshistory.pop_front();
-    poshistory.push_back(GetCentroid(context->shadowcopy[0].proto.shapes[0]));
+    poshistory.push_back(GetCentroid(context->entities[context->localplayer.eid].proto.shapes[0]));
 
     poscnt = 0;
     for (auto p = poshistory.begin();
@@ -197,6 +206,65 @@ uint32_t StageMain::doUpdate()
 
     return 0;
 }
+uint32_t
+DressEntity(
+    Context* context,
+    Entity & entity,
+    sf::RectangleShape & rs,
+    sf::IntRect & subrect
+)
+{
+
+    Animation* animation;
+    Wardrobe & wardrobe = entity.proto.wardrobe;
+    if (entity.moving)
+    {
+        if (entity.proto.wardrobe.getAnimation("Running", animation))
+        {
+            ASE::Cel & cell = animation->sequence.cels[animation->celid];
+
+            ////
+            //wardrobe.getSubRect(cell, subrect);
+            if (vec::dot(entity.proto.body.vel, physics::rightVector(entity.proto.body.angle)) > 0.0f)
+            {
+                wardrobe.getSubRect(cell, subrect, false);
+            }
+            else
+            {
+                wardrobe.getSubRect(cell, subrect, true);
+            }
+            rs.setSize(sf::Vector2f(subrect.width, subrect.height));
+            rs.rotate(entity.proto.body.angle);
+            rs.setOrigin(subrect.width / 2.0f, subrect.height / 2.0f);
+            //if (e > 0)
+                rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+            //else
+            //    rs.setPosition(context->zaxpos);
+            rs.setTexture(&entity.proto.sstex->tex);
+        }
+    }
+    else
+    {
+
+        if (entity.proto.wardrobe.getAnimation("Idling", animation))
+        {
+            ASE::Cel & cell = animation->sequence.cels[animation->celid];
+            wardrobe.getSubRect(cell, subrect, false);
+
+            rs.setSize(sf::Vector2f(subrect.width, subrect.height));
+            rs.rotate(entity.proto.body.angle);
+            rs.setOrigin(subrect.width / 2.0f, subrect.height / 2.0f);
+            //if (e > 0)
+                rs.setPosition(GetCentroid(entity.proto.shapes[0]));
+            //else
+            //    rs.setPosition(context->zaxpos);
+            rs.setTexture(&entity.proto.sstex->tex);
+
+            //std::cout << animation->celid  << ", ["<< subrect.top << ", " << subrect.left << ", " << subrect.width << ", " << subrect.height << "] \n";
+        }
+    }
+    return 0;
+}
 
 
 uint32_t StageMain::doDraw()
@@ -207,12 +275,6 @@ uint32_t StageMain::doDraw()
 
 
     context->gameWindow.window.clear(sf::Color::Black);
-
-
-
-
-
-
     {
         sf::RenderStates states;
         ////
@@ -254,28 +316,26 @@ uint32_t StageMain::doDraw()
             //for (int h = 0; h < 1; h++)
             int h = 0;
             {
-                for (int si = 0; si < context->shadowcopy[h].collisionshapes.size(); si++)
+                for (int si = 0; si < context->entities[h].collisionshapes.size(); si++)
                 {
                     states.texture = NULL;
-/*                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setFillColor(sf::Color::Transparent);
-                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setOutlineThickness(2);
-                    context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].setOutlineColor(sf::Color::Red)*/;
-                    //context->canvas.draw(&context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].points[0], states);
+
                     sf::ConvexShape cs;
                     size_t id = 0;
-                    Vec<sf::Vector2f> & points = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].points;
-                    sf::Vector2f position = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].position;
-                    sf::Vector2f origin = context->allcollisionshapes[context->shadowcopy[h].collisionshapes[si]].origin;
+                    Vec<sf::Vector2f> & points = context->allcollisionshapes[context->entities[h].collisionshapes[si]].points;
+                    sf::Vector2f position = context->allcollisionshapes[context->entities[h].collisionshapes[si]].position;
+                    sf::Vector2f origin = context->allcollisionshapes[context->entities[h].collisionshapes[si]].origin;
 
                     cs.setPointCount(points.size());
                     cs.setFillColor(sf::Color::Transparent);
                     cs.setOutlineColor(sf::Color::Red);
                     cs.setOutlineThickness(2.f);
+
                     for (auto p : points)
                     {
                         cs.setPoint(id++, p+position);
                     }
-                    
+
                     context->canvas.draw(cs);
                 }
             }
@@ -292,70 +352,23 @@ uint32_t StageMain::doDraw()
         if (context->generalConfig.SHOW_ENTITY_POLYGON)
         {
             // Draw Entities Shapes
-            for (int e = 0; e < context->shadowcopy.size(); e++)
+            for (int e = 0; e < context->entities.size(); e++)
             {
                 //rs.setTexture(context->player0spritesheet);
                 //context->canvas.draw(context->shadowcopy[e].proto.shapes[0]);
             }
         }
 
-        for (int e = 0; e < context->shadowcopy.size(); e++)
+        for (int e = 0; e < context->entities.size(); e++)
         //int e = 0;
         {
-            Entity & entity = context->shadowcopy[e];
+            sf::RectangleShape rs;
+            sf::IntRect subrect;
+            Entity & entity = context->entities[e];
             if (entity.proto.wardrobe.animations.size() == 0)
                 continue;
 
-            sf::RectangleShape rs;
-            sf::IntRect subrect;
-            Animation* animation;
-            Wardrobe & wardrobe = entity.proto.wardrobe;
-            if (entity.moving)
-            {
-                if (entity.proto.wardrobe.getAnimation("Running", animation))
-                {
-                    ASE::Cel & cell = animation->sequence.cels[animation->celid];
-                    
-                    ////
-                    //wardrobe.getSubRect(cell, subrect);
-                    if (vec::dot(entity.proto.body.vel, physics::rightVector(entity.proto.body.angle)) > 0.0f)
-                    {
-                        wardrobe.getSubRect(cell, subrect, false);
-                    }
-                    else
-                    {
-                        wardrobe.getSubRect(cell, subrect, true);
-                    }
-                    rs.setSize(sf::Vector2f(subrect.width, subrect.height));
-                    rs.rotate(entity.proto.body.angle);
-                    rs.setOrigin(subrect.width / 2.0f, subrect.height / 2.0f);
-                    if (e > 0)
-                        rs.setPosition(GetCentroid(entity.proto.shapes[0]));
-                    else
-                        rs.setPosition(context->zaxpos);
-                    rs.setTexture(&entity.proto.sstex->tex);
-                }
-            }
-            else
-            {
-
-                if (entity.proto.wardrobe.getAnimation("Idling", animation))
-                {
-                    ASE::Cel & cell = animation->sequence.cels[animation->celid];
-                    wardrobe.getSubRect(cell, subrect, false);
-                    
-                    rs.setSize(sf::Vector2f(subrect.width, subrect.height));
-                    rs.rotate(entity.proto.body.angle);
-                    rs.setOrigin(subrect.width/2.0f, subrect.height/2.0f);
-                    if (e > 0)
-                        rs.setPosition(GetCentroid(entity.proto.shapes[0]));
-                    else
-                        rs.setPosition(context->zaxpos);
-                    rs.setTexture(&entity.proto.sstex->tex);
-
-                    //std::cout << animation->celid  << ", ["<< subrect.top << ", " << subrect.left << ", " << subrect.width << ", " << subrect.height << "] \n";
-                }
-            }
+            DressEntity(context, entity,rs, subrect);
             sf::RenderStates rendsta;
             rs.setTextureRect(subrect);
             rendsta.texture = &entity.proto.sstex->tex;
@@ -363,17 +376,16 @@ uint32_t StageMain::doDraw()
         }
 
 
-
         if (context->generalConfig.SHOW_ENTITY_CENTROID)
         {
             // Draw a box where we think the center of the entity is. center of gravity.
-            for (int h = 0; h < context->shadowcopy[0].collisionentities.size(); h++)
+            for (int h = 0; h < context->entities[0].collisionentities.size(); h++)
             {
                 sf::RectangleShape rs(sf::Vector2f(8, 8));
                 rs.setFillColor(sf::Color::Red);
-                sf::Vector2f pos(context->shadowcopy[context->shadowcopy[0].collisionentities[h]].proto.body.pos);
-                size_t e = context->shadowcopy[0].collisionentities[h];
-                sf::Vector2f newpos = GetCentroid(context->shadowcopy[e].proto.shapes[0]);
+                sf::Vector2f pos(context->entities[context->entities[0].collisionentities[h]].proto.body.pos);
+                size_t e = context->entities[0].collisionentities[h];
+                sf::Vector2f newpos = GetCentroid(context->entities[e].proto.shapes[0]);
                 rs.setPosition(newpos);
                 rs.move(-4, -4);
                 context->canvas.draw(rs);
@@ -404,7 +416,7 @@ uint32_t StageMain::doDraw()
         {
             for (size_t e = 1; e < context->entities.size(); e++)
             {
-                Entity & entity = context->shadowcopy[e];
+                Entity & entity = context->entities[e];
                 if (entity.waypointpath.size() > 0)
                 {
                     sf::VertexArray va(sf::PrimitiveType::LineStrip);
@@ -435,7 +447,7 @@ uint32_t StageMain::doDraw()
         ImGui::Checkbox("Auto Gravity Player", (bool*)&context->generalConfig.AUTO_GRAVITY_PLAYERS);
         //ImGui::Checkbox("Auto Gravity Entities", &context->settings.AUTO_GRAVITY_ENTITIES);
         ImGui::Checkbox("Disable Mouse Gravity", (bool*)&context->generalConfig.DISABLE_MOUSE_GRAVITY);
-        ImGui::Checkbox("R U Huntable?", &context->players[0].entity->huntable);
+        ImGui::Checkbox("R U Huntable?", &context->entities[context->localplayer.eid].huntable);
         ImGui::SliderFloat("Hunt Radius", &context->generalConfig.HUNT_THRESHOLD, 64.f, 512.f);
         ImGui::SliderFloat("Seek Radius", &context->generalConfig.SEEK_THRESHOLD, 64.f, 512.f);
         ImGui::SliderFloat("Waypoint Radius", &context->generalConfig.ARRIVED_THRESHOLD, 16.f, 256.f);
@@ -458,7 +470,7 @@ uint32_t StageMain::doDraw()
 
 uint32_t StageMain::cleanup()
 {
-    context->players.back().controller.mk.Cleanup();
+    context->localplayer.controller.mk.Cleanup();
     return 0;
 }
 
